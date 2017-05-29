@@ -29,23 +29,23 @@ class Server:
 	### Imports the data and stores it in the server	
 	def import_data(self):
 		try:
-			self.data = ecnet_data_utils.initialize_data(self)
+			self.data = ecnet_data_utils.initialize_data(self.data_filename)
 		except:
 			print("Error: Cannot find 'data_filename' in 'config.yml'.")
 			raise
 			sys.exit()
 		try:
-			self.data.build(self)
+			self.data.build()
 		except:
 			print("Error: Unable to parse file. Check file format for unity.")
 			raise
 			sys.exit()
 		try:
-			self.data.buildTVL(self)
+			self.data.buildTVL(self.sort_type, self.data_split)
 			if self.normals_use == True:
-				self.data.normalize(self)
-			self.data.applyTVL(self)
-			self.data.package(self)
+				self.data.normalize(self.normal_params_filename)
+			self.data.applyTVL()
+			self.data.package()
 		except:
 			print("Error: Unable to build data TVL. Check syntax.")
 			raise
@@ -86,13 +86,13 @@ class Server:
 						print("Trial %d of %d"%(trial+1,self.num_trials))
 						self.output_filepath = os.path.join(os.path.join(os.path.join(self.project_name, self.build_dirs[build]), self.node_dirs[build][node]),self.model_output_filename + "_%d"%(trial + 1))
 						try:
-							self.model.fit(self)
+							self.model.fit(self.data.learn_x, self.data.learn_y, self.learning_rate, self.train_epochs)
 						except:
 							print("Error: model must be created before it can be fit.")
 							raise
 							sys.exit()
 						try:
-							self.model.save_net(self)
+							self.model.save_net(self.output_filepath)
 						except:
 							print("Error: Unable to save model. Check 'config.yaml' for filename mismatches.")
 							raise
@@ -103,13 +103,13 @@ class Server:
 		else:
 			self.output_filepath = self.model_output_filename
 			try:
-				self.model.fit(self)
+				self.model.fit(self.data.learn_x, self.data.learn_y, self.learning_rate, self.train_epochs)
 			except:
 				print("Error: model must be created before it can be fit.")
 				raise
 				sys.exit()
 			try:
-				self.model.save_net(self)
+				self.model.save_net(self.output_filepath)
 			except:
 				print("Error: Unable to save model. Check 'config.yaml' for filename mismatches.")
 				raise
@@ -127,13 +127,13 @@ class Server:
 						print("Trial %d of %d"%(trial+1,self.num_trials))
 						self.output_filepath = os.path.join(os.path.join(os.path.join(self.project_name, self.build_dirs[build]), self.node_dirs[build][node]), self.model_output_filename + "_%d"%(trial + 1))
 						try:
-							self.model.fit_validation(self)
+							self.model.fit_validation(self.data.learn_x, self.data.valid_x, self.data.learn_y, self.data.valid_y, self.learning_rate, self.valid_mdrmse_stop, self.valid_mdrmse_memory, self.valid_max_epochs)
 						except:
 							print("Error: model must be created before it can be fit.")
 							raise
 							sys.exit()
 						try:
-							self.model.save_net(self)
+							self.model.save_net(self.output_filepath)
 						except:
 							print("Error: Unable to save model. Check 'config.yaml' for filename mismatches.")
 							raise
@@ -144,13 +144,13 @@ class Server:
 		else:
 			self.output_filepath = self.model_output_filename
 			try:
-				self.model.fit_validation(self)
+				self.model.fit_validation(self.data.learn_x, self.data.valid_x, self.data.learn_y, self.data.valid_y, self.learning_rate, self.valid_mdrmse_stop, self.valid_mdrmse_memory, self.valid_max_epochs)
 			except:
 				print("Error: model must be created before it can be fit.")
 				raise
 				sys.exit()
 			try:
-				self.model.save_net(self)
+				self.model.save_net(self.output_filepath)
 			except:
 				print("Error: Unable to save model. Check 'config.yaml' for filename mismatches.")
 				raise
@@ -164,17 +164,15 @@ class Server:
 			sys.exit()
 		### MULTINET ###
 		else:
-			self.data.test_x = self.data.x
-			self.data.test_y = self.data.y
 			for i in range(0,self.num_builds):
 				for j in range(0,self.num_nodes):
 					rmse_list = []
 					for k in range(0,self.num_trials):
 						self.model_load_filename = os.path.join(os.path.join(self.project_name, "build_%d"%(i+1)),os.path.join("node_%d"%(j+1),self.model_output_filename + "_%d"%(k+1)))
 						self.model = ecnet_model.multilayer_perceptron()
-						self.model.load_net(self)
-						res = self.model.test_new(self)
-						rmse = ecnet_data_utils.calc_rmse(res, self.data.test_y)
+						self.model.load_net(self.model_load_filename)
+						res = self.model.test_new(self.data.x)
+						rmse = ecnet_data_utils.calc_rmse(res, self.data.y)
 						rmse_list.append(rmse)
 					current_min = 0
 					for error in range(0,len(rmse_list)):
@@ -182,34 +180,28 @@ class Server:
 							current_min = error
 					self.model_load_filename = os.path.join(os.path.join(self.project_name, "build_%d"%(i+1)),os.path.join("node_%d"%(j+1),self.model_output_filename + "_%d"%(current_min+1)))
 					self.output_filepath = os.path.join(os.path.join(self.project_name, "build_%d"%(i+1)),os.path.join("node_%d"%(j+1),"final_net_%d"%(j+1)))
-					self.resave_net()
+					self.resave_net(self.output_filepath)
 	
 	def use_mlp_model(self):
 		### SINGLE NET ###
 		if self.folder_structs_built == False:
 			self.model = ecnet_model.multilayer_perceptron()
 			try:
-				self.model.load_net(self)
+				self.model.load_net(self.model_load_filename)
 			except:
 				print("Error: Unable to load model; one must be created first. If one exists, check 'condig.yaml' for filename mismatches.")
 				raise
 				sys.exit()
-			if self.normals_use == True:
-				try:
-					res = ecnet_data_utils.denormalize_result(self.model.test_new(self), self)
-					return [res]
-				except:
-					print("Error: data must be loaded before model can be used.")
-					raise
-					sys.exit()
-			else:
-				try:
-					res = self.model.test_new(self)
-					return [res]
-				except:
-					print("Error: data must be loaded before model can be used.")
-					raise
-					sys.exit()			
+			try:
+				if self.normals_use == True:
+					res = ecnet_data_utils.denormalize_result(self.model.test_new(self.data.test_x), self.normal_params_filename)
+				else:
+					res = self.model.test_new(self.data.test_x)
+				return [res]
+			except:
+				print("Error: data must be loaded before model can be used.")
+				raise
+				sys.exit()
 				
 		### MULTINET ###
 		else:
@@ -219,9 +211,12 @@ class Server:
 				for j in range(0,self.num_nodes):
 					self.model_load_filename = os.path.join(os.path.join(self.project_name, "build_%d"%(i+1)),os.path.join("node_%d"%(j+1),"final_net_%d"%(j+1)))
 					self.model = ecnet_model.multilayer_perceptron()
-					self.model.load_net(self)
+					self.model.load_net(self.model_load_filename)
 					try:
-						pred = self.model.test_new(self)
+						if self.normals_use == True:
+							pred = ecnet_data_utils.denormalize_result(self.model.test_new(self.data.test_x), self.normal_params_filename)
+						else:
+							pred = self.model.test_new(self.data.test_x)
 						predlist.append(pred)
 					except:
 						print("Error: data must be loaded before model can be used.")
@@ -263,17 +258,17 @@ class Server:
 			self.data.test_y = temp_test_y
 			return rmse_list
 
-	### Resaves the file under 'model_load_filename' to 'model_output_filename'	
-	def resave_net(self):
+	### Resaves the file under 'model_load_filename' to a new filename
+	def resave_net(self, output):
 		self.model = ecnet_model.multilayer_perceptron()
 		try:
-			self.model.load_net(self)
+			self.model.load_net(self.model_load_filename)
 		except:
 			print("Error: Unable to load model; one must be created first. If one exists, check 'condig.yaml' for filename mismatches.")
 			raise
 			sys.exit()
 		try:
-			self.model.save_net(self)
+			self.model.save_net(output)
 		except:
 			print("Error: Unable to save model. Unknown Error.")
 			raise
@@ -339,7 +334,6 @@ def create_default_config():
 		'num_builds' : 1,
 		'num_nodes' : 1,
 		'num_trials' : 1,
-		'nz' : 1,
 		'param_limit_num' : 15,
 		'project_name' : 'my_project',
 		'sort_type' : 'random',	

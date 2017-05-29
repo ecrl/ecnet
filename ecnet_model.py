@@ -47,8 +47,8 @@ class multilayer_perceptron:
 				layerOutput.append(tf.nn.sigmoid(tf.add(tf.matmul(layerOutput[-1], self.weights[layer - 1]), self.biases[layer - 1])))
 		return(layerOutput[-1])
 	
-	### SERVER FUNCTION - serves the data to the model, and fits the model to the data
-	def fit(self, server):
+	### Data is served to the model, and fits the model to the data
+	def fit(self, x, y, learning_rate = 0.1, train_epochs = 500):
 		# placeholder variables for input and output matrices
 		x = tf.placeholder("float", [None, self.layers[0][0]])
 		y = tf.placeholder("float", [None, self.layers[-1][0]])
@@ -56,22 +56,22 @@ class multilayer_perceptron:
 		
 		# cost function and optimizer - TODO: look into other optimizers besides Adam
 		cost = tf.square(y - pred)
-		optimizer = tf.train.AdamOptimizer(learning_rate = server.learning_rate).minimize(cost)
+		optimizer = tf.train.AdamOptimizer(learning_rate = learning_rate).minimize(cost)
 		
 		# opens the tensorflow session for training
 		with tf.Session() as self.sess:
 			# initialize the pre-defined variables
 			self.sess.run(tf.global_variables_initializer())
 			# runs training loop for explicit number of epochs -> find in config.yaml
-			for epoch in range(server.train_epochs):
-				self.sess.run(optimizer, feed_dict = {x: server.data.learn_x, y: server.data.learn_y})
+			for epoch in range(train_epochs):
+				self.sess.run(optimizer, feed_dict = {x: x, y: y})
 			# saves a temporary output file, variables (weights, biases) included
 			saver = tf.train.Saver()
 			saver.save(self.sess,"./_ckpt")
 		self.sess.close()
 	
-	### SERVER FUNCTION - serves the data to the model, and fits the model to the data using periodic validation
-	def fit_validation(self, server):
+	### Data is served to the model, and fits the model to the data using periodic validation
+	def fit_validation(self, x_l, x_v, y_l, y_v, learning_rate = 0.1, mdrmse_stop = 0.1, mdrmse_memory = 50, max_epochs = 500):
 		# placeholder variables for input and output matrices
 		x = tf.placeholder("float", [None, self.layers[0][0]])
 		y = tf.placeholder("float", [None, self.layers[-1][0]])
@@ -85,24 +85,24 @@ class multilayer_perceptron:
 	
 		# cost function and optimizer - TODO: look into other optimizers besides Adam
 		cost = tf.square(y - pred)
-		optimizer = tf.train.AdamOptimizer(learning_rate = server.learning_rate).minimize(cost)
+		optimizer = tf.train.AdamOptimizer(learning_rate = learning_rate).minimize(cost)
 			
 		# opens the tensorflow session for training
 		with tf.Session() as self.sess:
 			# initialize the pre-defined variables
 			self.sess.run(tf.global_variables_initializer())
 			# while current mdRMSE is more than the cutoff point, and the max num of epochs hasn't been reached:
-			while mdRMSE > server.valid_mdrmse_stop and current_epoch < server.valid_max_epochs:
-				self.sess.run(optimizer, feed_dict = {x: server.data.learn_x, y: server.data.learn_y})
+			while mdRMSE > mdrmse_stop and current_epoch < max_epochs:
+				self.sess.run(optimizer, feed_dict = {x: x_l, y: y_l})
 				current_epoch += 1
 				# determine new mdRMSE after every 100 epochs
 				if current_epoch % 100 == 0:
-					valid_pred = self.sess.run(pred, feed_dict = {x: server.data.valid_x})
-					rmse_list.append(calc_valid_rmse(valid_pred, server.data.valid_y))
+					valid_pred = self.sess.run(pred, feed_dict = {x: x_v})
+					rmse_list.append(calc_valid_rmse(valid_pred, y_v))
 					if len(rmse_list) > 1:
 						delta_list.append(abs(rmse_list[-2] - rmse_list[-1]))
 						# mdRMSE memory: how far back the function looks to determine mdRMSE
-						if len(delta_list) > server.valid_mdrmse_memory:
+						if len(delta_list) > mdrmse_memory:
 							del(delta_list[0])
 						mdRMSE = reduce(lambda x, y: x + y, delta_list) / len(delta_list)
 			
@@ -110,32 +110,32 @@ class multilayer_perceptron:
 			saver.save(self.sess, "./_ckpt")
 		self.sess.close()
 		
-	### SERVER FUNCTION - tests the test data from the server
-	def test_new(self, server):
+	### Tests the test data from the server
+	def test_new(self, x):
 		with tf.Session() as self.sess:
 			saver = tf.train.Saver()
 			saver.restore(self.sess, "./_ckpt")
-			result = self.feed_forward(server.data.test_x)
+			result = self.feed_forward(x)
 			result = result.eval()
 		self.sess.close()
 		return result
 		
-	### SERVER FUNCTION - saves the _ckpt.ecnet file to a pre-defined output file	
-	def save_net(self, server):
+	### Saves the _ckpt.ecnet file to a pre-defined output file	
+	def save_net(self, output_filepath):
 		with tf.Session() as self.sess:
 			saver = tf.train.Saver()
 			saver.restore(self.sess, "./_ckpt")
-			saver.save(self.sess, "./" + server.output_filepath + ".sess")
+			saver.save(self.sess, "./" + output_filepath + ".sess")
 		self.sess.close()
-		pickle.dump(self.layers, open("./" + server.output_filepath + ".struct", "wb"))
+		pickle.dump(self.layers, open("./" + output_filepath + ".struct", "wb"))
 		
-	### SERVER FUNCTION - loads a pre-defined file into the model
-	def load_net(self, server):
-		self.layers = pickle.load(open("./" + server.model_load_filename + ".struct", "rb"))
+	### Loads a pre-defined file into the model
+	def load_net(self, model_load_filename):
+		self.layers = pickle.load(open("./" + model_load_filename + ".struct", "rb"))
 		self.connectLayers()
 		with tf.Session() as self.sess:
 			saver = tf.train.Saver()
-			saver.restore(self.sess, "./" + server.model_load_filename + ".sess")
+			saver.restore(self.sess, "./" + model_load_filename + ".sess")
 			saver.save(self.sess, "./_ckpt")
 		self.sess.close()
 		

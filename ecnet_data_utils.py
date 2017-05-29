@@ -16,8 +16,7 @@ from math import sqrt
 import sys
 
 # Denormalizes resultant data using parameter file
-def denormalize_result(results, server):
-	param_filepath = server.normal_params_filename
+def denormalize_result(results, param_filepath):
 	normalParams = pickle.load(open(param_filepath + ".ecnet","rb"))
 	for i in range(0,len(results[0])):
 		for j in range(0,len(results)):
@@ -37,36 +36,23 @@ def calc_rmse(results, target):
 	
 ### SERVER CLASS OBJECT: Initial definition of data object
 class initialize_data:  
-	def __init__(self, server):
-		self.file = server.data_filename
+	def __init__(self, data_filename):
+		self.file = data_filename
 
 	# Opening excel (csv) file, and parsing initial data
-	def build(self, server):
-		nz = server.nz
-		if(nz > 1):
-			print("Running program using '" + self.file + "':")
-			print("")
-			print("Building list structure:")
+	def build(self):
 		if(".xlsx" in self.file):
 			print(".xlsx file format detected. Please reformat as '.csv'.")
 			sys.exit()
 		elif(".csv" in self.file):
-			if(nz > 1):
-				print("     Opening file...")
-			#try:
 			with open(self.file, newline='') as csvfile:
 				fileRaw = csv.reader(csvfile)
 				fileRaw = list(fileRaw)
 					# generates a raw list/2D Array for rows + cols of csv file;
 					# i.e. cell A1 = [0][0], A2 = [1][0], B2 = [1][1], etc.
-			#except:
-			#	print("Error: File not found")
-			#	return
 		else:
 			print("Error: Unsupported file format")
 			sys.exit()
-		if(nz > 1):
-			print("     Parsing information...")
 			
 		# parse master parameters from .csv file
 		controls_m_param_count = int(fileRaw[1][0]) # num of master parameters, defined by A2
@@ -111,14 +97,9 @@ class initialize_data:
 				del self.groups[dropRowNum]
 				del self.params[dropRowNum]
 				del self.tvl_strings[dropRowNum]
-				if (nz > 1):
-					print("          Dropped data point "+drop_remaining[0])
 				del drop_remaining[0]
-			if(nz > 1):
-				print("     Dropping of excluded data complete.")
 		except:
-			if(nz > 1):
-				print("        No data dropped.")
+			pass
 		self.unreliable = []
 		for i in range(0,len(self.dataid)):
 			if (self.tvl_strings[i]).startswith("U"): # deleting predetermined unreliable data
@@ -131,16 +112,9 @@ class initialize_data:
 			del self.tvl_strings[self.unreliable[-1]]
 			del self.unreliable[-1]
 		# End of building
-		if nz > 1:
-			print("Build complete.")
-			print("")
 
 	# Normalizing the parameter data to be within range [0,1] for each parameter. For use with sigmoidal activation functions only.
-	def normalize(self, server):
-		nz = server.nz
-		param_filepath = server.normal_params_filename
-		if nz > 1:
-			print("Normalizing data:")
+	def normalize(self, param_filepath = 'normalParams'):
 		minMaxList = []
 		for i in range(0,len(self.params[0])):
 			beforeNormal = [sublist[i] for sublist in self.params]
@@ -161,16 +135,9 @@ class initialize_data:
 		normalized_list = normalized_list.tolist()
 		self.params = normalized_list
 		pickle.dump(minMaxList,open(param_filepath + ".ecnet","wb")) # Saves the parameter list for opening in data normalization and predicting
-		if nz > 1:
-			print("Data normalized; parameters output to '%s'")%(param_filepath + ".ecnet")
 
-	# Applying normalizing parameters using 'normalParams.p' file to new (unseen) data. Based on previously build network.
-	def applyNormal(self, server):
-		nz = server.nz
-		param_filepath = server.normal_params_filename
-		if nz > 1:
-			print("")
-			print("Normalizing new data using '%s':")%(param_filepath + ".ecnet")
+	# Applying normalizing parameters using parameter file to new (unseen) data. Based on previously build network.
+	def applyNormal(self, param_filepath = 'normalParams'):
 		self.normalParams = pickle.load(open(param_filepath + ".ecnet","rb"))
 		inputParams = []
 		outputParams = []
@@ -185,22 +152,13 @@ class initialize_data:
 				else:
 					inputParamsAdd.append((paramBeforeNorm[j] + self.normalParams[j][0])/self.normalParams[j][1])
 			inputParams.append(inputParamsAdd)
-		if nz > 1:
-				print("Normalizing complete.")
 
 	# Defining data for test, validation or learning based on either imported file or randomization
-	def buildTVL(self, server):
-		sort_type = server.sort_type
-		data_split = server.data_split
-		nz = server.nz
-		if(nz > 1):
-			print("Building T/V/L/U lists:")
+	def buildTVL(self, sort_type = 'random', data_split = [0.65, 0.25, 0.1]):
 		self.testIndex = []
 		self.validIndex = []
 		self.learnIndex = []        
 		if 'explicit' in sort_type:
-			if(nz > 1):
-				print("     Applying explicit T/V/L/U index values...")
 			for i in range(0,len(self.dataid)):
 				if (self.tvl_strings[i]).startswith("T"):
 					(self.testIndex).append(i)
@@ -208,15 +166,9 @@ class initialize_data:
 					(self.validIndex).append(i)
 				if (self.tvl_strings[i]).startswith("L"):
 					(self.learnIndex).append(i)
-			if(nz > 1):
-				print("     Application complete.")
 		elif 'random' in sort_type:
-			if(nz > 1):
-				print("     Applying random T/V/L index values...")
 			randIndex = random.sample(range(len(self.dataid)),len(self.dataid))
 			self.randomizeData(randIndex, data_split)
-			if(nz > 1):
-				print("     Application complete.")
 		else:
 			print("Error: unknown sort_type method, no splitting done.")
 			sys.exit()
@@ -247,10 +199,7 @@ class initialize_data:
 		(self.learnIndex).sort()
 
 	# Application of index values to data
-	def applyTVL(self, server):
-		nz = server.nz
-		if(nz > 1):
-			print("     Applying index values to data...")
+	def applyTVL(self):
 		self.test_dataid = []
 		self.test_params = []
 		self.test_strings = []
@@ -278,17 +227,10 @@ class initialize_data:
 			(self.learn_params).append(self.params[self.learnIndex[i]])
 			(self.learn_strings).append(self.strings[self.learnIndex[i]])
 			(self.learn_groups).append(self.groups[self.learnIndex[i]])
-		if(nz > 1):
-			print("     Application Complete.")
-			print("Build Complete.")
-			print("")
 
 	# Builds x & y matrices (output for regression)
 	# Applies to whole data set, plus TVL lists
-	def package(self, server):
-		nz = server.nz
-		if(nz > 1):
-			print("Packaging data for output:")
+	def package(self):
 		if not('Result (Exp)' or 'Result' in self.param_cols[0]):
 			print("Error: Improper indexing; check database format.")
 			sys.exit()
@@ -348,13 +290,5 @@ class initialize_data:
 					self.learn_y[i][j] = float(self.learn_y[i][j])
 		else:
 			self.learn_y = (np.asarray(self.learn_y)).astype(np.float32)
-		
-		#self.use_conf_weights = False
-		
-		if(nz > 1):
-			print("Packaging complete.")
-			print("")
-			print("Number of initial data values:")
-			print(len(self.dataid))
 
         
