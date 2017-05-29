@@ -13,7 +13,6 @@ normals_use: false
 num_builds: 1
 num_nodes: 5
 num_trials: 5
-nz: 1
 param_limit_num: 15
 project_name: v8_tf1.0_test
 sort_type: random
