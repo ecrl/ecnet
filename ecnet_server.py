@@ -257,6 +257,9 @@ class Server:
 			self.data.test_x = temp_test_x
 			self.data.test_y = temp_test_y
 			return rmse_list
+			
+	def output_results(self, results, filename):
+		ecnet_data_utils.output_results(results, self.data, filename)
 
 	### Resaves the file under 'model_load_filename' to a new filename
 	def resave_net(self, output):

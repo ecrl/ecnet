@@ -5,7 +5,7 @@
 #  
 #  Developed in 2017 by Travis Kessler <travis.j.kessler@gmail.com>
 #  
-#  This program contains functions necessary for manipulating and shaping a data object for a server to serve a neural network model
+#  This program contains the data object class, and functions for manipulating/importing/outputting data
 #
 
 import csv
@@ -33,8 +33,42 @@ def calc_rmse(results, target):
 		except:
 			print("Error in calculating RMSE. Check input data format.")
 			sys.exit()
+
+# Saves test results, data strings, groups to desired output .csv file			
+def output_results(results, data, filename):
+	# Makes sure filetype is csv
+	if ".csv" not in filename:
+		filename = filename + ".csv"
+	# List of all rows
+	rows = []
+	# Title row, containing column names
+	title_row = []
+	title_row.append("DataID")
+	for string in range(0,len(data.string_cols)):
+		title_row.append(data.string_cols[string])
+	for group in range(0,len(data.group_cols)):
+		title_row.append(data.group_cols[group])
+	title_row.append("DB Value")
+	title_row.append("Predicted Value")
+	rows.append(title_row)
+	# Adds data ID's, strings, groups, DB values and predictions for each test result to the rows list
+	for result in range(0,len(results[0])):
+		local_row = []
+		local_row.append(data.test_dataid[result])
+		for string in range(0,len(data.test_strings[result])):
+			local_row.append(data.test_strings[result][string])
+		for group in range(0,len(data.test_groups[result])):
+			local_row.append(data.test_groups[result][group])
+		local_row.append(data.test_y[result][0])
+		local_row.append(results[0][result][0])
+		rows.append(local_row)
+	# Outputs each row to the output file
+	with open(filename, 'w') as output_file:
+		wr = csv.writer(output_file, quoting = csv.QUOTE_ALL, lineterminator = '\n')
+		for row in range(0,len(rows)):
+			wr.writerow(rows[row])
 	
-### SERVER CLASS OBJECT: Initial definition of data object
+### Initial definition of data object
 class initialize_data:  
 	def __init__(self, data_filename):
 		self.file = data_filename
