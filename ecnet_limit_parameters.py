@@ -1,6 +1,7 @@
 import ecnet_server
+import csv
 
-def limit(data, num_params):
+def limit(data, num_params, feedback = False):
 	
 	# Grabs paramter names
 	param_names = data.param_cols[:]
@@ -113,15 +114,78 @@ def limit(data, num_params):
 		param_list.append(param_names[idx])
 				
 		# Prints the parameter list after each iteration, as well as the RMSE
-		print(param_list)
-		print(val)
+		if feedback == True:
+			print(param_list)
+			print(val)
 		
 	# Returns the parameter list
 	return param_list
-			
+	
+def output(data, param_list, filename):
+	# Checks for .csv file format
+	if ".csv" not in filename:
+		filename = filename + ".csv"
+	# Creates list of spreadsheet rows
+	rows = []
+	# Row 1: Main controls
+	control_row_1 = ["NUM OF MASTER"]
+	for i in range(0,len(data.controls_param_cols)):
+		control_row_1.append(data.controls_param_cols[i])
+	rows.append(control_row_1)
+	# Row 2: Main control values
+	control_row_2 = [data.controls_m_param_count]
+	for i in range(0,len(data.control_params)):
+		control_row_2.append(data.control_params[i])
+	rows.append(control_row_2)
+	# Rows 3 and 4: Column groups and sub-groups
+	row_3 = ["DATAID", "T/V/L/U"]
+	row_4 = ["DATAid", "T/V/L"]
+	if data.controls_num_str != 0:
+		row_3.append("STRINGS")
+		for i in range(0,data.controls_num_str - 1):
+			row_3.append(" ")
+		for i in range(0,len(data.string_cols)):
+			row_4.append(data.string_cols[i])
+	if data.controls_num_grp != 0:
+		row_3.append("GROUPS")
+		for i in range(0,data.controls_num_grp - 1):
+			row_3.append(" ")
+		for i in range(0,len(data.group_cols)):
+			row_4.append(data.group_cols[i])
+	row_3.append("PARAMETERS")
+	rows.append(row_3)
+	for i in range(0,data.controls_num_outputs):
+		row_4.append(data.param_cols[i])
+	param_idx = []
+	for i in range(0,len(param_list)):
+		row_4.append(param_list[i])
+		for j in range(0,len(data.param_cols)):
+			if param_list[i] == data.param_cols[j]:
+				param_idx.append(j)
+				break
+	rows.append(row_4)
+	# Data value rows
+	for i in range(0,len(data.dataid)):
+		local_row = [data.dataid[i], data.tvl_strings[i]]
+		for j in range(0,len(data.strings[i])):
+			local_row.append(data.strings[i][j])
+		for j in range(0,len(data.groups[i])):
+			local_row.append(data.groups[i][j])
+		for j in range(0,data.controls_num_outputs):
+			local_row.append(data.params[i][j])
+		for j in range(0,len(param_idx)):
+			local_row.append(data.params[i][param_idx[j]])
+		rows.append(local_row)
+	# Output to file
+	with open(filename, 'w') as output_file:
+		wr = csv.writer(output_file, quoting = csv.QUOTE_ALL, lineterminator = '\n')
+		for row in range(0,len(rows)):
+			wr.writerow(rows[row])
+		
 
 ### Example function call ###
 if __name__ == "__main__":
 	server = ecnet_server.Server()
 	server.import_data()
-	limit(server.data, server.param_limit_num)
+	param_list = limit(server.data, server.param_limit_num, feedback = True)
+	output(server.data, param_list, "test_param_output.csv")
