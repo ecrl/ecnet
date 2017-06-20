@@ -35,7 +35,7 @@ def calc_rmse(results, target):
 			sys.exit()
 
 # Saves test results, data strings, groups to desired output .csv file			
-def output_results(results, data, filename):
+def output_results(results, data, filename = "results.csv"):
 	# Makes sure filetype is csv
 	if ".csv" not in filename:
 		filename = filename + ".csv"
