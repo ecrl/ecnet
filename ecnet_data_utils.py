@@ -89,27 +89,27 @@ class initialize_data:
 			sys.exit()
 			
 		# parse master parameters from .csv file
-		controls_m_param_count = int(fileRaw[1][0]) # num of master parameters, defined by A2
-		controls_param_cols = fileRaw[0][1:1+controls_m_param_count] # ROW 1
-		control_params = fileRaw[1][1:1+controls_m_param_count] # ROW 2
-		controls_num_str = int(control_params[0])
-		controls_num_grp = int(control_params[1])
-		self.controls_num_outputs = int(control_params[4])
+		self.controls_m_param_count = int(fileRaw[1][0]) # num of master parameters, defined by A2
+		self.controls_param_cols = fileRaw[0][1:1+self.controls_m_param_count] # ROW 1
+		self.control_params = fileRaw[1][1:1+self.controls_m_param_count] # ROW 2
+		self.controls_num_str = int(self.control_params[0])
+		self.controls_num_grp = int(self.control_params[1])
+		self.controls_num_outputs = int(self.control_params[4])
 		
 		# parse column names from .csv file
-		self.string_cols = fileRaw[3][2:2+controls_num_str]
-		self.group_cols = fileRaw[3][2+controls_num_str:2+controls_num_str+controls_num_grp]
-		self.param_cols = fileRaw[3][2+controls_num_str+controls_num_grp:-1]
+		self.string_cols = fileRaw[3][2:2+self.controls_num_str]
+		self.group_cols = fileRaw[3][2+self.controls_num_str:2+self.controls_num_str+self.controls_num_grp]
+		self.param_cols = fileRaw[3][2+self.controls_num_str+self.controls_num_grp:-1]
 		(self.param_cols).append(fileRaw[3][-1])
 		
 		# parse data from .csv file
 		self.dataid = [sublist[0] for sublist in fileRaw]
 		del self.dataid[0:4] #removal of title rows
-		self.strings = [sublist[2:2+controls_num_str] for sublist in fileRaw]
+		self.strings = [sublist[2:2+self.controls_num_str] for sublist in fileRaw]
 		del self.strings[0:4] #removal of title rows
-		self.groups = [sublist[2+controls_num_str:2+controls_num_str+controls_num_grp] for sublist in fileRaw]
+		self.groups = [sublist[2+self.controls_num_str:2+self.controls_num_str+self.controls_num_grp] for sublist in fileRaw]
 		del self.groups[0:4] #removal of title rows
-		self.params = [sublist[2+controls_num_str+controls_num_grp:-1] for sublist in fileRaw]
+		self.params = [sublist[2+self.controls_num_str+self.controls_num_grp:-1] for sublist in fileRaw]
 		del self.params[0:4] #removal of title rows
 		params_last = [sublist[-1] for sublist in fileRaw]
 		del(params_last[0:4])
@@ -121,7 +121,7 @@ class initialize_data:
 		del self.tvl_strings[0:4] #removal of title rows
 		
 		# Drop any data from data set defined in 'Data to AUTOMATICALLY DROP' or Unreliable in csv file
-		dropListIndex = control_params[controls_param_cols.index("Data to AUTOMATICALLY DROP")]
+		dropListIndex = self.control_params[self.controls_param_cols.index("Data to AUTOMATICALLY DROP")]
 		try:
 			drop_remaining = dropListIndex.split( )
 			while len(drop_remaining) != 0:
@@ -265,9 +265,6 @@ class initialize_data:
 	# Builds x & y matrices (output for regression)
 	# Applies to whole data set, plus TVL lists
 	def package(self):
-		if not('Result (Exp)' or 'Result' in self.param_cols[0]):
-			print("Error: Improper indexing; check database format.")
-			sys.exit()
 
 		# Whole data set
 		self.y = [sublist[0:self.controls_num_outputs] for sublist in self.params]
