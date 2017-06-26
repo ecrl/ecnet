@@ -33,6 +33,16 @@ def calc_rmse(results, target):
 		except:
 			print("Error in calculating RMSE. Check input data format.")
 			sys.exit()
+			
+# Calculates the MAE of the model result and the target data
+def calc_mae(results, target):
+	try:
+		return(np.absolute(results-target).mean())
+	except:
+		try:
+			return(np.absolute(np.asarray(results)-np.asarray(target)).mean())
+		except:
+			print("Error in calculating MAE. Check input data format.")
 
 # Saves test results, data strings, groups to desired output .csv file			
 def output_results(results, data, filename = "results.csv"):
@@ -49,7 +59,8 @@ def output_results(results, data, filename = "results.csv"):
 	for group in range(0,len(data.group_cols)):
 		title_row.append(data.group_cols[group])
 	title_row.append("DB Value")
-	title_row.append("Predicted Value")
+	for i in range(0,len(results)):
+		title_row.append("Predicted Value %d" %i)
 	rows.append(title_row)
 	# Adds data ID's, strings, groups, DB values and predictions for each test result to the rows list
 	for result in range(0,len(results[0])):
@@ -60,7 +71,8 @@ def output_results(results, data, filename = "results.csv"):
 		for group in range(0,len(data.test_groups[result])):
 			local_row.append(data.test_groups[result][group])
 		local_row.append(data.test_y[result][0])
-		local_row.append(results[0][result][0])
+		for i in range(0,len(results)):
+			local_row.append(results[i][result][0])
 		rows.append(local_row)
 	# Outputs each row to the output file
 	with open(filename, 'w') as output_file:
