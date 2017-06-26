@@ -34,7 +34,7 @@ def calc_rmse(results, target):
 			print("Error in calculating RMSE. Check input data format.")
 			sys.exit()
 			
-# Calculates the MAE of the model result and the target data
+# Calculates the MAE of the model result and the target data 
 def calc_mae(results, target):
 	try:
 		return(np.absolute(results-target).mean())
