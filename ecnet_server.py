@@ -14,7 +14,7 @@ import numpy as np
 import sys
 import os
 
-# KNET program files
+# ECNet program files
 import ecnet_data_utils
 import ecnet_model
 from ecnet_model import multilayer_perceptron
@@ -258,6 +258,34 @@ class Server:
 			self.data.test_y = temp_test_y
 			return rmse_list
 			
+	### Tests the model's mean absolute error on the currently loaded data set (in its entirety)
+	def test_model_mae(self):
+		temp_test_x = self.data.test_x[:]
+		temp_test_y = self.data.test_y[:]
+		self.data.test_x = self.data.x
+		self.data.test_y = self.data.y
+		
+		### SINGLE NET ###
+		if self.folder_structs_built == False:
+			self.model = ecnet_model.multilayer_perceptron()
+			preds = self.use_mlp_model()
+			mae = ecnet_data_utils.calc_mae(preds, self.data.test_y)
+			self.data.test_x = temp_test_x
+			self.data.test_y = temp_test_y
+			return mae
+			
+		### MULTINET ###
+		else:
+			self.model = ecnet_model.multilayer_perceptron()
+			final_preds = self.use_mlp_model()
+			mae_list = []
+			for i in range(0,len(final_preds)):
+				mae_list.append(ecnet_data_utils.calc_mae(final_preds[i], self.data.test_y))
+			self.data.test_x = temp_test_x
+			self.data.test_y = temp_test_y
+			return mae_list
+		
+	### Outputs results to desired .csv file	
 	def output_results(self, results, filename):
 		ecnet_data_utils.output_results(results, self.data, filename)
 
