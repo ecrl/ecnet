@@ -44,6 +44,80 @@ def calc_mae(results, target):
 		except:
 			print("Error in calculating MAE. Check input data format.")
 
+def create_static_test_set(data):
+	filename = data.file.split(".")[0]
+	# Header setup
+	control_row_1 = ["NUM OF MASTER"]
+	for i in range(0,len(data.controls_param_cols)):
+		control_row_1.append(data.controls_param_cols[i])
+	control_row_2 = [data.controls_m_param_count]
+	for i in range(0,len(data.control_params)):
+		control_row_2.append(data.control_params[i])
+	row_3 = ["DATAID", "T/V/L/U"]
+	row_4 = ["DATAid", "T/V/L"]
+	if data.controls_num_str != 0:
+		row_3.append("STRINGS")
+		for i in range(0,data.controls_num_str - 1):
+			row_3.append(" ")
+		for i in range(0,len(data.string_cols)):
+			row_4.append(data.string_cols[i])
+	if data.controls_num_grp != 0:
+		row_3.append("GROUPS")
+		for i in range(0,data.controls_num_grp - 1):
+			row_3.append(" ")
+		for i in range(0,len(data.group_cols)):
+			row_4.append(data.group_cols[i])
+	row_3.append("PARAMETERS")
+	for i in range(0,len(data.param_cols)):
+		row_4.append(data.param_cols[i])
+	# Test set file
+	test_rows = []
+	test_rows.append(control_row_1)
+	test_rows.append(control_row_2)
+	test_rows.append(row_3)
+	test_rows.append(row_4)
+	for i in range(0,len(data.test_dataid)):
+		local_row = [data.test_dataid[i], "T"]
+		for j in range(0,len(data.test_strings[i])):
+			local_row.append(data.test_strings[i][j])
+		for j in range(0,len(data.test_groups[i])):
+			local_row.append(data.test_groups[i][j])
+		for j in range(0,len(data.test_params[i])):
+			local_row.append(data.test_params[i][j])
+		test_rows.append(local_row)
+	with open(filename + "_st.csv", 'w') as output_file:
+		wr = csv.writer(output_file, quoting = csv.QUOTE_ALL, lineterminator = '\n')
+		for row in range(0,len(test_rows)):
+			wr.writerow(test_rows[row])
+	# Learning/validation set file
+	lv_rows = []
+	lv_rows.append(control_row_1)
+	lv_rows.append(control_row_2)
+	lv_rows.append(row_3)
+	lv_rows.append(row_4)
+	for i in range(0,len(data.learn_dataid)):
+		local_row = [data.learn_dataid[i], "L"]
+		for j in range(0,len(data.learn_strings[i])):
+			local_row.append(data.learn_strings[i][j])
+		for j in range(0,len(data.learn_groups[i])):
+			local_row.append(data.learn_groups[i][j])
+		for j in range(0,len(data.learn_params[i])):
+			local_row.append(data.learn_params[i][j])
+		lv_rows.append(local_row)
+	for i in range(0,len(data.valid_dataid)):
+		local_row = [data.valid_dataid[i], "V"]
+		for j in range(0,len(data.valid_strings[i])):
+			local_row.append(data.valid_strings[i][j])
+		for j in range(0,len(data.valid_groups[i])):
+			local_row.append(data.valid_groups[i][j])
+		for j in range(0,len(data.valid_params[i])):
+			local_row.append(data.valid_params[i][j])
+		lv_rows.append(local_row)
+	with open(filename + "_slv.csv", 'w') as output_file:
+		wr = csv.writer(output_file, quoting = csv.QUOTE_ALL, lineterminator = '\n')
+		for row in range(0,len(lv_rows)):
+			wr.writerow(lv_rows[row])
+
 # Saves test results, data strings, groups to desired output .csv file			
 def output_results(results, data, filename = "results.csv"):
 	# Makes sure filetype is csv
