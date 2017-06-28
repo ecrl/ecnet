@@ -182,6 +182,7 @@ class Server:
 					self.output_filepath = os.path.join(os.path.join(self.project_name, "build_%d"%(i+1)),os.path.join("node_%d"%(j+1),"final_net_%d"%(j+1)))
 					self.resave_net(self.output_filepath)
 	
+	### Predicts values for the current test set data
 	def use_mlp_model(self):
 		### SINGLE NET ###
 		if self.folder_structs_built == False:
