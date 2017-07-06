@@ -15,14 +15,6 @@ import numpy as np
 from math import sqrt
 import sys
 
-# Denormalizes resultant data using parameter file
-def denormalize_result(results, param_filepath):
-	normalParams = pickle.load(open(param_filepath + ".ecnet","rb"))
-	for i in range(0,len(results[0])):
-		for j in range(0,len(results)):
-			results[j][i] = (results[j][i]*normalParams[i][1])-normalParams[i][0]
-	return(results)
-
 # Calculates the RMSE of the model result and the target data	
 def calc_rmse(results, target):
 	try:
@@ -32,6 +24,7 @@ def calc_rmse(results, target):
 			return(np.sqrt(((np.asarray(results)-np.asarray(target))**2).mean()))
 		except:
 			print("Error in calculating RMSE. Check input data format.")
+			raise
 			sys.exit()
 			
 # Calculates the MAE of the model result and the target data 
@@ -43,7 +36,27 @@ def calc_mae(results, target):
 			return(np.absolute(np.asarray(results)-np.asarray(target)).mean())
 		except:
 			print("Error in calculating MAE. Check input data format.")
+			raise
+			sys.exit()
 
+# Calculates the correlation of determination, or r-squared value		
+def calc_r2(results, target):
+	target_mean = target.mean()
+	try:
+		s_res = np.sum((results-target)**2)
+		s_tot = np.sum((target-target_mean)**2)
+		return(1 - (s_res/s_tot))
+	except:
+		try:
+			s_res = np.sum((np.asarray(results)-np.asarray(target))**2)
+			s_tot = np.sum((np.asarray(target)-target_mean)**2)
+			return(1 - (s_res/s_tot))
+		except:
+			print("Error in calculating r-squared. Check input data format.")
+			raise
+			sys.exit()
+
+# Creates a static test set, as well as a static learning/validation set with remaining data
 def create_static_test_set(data):
 	filename = data.file.split(".")[0]
 	# Header setup
@@ -153,6 +166,14 @@ def output_results(results, data, filename = "results.csv"):
 		wr = csv.writer(output_file, quoting = csv.QUOTE_ALL, lineterminator = '\n')
 		for row in range(0,len(rows)):
 			wr.writerow(rows[row])
+
+# Denormalizes resultant data using parameter file
+def denormalize_result(results, param_filepath):
+	normalParams = pickle.load(open(param_filepath + ".ecnet","rb"))
+	for i in range(0,len(results[0])):
+		for j in range(0,len(results)):
+			results[j][i] = (results[j][i]*normalParams[i][1])-normalParams[i][0]
+	return(results)
 	
 ### Initial definition of data object
 class initialize_data:  

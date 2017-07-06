@@ -286,6 +286,33 @@ class Server:
 			self.data.test_y = temp_test_y
 			return mae_list
 		
+	### Tests the model's coefficient of determination, or r-squared value
+	def test_model_r2(self):
+		temp_test_x = self.data.test_x[:]
+		temp_test_y = self.data.test_y[:]
+		self.data.test_x = self.data.x
+		self.data.test_y = self.data.y
+		
+		### SINGLE NET ###
+		if self.folder_structs_built == False:
+			self.model = ecnet_model.multilayer_perceptron()
+			preds = self.use_mlp_model()
+			r2 = ecnet_data_utils.calc_r2(preds, self.data.test_y)
+			self.data.test_x = temp_test_x
+			self.data.test_y = temp_test_y
+			return r2
+			
+		### MULTINET ###
+		else:
+			self.model = ecnet_model.multilayer_perceptron()
+			final_preds = self.use_mlp_model()
+			r2_list = []
+			for i in range(0,len(final_preds)):
+				r2_list.append(ecnet_data_utils.calc_r2(final_preds[i], self.data.test_y))
+			self.data.test_x = temp_test_x
+			self.data.test_y = temp_test_y
+			return r2_list
+		
 	### Outputs results to desired .csv file	
 	def output_results(self, results, filename):
 		ecnet_data_utils.output_results(results, self.data, filename)
