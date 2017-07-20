@@ -17,6 +17,7 @@ import os
 # ECNet program files
 import ecnet_data_utils
 import ecnet_model
+import ecnet_limit_parameters
 from ecnet_model import multilayer_perceptron
 
 ### Config/server object; to be referenced by most other files ###
@@ -31,13 +32,11 @@ class Server:
 		try:
 			self.data = ecnet_data_utils.initialize_data(self.data_filename)
 		except:
-			print("Error: Cannot find 'data_filename' in 'config.yml'.")
 			raise
 			sys.exit()
 		try:
 			self.data.build()
 		except:
-			print("Error: Unable to parse file. Check file format for unity.")
 			raise
 			sys.exit()
 		try:
@@ -47,21 +46,20 @@ class Server:
 			self.data.applyTVL()
 			self.data.package()
 		except:
-			print("Error: Unable to build data TVL. Check syntax.")
 			raise
 			sys.exit()
 	
-	### NOT FUNCTIONAL - TODO: Add function for limiting parameters to data utils file		
-	def limit_parameters(self):
+	### Determines which parameters contribute to an accurate output - number is determined by param_limit_num in config; supply an output filename
+	def limit_parameters(self, limited_database_output_filename):
 		return
-		#return ecnet_data_utils.limit_parameters(self.data, self.param_limit_num)
+		params = ecnet_limit_parameters.limit(self.data, self.param_limit_num)
+		ecnet_limit_parameters.output(self.data, params, limited_database_output_filename)
 
 	### Creates the save environment
 	def create_save_env(self):
 		try:
 			create_folder_structure(self)
 		except:
-			print("Error: Unknown error in creating project folder structure.")
 			raise
 			sys.exit()
 
@@ -70,13 +68,12 @@ class Server:
 		try:
 			self.model = create_model(self)
 		except:
-			print("Error: Unable to create model. Make sure data has been loaded and/or check 'config.yaml' for syntax errors with structure parameters.")
 			raise
 			sys.exit()
 	
 	### Fits the model using predetermined number of learning epochs	
 	def fit_mlp_model(self):
-        ### MULTINET ###
+        ### PROJECT ###
 		if self.folder_structs_built == True:
 			for build in range(0,self.num_builds):
 				print("Build %d of %d"%(build+1,self.num_builds))
@@ -88,13 +85,11 @@ class Server:
 						try:
 							self.model.fit(self.data.learn_x, self.data.learn_y, self.learning_rate, self.train_epochs)
 						except:
-							print("Error: model must be created before it can be fit.")
 							raise
 							sys.exit()
 						try:
 							self.model.save_net(self.output_filepath)
 						except:
-							print("Error: Unable to save model. Check 'config.yaml' for filename mismatches.")
 							raise
 							sys.exit()
 						self.import_data()
@@ -105,19 +100,17 @@ class Server:
 			try:
 				self.model.fit(self.data.learn_x, self.data.learn_y, self.learning_rate, self.train_epochs)
 			except:
-				print("Error: model must be created before it can be fit.")
 				raise
 				sys.exit()
 			try:
 				self.model.save_net(self.output_filepath)
 			except:
-				print("Error: Unable to save model. Check 'config.yaml' for filename mismatches.")
 				raise
 				sys.exit()
 
-	### Fits the model using validation RMSE cutoff method		
+	### Fits the model using validation RMSE cutoff method, or max epochs
 	def fit_mlp_model_validation(self):
-		### MULTINET ###
+		### PROJECT ###
 		if self.folder_structs_built == True:
 			for build in range(0,self.num_builds):
 				print("Build %d of %d"%(build+1,self.num_builds))
@@ -129,13 +122,11 @@ class Server:
 						try:
 							self.model.fit_validation(self.data.learn_x, self.data.valid_x, self.data.learn_y, self.data.valid_y, self.learning_rate, self.valid_mdrmse_stop, self.valid_mdrmse_memory, self.valid_max_epochs)
 						except:
-							print("Error: model must be created before it can be fit.")
 							raise
 							sys.exit()
 						try:
 							self.model.save_net(self.output_filepath)
 						except:
-							print("Error: Unable to save model. Check 'config.yaml' for filename mismatches.")
 							raise
 							sys.exit()
 						self.import_data()
@@ -146,23 +137,21 @@ class Server:
 			try:
 				self.model.fit_validation(self.data.learn_x, self.data.valid_x, self.data.learn_y, self.data.valid_y, self.learning_rate, self.valid_mdrmse_stop, self.valid_mdrmse_memory, self.valid_max_epochs)
 			except:
-				print("Error: model must be created before it can be fit.")
 				raise
 				sys.exit()
 			try:
 				self.model.save_net(self.output_filepath)
 			except:
-				print("Error: Unable to save model. Check 'config.yaml' for filename mismatches.")
 				raise
 				sys.exit()
 
 	### Selects the best performing networks from each node of each build. Folder structs must be created.			
 	def select_best(self):
-		### SINGLE NET ###
+		### SINGLE MODEL ###
 		if self.folder_structs_built == False:
-			print("Error: Folder structs must be built in order to select best.")
+			print("Error: Project folder structure must be built in order to select best.")
 			sys.exit()
-		### MULTINET ###
+		### PROJECT ###
 		else:
 			for i in range(0,self.num_builds):
 				for j in range(0,self.num_nodes):
@@ -184,13 +173,12 @@ class Server:
 	
 	### Predicts values for the current test set data
 	def use_mlp_model(self):
-		### SINGLE NET ###
+		### SINGLE MODEL ###
 		if self.folder_structs_built == False:
 			self.model = ecnet_model.multilayer_perceptron()
 			try:
 				self.model.load_net(self.model_load_filename)
 			except:
-				print("Error: Unable to load model; one must be created first. If one exists, check 'condig.yaml' for filename mismatches.")
 				raise
 				sys.exit()
 			try:
@@ -200,11 +188,10 @@ class Server:
 					res = self.model.test_new(self.data.test_x)
 				return [res]
 			except:
-				print("Error: data must be loaded before model can be used.")
 				raise
 				sys.exit()
 				
-		### MULTINET ###
+		### PROJECT ###
 		else:
 			final_preds = []
 			for i in range(0,self.num_builds):
@@ -220,7 +207,6 @@ class Server:
 							pred = self.model.test_new(self.data.test_x)
 						predlist.append(pred)
 					except:
-						print("Error: data must be loaded before model can be used.")
 						raise
 						sys.exit()
 				finalpred = []
@@ -234,13 +220,12 @@ class Server:
 		
 	### Predicts values for the current data set (whole)
 	def use_mlp_model_all(self):
-		### SINGLE NET ###
+		### SINGLE MODEL ###
 		if self.folder_structs_built == False:
 			self.model = ecnet_model.multilayer_perceptron()
 			try:
 				self.model.load_net(self.model_load_filename)
 			except:
-				print("Error: Unable to load model; one must be created first. If one exists, check 'condig.yaml' for filename mismatches.")
 				raise
 				sys.exit()
 			try:
@@ -250,11 +235,10 @@ class Server:
 					res = self.model.test_new(self.data.x)
 				return [res]
 			except:
-				print("Error: data must be loaded before model can be used.")
 				raise
 				sys.exit()
 				
-		### MULTINET ###
+		### PROJECT ###
 		else:
 			final_preds = []
 			for i in range(0,self.num_builds):
@@ -270,7 +254,6 @@ class Server:
 							pred = self.model.test_new(self.data.x)
 						predlist.append(pred)
 					except:
-						print("Error: data must be loaded before model can be used.")
 						raise
 						sys.exit()
 				finalpred = []
@@ -284,12 +267,12 @@ class Server:
 
 	### Tests the model's RMSE on the currently loaded data set	(in its entirety)		
 	def test_model_rmse(self):
-		### SINGLE NET ###
+		### SINGLE MODEL ###
 		if self.folder_structs_built == False:
 			preds = self.use_mlp_model_all()
 			rmse = ecnet_data_utils.calc_rmse(preds, self.data.y)
 			return rmse			
-		### MULTINET ###
+		### PROJECT ###
 		else:
 			final_preds = self.use_mlp_model_all()
 			rmse_list = []
@@ -299,12 +282,12 @@ class Server:
 			
 	### Tests the model's mean absolute error on the currently loaded data set (in its entirety)
 	def test_model_mae(self):
-		### SINGLE NET ###
+		### SINGLE MODEL ###
 		if self.folder_structs_built == False:
 			preds = self.use_mlp_model_all()
 			mae = ecnet_data_utils.calc_mae(preds, self.data.y)
 			return mae	
-		### MULTINET ###
+		### PROJECT ###
 		else:
 			final_preds = self.use_mlp_model_all()
 			mae_list = []
@@ -314,12 +297,12 @@ class Server:
 		
 	### Tests the model's coefficient of determination, or r-squared value
 	def test_model_r2(self):
-		### SINGLE NET ###
+		### SINGLE MODEL ###
 		if self.folder_structs_built == False:
 			preds = self.use_mlp_model_all()
 			r2 = ecnet_data_utils.calc_r2(preds, self.data.y)
 			return r2
-		### MULTINET ###
+		### PROJECT ###
 		else:
 			final_preds = self.use_mlp_model_all()
 			r2_list = []
@@ -337,13 +320,11 @@ class Server:
 		try:
 			self.model.load_net(self.model_load_filename)
 		except:
-			print("Error: Unable to load model; one must be created first. If one exists, check 'condig.yaml' for filename mismatches.")
 			raise
 			sys.exit()
 		try:
 			self.model.save_net(output)
 		except:
-			print("Error: Unable to save model. Unknown Error.")
 			raise
 			sys.exit()
 
