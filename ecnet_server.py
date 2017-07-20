@@ -40,7 +40,7 @@ class Server:
 			raise
 			sys.exit()
 		try:
-			self.data.buildTVL(self.sort_type, self.data_split)
+			self.data.buildTVL(self.data_sort_type, self.data_split)
 			if self.normals_use == True:
 				self.data.normalize(self.normal_params_filename)
 			self.data.applyTVL()
@@ -75,13 +75,16 @@ class Server:
 	def fit_mlp_model(self):
         ### PROJECT ###
 		if self.folder_structs_built == True:
-			for build in range(0,self.num_builds):
-				print("Build %d of %d"%(build+1,self.num_builds))
-				for node in range(0,self.num_nodes):
-					print("Node %d of %d"%(node+1,self.num_nodes))
-					for trial in range(0,self.num_trials):
-						print("Trial %d of %d"%(trial+1,self.num_trials))
-						self.output_filepath = os.path.join(os.path.join(os.path.join(self.project_name, self.build_dirs[build]), self.node_dirs[build][node]),self.model_output_filename + "_%d"%(trial + 1))
+			for build in range(0,self.project_num_builds):
+				if self.project_print_feedback == True:
+					print("Build %d of %d"%(build+1,self.project_num_builds))
+				for node in range(0,self.project_num_nodes):
+					if self.project_print_feedback == True:
+						print("Node %d of %d"%(node+1,self.project_num_nodes))
+					for trial in range(0,self.project_num_trials):
+						if self.project_print_feedback == True:
+							print("Trial %d of %d"%(trial+1,self.project_num_trials))
+						self.output_filepath = os.path.join(os.path.join(os.path.join(self.project_name, self.build_dirs[build]), self.node_dirs[build][node]), "model_output" + "_%d"%(trial + 1))
 						try:
 							self.model.fit(self.data.learn_x, self.data.learn_y, self.learning_rate, self.train_epochs)
 						except:
@@ -103,7 +106,7 @@ class Server:
 				raise
 				sys.exit()
 			try:
-				self.model.save_net(self.output_filepath)
+				self.model.save_net("model_output")
 			except:
 				raise
 				sys.exit()
@@ -112,13 +115,16 @@ class Server:
 	def fit_mlp_model_validation(self):
 		### PROJECT ###
 		if self.folder_structs_built == True:
-			for build in range(0,self.num_builds):
-				print("Build %d of %d"%(build+1,self.num_builds))
-				for node in range(0,self.num_nodes):
-					print("Node %d of %d"%(node+1,self.num_nodes))
-					for trial in range(0,self.num_trials):
-						print("Trial %d of %d"%(trial+1,self.num_trials))
-						self.output_filepath = os.path.join(os.path.join(os.path.join(self.project_name, self.build_dirs[build]), self.node_dirs[build][node]), self.model_output_filename + "_%d"%(trial + 1))
+			for build in range(0,self.project_num_builds):
+				if self.project_print_feedback == True:
+					print("Build %d of %d"%(build+1,self.project_num_builds))
+				for node in range(0,self.project_num_nodes):
+					if self.project_print_feedback == True:
+						print("Node %d of %d"%(node+1,self.project_num_nodes))
+					for trial in range(0,self.project_num_trials):
+						if self.project_print_feedback == True:
+							print("Trial %d of %d"%(trial+1,self.project_num_trials))
+						self.output_filepath = os.path.join(os.path.join(os.path.join(self.project_name, self.build_dirs[build]), self.node_dirs[build][node]), "model_output" + "_%d"%(trial + 1))
 						try:
 							self.model.fit_validation(self.data.learn_x, self.data.valid_x, self.data.learn_y, self.data.valid_y, self.learning_rate, self.valid_mdrmse_stop, self.valid_mdrmse_memory, self.valid_max_epochs)
 						except:
@@ -140,7 +146,7 @@ class Server:
 				raise
 				sys.exit()
 			try:
-				self.model.save_net(self.output_filepath)
+				self.model.save_net("model_output")
 			except:
 				raise
 				sys.exit()
@@ -153,11 +159,11 @@ class Server:
 			sys.exit()
 		### PROJECT ###
 		else:
-			for i in range(0,self.num_builds):
-				for j in range(0,self.num_nodes):
+			for i in range(0,self.project_num_builds):
+				for j in range(0,self.project_num_nodes):
 					rmse_list = []
-					for k in range(0,self.num_trials):
-						self.model_load_filename = os.path.join(os.path.join(self.project_name, "build_%d"%(i+1)),os.path.join("node_%d"%(j+1),self.model_output_filename + "_%d"%(k+1)))
+					for k in range(0,self.project_num_trials):
+						self.model_load_filename = os.path.join(os.path.join(self.project_name, "build_%d"%(i+1)),os.path.join("node_%d"%(j+1), "model_output" + "_%d"%(k+1)))
 						self.model = ecnet_model.multilayer_perceptron()
 						self.model.load_net(self.model_load_filename)
 						res = self.model.test_new(self.data.x)
@@ -167,7 +173,7 @@ class Server:
 					for error in range(0,len(rmse_list)):
 						if rmse_list[error] < rmse_list[current_min]:
 							current_min = error
-					self.model_load_filename = os.path.join(os.path.join(self.project_name, "build_%d"%(i+1)),os.path.join("node_%d"%(j+1),self.model_output_filename + "_%d"%(current_min+1)))
+					self.model_load_filename = os.path.join(os.path.join(self.project_name, "build_%d"%(i+1)),os.path.join("node_%d"%(j+1), "model_output" + "_%d"%(current_min+1)))
 					self.output_filepath = os.path.join(os.path.join(self.project_name, "build_%d"%(i+1)),os.path.join("node_%d"%(j+1),"final_net_%d"%(j+1)))
 					self.resave_net(self.output_filepath)
 	
@@ -177,7 +183,7 @@ class Server:
 		if self.folder_structs_built == False:
 			self.model = ecnet_model.multilayer_perceptron()
 			try:
-				self.model.load_net(self.model_load_filename)
+				self.model.load_net("model_output")
 			except:
 				raise
 				sys.exit()
@@ -194,9 +200,9 @@ class Server:
 		### PROJECT ###
 		else:
 			final_preds = []
-			for i in range(0,self.num_builds):
+			for i in range(0,self.project_num_builds):
 				predlist = []
-				for j in range(0,self.num_nodes):
+				for j in range(0,self.project_num_nodes):
 					self.model_load_filename = os.path.join(os.path.join(self.project_name, "build_%d"%(i+1)),os.path.join("node_%d"%(j+1),"final_net_%d"%(j+1)))
 					self.model = ecnet_model.multilayer_perceptron()
 					self.model.load_net(self.model_load_filename)
@@ -224,7 +230,7 @@ class Server:
 		if self.folder_structs_built == False:
 			self.model = ecnet_model.multilayer_perceptron()
 			try:
-				self.model.load_net(self.model_load_filename)
+				self.model.load_net("model_output")
 			except:
 				raise
 				sys.exit()
@@ -241,9 +247,9 @@ class Server:
 		### PROJECT ###
 		else:
 			final_preds = []
-			for i in range(0,self.num_builds):
+			for i in range(0,self.project_num_builds):
 				predlist = []
-				for j in range(0,self.num_nodes):
+				for j in range(0,self.project_num_nodes):
 					self.model_load_filename = os.path.join(os.path.join(self.project_name, "build_%d"%(i+1)),os.path.join("node_%d"%(j+1),"final_net_%d"%(j+1)))
 					self.model = ecnet_model.multilayer_perceptron()
 					self.model.load_net(self.model_load_filename)
@@ -314,7 +320,7 @@ class Server:
 	def output_results(self, results, which_data, filename):
 		ecnet_data_utils.output_results(results, self.data, which_data, filename)
 
-	### Resaves the file under 'model_load_filename' to a new filename
+	### Resaves the file under 'self.model_load_filename' to specified output filepath
 	def resave_net(self, output):
 		self.model = ecnet_model.multilayer_perceptron()
 		try:
@@ -330,14 +336,13 @@ class Server:
 
 # Creates the default folder structure, outlined in the file config by number of builds and nodes.
 def create_folder_structure(server_obj):
-	filename_raw = server_obj.model_output_filename
 	server_obj.build_dirs = []
-	for build_dirs in range(0,server_obj.num_builds):
+	for build_dirs in range(0,server_obj.project_num_builds):
 		server_obj.build_dirs.append('build_%d'%(build_dirs + 1))
 	server_obj.node_dirs = []
-	for build_dirs in range(0,server_obj.num_builds):
+	for build_dirs in range(0,server_obj.project_num_builds):
 		local_nodes = []
-		for node_dirs in range(0,server_obj.num_nodes):
+		for node_dirs in range(0,server_obj.project_num_nodes):
 			local_nodes.append('node_%d'%(node_dirs + 1))
 		server_obj.node_dirs.append(local_nodes)
 	for build in range(0,len(server_obj.build_dirs)):
@@ -376,21 +381,20 @@ def create_default_config():
 	stream = open('config.yml', 'w')
 	config_dict = {
 		'data_filename' : 'data.csv',
+		'data_sort_type' : 'random',
 		'data_split' : [0.65,0.25,0.10],
 		'learning_rate' : 0.1,
 		'mlp_hidden_layers' : [[5, 'relu'], [5, 'relu']],
 		'mlp_in_layer_activ' : 'relu',
 		'mlp_out_layer_activ' : 'linear',
-		'model_load_filename' : '_net_output',
-		'model_output_filename' : '_net_output',
 		'normal_params_filename' : 'normal_params',
 		'normals_use' : False,
-		'num_builds' : 1,
-		'num_nodes' : 1,
-		'num_trials' : 1,
 		'param_limit_num' : 15,
 		'project_name' : 'my_project',
-		'sort_type' : 'random',	
+		'project_num_builds' : 1,
+		'project_num_nodes' : 1,
+		'project_num_trials' : 1,
+		'project_print_feedback': True,
 		'train_epochs' : 100,
 		'valid_max_epochs': 1000,
 		'valid_mdrmse_stop' : 0.1,

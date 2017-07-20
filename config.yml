@@ -1,4 +1,5 @@
-data_filename: data.csv
+data_filename: on_mon_v1_a.csv
+data_sort_type: random
 data_split: [0.65, 0.25, 0.1]
 learning_rate: 0.08
 mlp_hidden_layers:
@@ -6,16 +7,14 @@ mlp_hidden_layers:
 - [32, relu]
 mlp_in_layer_activ: relu
 mlp_out_layer_activ: linear
-model_load_filename: model_output
-model_output_filename: model_output
 normal_params_filename: normal_params
 normals_use: false
-num_builds: 10
-num_nodes: 5
-num_trials: 75
 param_limit_num: 15
-project_name: my_project
-sort_type: random
+project_name: on_mon_10a_2
+project_num_builds: 1
+project_num_nodes: 5
+project_num_trials: 5
+project_print_feedback: True
 train_epochs: 12500
 valid_max_epochs: 1250
 valid_mdrmse_stop: 0.07
