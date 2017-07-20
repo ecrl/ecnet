@@ -1,20 +1,20 @@
-data_filename: cn_model_v8.csv
+data_filename: data.csv
 data_split: [0.65, 0.25, 0.1]
-learning_rate: 0.1
+learning_rate: 0.08
 mlp_hidden_layers:
 - [32, relu]
 - [32, relu]
 mlp_in_layer_activ: relu
 mlp_out_layer_activ: linear
-model_load_filename: cn_model_output
-model_output_filename: cn_model_output
+model_load_filename: model_output
+model_output_filename: model_output
 normal_params_filename: normal_params
 normals_use: false
-num_builds: 1
+num_builds: 10
 num_nodes: 5
-num_trials: 5
+num_trials: 75
 param_limit_num: 15
-project_name: v8_tf1.0_test
+project_name: my_project
 sort_type: random
 train_epochs: 12500
 valid_max_epochs: 1250
