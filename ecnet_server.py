@@ -18,7 +18,6 @@ import os
 import ecnet_data_utils
 import ecnet_model
 import ecnet_limit_parameters
-from ecnet_model import multilayer_perceptron
 
 ### Config/server object; to be referenced by most other files ###
 class Server:
