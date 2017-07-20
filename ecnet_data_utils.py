@@ -132,7 +132,7 @@ def create_static_test_set(data):
 			wr.writerow(lv_rows[row])
 
 # Saves test results, data strings, groups to desired output .csv file			
-def output_results(results, data, filename = "results.csv"):
+def output_results(results, data, which_data = "A", filename = "results.csv"):
 	# Makes sure filetype is csv
 	if ".csv" not in filename:
 		filename = filename + ".csv"
@@ -152,12 +152,20 @@ def output_results(results, data, filename = "results.csv"):
 	# Adds data ID's, strings, groups, DB values and predictions for each test result to the rows list
 	for result in range(0,len(results[0])):
 		local_row = []
-		local_row.append(data.test_dataid[result])
-		for string in range(0,len(data.test_strings[result])):
-			local_row.append(data.test_strings[result][string])
-		for group in range(0,len(data.test_groups[result])):
-			local_row.append(data.test_groups[result][group])
-		local_row.append(data.test_y[result][0])
+		if which_data == "test":
+			local_row.append(data.test_dataid[result])
+			for string in range(0,len(data.test_strings[result])):
+				local_row.append(data.test_strings[result][string])
+			for group in range(0,len(data.test_groups[result])):
+				local_row.append(data.test_groups[result][group])
+			local_row.append(data.test_y[result][0])
+		elif which_data == "all":
+			local_row.append(data.dataid[result])
+			for string in range(0,len(data.strings[result])):
+				local_row.append(data.strings[result][string])
+			for group in range(0,len(data.groups[result])):
+				local_row.append(data.groups[result][group])
+			local_row.append(data.y[result][0])
 		for i in range(0,len(results)):
 			local_row.append(results[i][result][0])
 		rows.append(local_row)

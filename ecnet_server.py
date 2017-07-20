@@ -231,91 +231,105 @@ class Server:
 					finalpred.append([np.mean(local_raw)])
 				final_preds.append(finalpred)
 			return final_preds
-
-	### Tests the model's RMSE on the currently loaded data set	(in its entirety)		
-	def test_model_rmse(self):
-		temp_test_x = self.data.test_x[:]
-		temp_test_y = self.data.test_y[:]
-		self.data.test_x = self.data.x
-		self.data.test_y = self.data.y
-			
+		
+	### Predicts values for the current data set (whole)
+	def use_mlp_model_all(self):
 		### SINGLE NET ###
 		if self.folder_structs_built == False:
 			self.model = ecnet_model.multilayer_perceptron()
-			preds = self.use_mlp_model()
-			rmse = ecnet_data_utils.calc_rmse(preds, self.data.test_y)
-			self.data.test_x = temp_test_x
-			self.data.test_y = temp_test_y
-			return rmse
-					
+			try:
+				self.model.load_net(self.model_load_filename)
+			except:
+				print("Error: Unable to load model; one must be created first. If one exists, check 'condig.yaml' for filename mismatches.")
+				raise
+				sys.exit()
+			try:
+				if self.normals_use == True:
+					res = ecnet_data_utils.denormalize_result(self.model.test_new(self.data.x), self.normal_params_filename)
+				else:
+					res = self.model.test_new(self.data.x)
+				return [res]
+			except:
+				print("Error: data must be loaded before model can be used.")
+				raise
+				sys.exit()
+				
 		### MULTINET ###
 		else:
-			self.model = ecnet_model.multilayer_perceptron()
-			final_preds = self.use_mlp_model()
+			final_preds = []
+			for i in range(0,self.num_builds):
+				predlist = []
+				for j in range(0,self.num_nodes):
+					self.model_load_filename = os.path.join(os.path.join(self.project_name, "build_%d"%(i+1)),os.path.join("node_%d"%(j+1),"final_net_%d"%(j+1)))
+					self.model = ecnet_model.multilayer_perceptron()
+					self.model.load_net(self.model_load_filename)
+					try:
+						if self.normals_use == True:
+							pred = ecnet_data_utils.denormalize_result(self.model.test_new(self.data.x), self.normal_params_filename)
+						else:
+							pred = self.model.test_new(self.data.x)
+						predlist.append(pred)
+					except:
+						print("Error: data must be loaded before model can be used.")
+						raise
+						sys.exit()
+				finalpred = []
+				for j in range(0,len(predlist[0])):
+					local_raw = []
+					for k in range(0,len(predlist)):
+						local_raw.append(predlist[k][j])
+					finalpred.append([np.mean(local_raw)])
+				final_preds.append(finalpred)
+			return final_preds
+
+	### Tests the model's RMSE on the currently loaded data set	(in its entirety)		
+	def test_model_rmse(self):
+		### SINGLE NET ###
+		if self.folder_structs_built == False:
+			preds = self.use_mlp_model_all()
+			rmse = ecnet_data_utils.calc_rmse(preds, self.data.y)
+			return rmse			
+		### MULTINET ###
+		else:
+			final_preds = self.use_mlp_model_all()
 			rmse_list = []
 			for i in range(0,len(final_preds)):
-				rmse_list.append(ecnet_data_utils.calc_rmse(final_preds[i], self.data.test_y))
-			self.data.test_x = temp_test_x
-			self.data.test_y = temp_test_y
+				rmse_list.append(ecnet_data_utils.calc_rmse(final_preds[i], self.data.y))
 			return rmse_list
 			
 	### Tests the model's mean absolute error on the currently loaded data set (in its entirety)
 	def test_model_mae(self):
-		temp_test_x = self.data.test_x[:]
-		temp_test_y = self.data.test_y[:]
-		self.data.test_x = self.data.x
-		self.data.test_y = self.data.y
-		
 		### SINGLE NET ###
 		if self.folder_structs_built == False:
-			self.model = ecnet_model.multilayer_perceptron()
-			preds = self.use_mlp_model()
-			mae = ecnet_data_utils.calc_mae(preds, self.data.test_y)
-			self.data.test_x = temp_test_x
-			self.data.test_y = temp_test_y
-			return mae
-			
+			preds = self.use_mlp_model_all()
+			mae = ecnet_data_utils.calc_mae(preds, self.data.y)
+			return mae	
 		### MULTINET ###
 		else:
-			self.model = ecnet_model.multilayer_perceptron()
-			final_preds = self.use_mlp_model()
+			final_preds = self.use_mlp_model_all()
 			mae_list = []
 			for i in range(0,len(final_preds)):
-				mae_list.append(ecnet_data_utils.calc_mae(final_preds[i], self.data.test_y))
-			self.data.test_x = temp_test_x
-			self.data.test_y = temp_test_y
+				mae_list.append(ecnet_data_utils.calc_mae(final_preds[i], self.data.y))
 			return mae_list
 		
 	### Tests the model's coefficient of determination, or r-squared value
 	def test_model_r2(self):
-		temp_test_x = self.data.test_x[:]
-		temp_test_y = self.data.test_y[:]
-		self.data.test_x = self.data.x
-		self.data.test_y = self.data.y
-		
 		### SINGLE NET ###
 		if self.folder_structs_built == False:
-			self.model = ecnet_model.multilayer_perceptron()
-			preds = self.use_mlp_model()
-			r2 = ecnet_data_utils.calc_r2(preds, self.data.test_y)
-			self.data.test_x = temp_test_x
-			self.data.test_y = temp_test_y
+			preds = self.use_mlp_model_all()
+			r2 = ecnet_data_utils.calc_r2(preds, self.data.y)
 			return r2
-			
 		### MULTINET ###
 		else:
-			self.model = ecnet_model.multilayer_perceptron()
-			final_preds = self.use_mlp_model()
+			final_preds = self.use_mlp_model_all()
 			r2_list = []
 			for i in range(0,len(final_preds)):
-				r2_list.append(ecnet_data_utils.calc_r2(final_preds[i], self.data.test_y))
-			self.data.test_x = temp_test_x
-			self.data.test_y = temp_test_y
+				r2_list.append(ecnet_data_utils.calc_r2(final_preds[i], self.data.y))
 			return r2_list
 		
 	### Outputs results to desired .csv file	
-	def output_results(self, results, filename):
-		ecnet_data_utils.output_results(results, self.data, filename)
+	def output_results(self, results, which_data, filename):
+		ecnet_data_utils.output_results(results, self.data, which_data, filename)
 
 	### Resaves the file under 'model_load_filename' to a new filename
 	def resave_net(self, output):
