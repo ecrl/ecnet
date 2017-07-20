@@ -1,4 +1,4 @@
-data_filename: on_mon_v1_a.csv
+data_filename: data.csv
 data_sort_type: random
 data_split: [0.65, 0.25, 0.1]
 learning_rate: 0.08
@@ -10,10 +10,10 @@ mlp_out_layer_activ: linear
 normal_params_filename: normal_params
 normals_use: false
 param_limit_num: 15
-project_name: on_mon_10a_2
+project_name: my_project
 project_num_builds: 1
-project_num_nodes: 5
-project_num_trials: 5
+project_num_nodes: 1
+project_num_trials: 1
 project_print_feedback: True
 train_epochs: 12500
 valid_max_epochs: 1250

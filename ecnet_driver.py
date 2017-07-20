@@ -9,7 +9,6 @@
 #
 
 import ecnet_server
-import ecnet_data_utils
 
 if __name__ == "__main__":
 

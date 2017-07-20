@@ -376,7 +376,7 @@ def import_config():
 		stream = open('config.yml', 'r')
 		return(yaml.load(stream))
 
-# Creates a default 'config.yaml' file				
+# Creates a default 'config.yaml' file	 			
 def create_default_config():
 	stream = open('config.yml', 'w')
 	config_dict = {
