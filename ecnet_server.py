@@ -98,7 +98,6 @@ class Server:
 						self.create_mlp_model()
 		### SINGLE NET ###
 		else:
-			self.output_filepath = self.model_output_filename
 			try:
 				self.model.fit(self.data.learn_x, self.data.learn_y, self.learning_rate, self.train_epochs)
 			except:
@@ -138,7 +137,6 @@ class Server:
 						self.create_mlp_model()
 		### SINGLE NET ###
 		else:
-			self.output_filepath = self.model_output_filename
 			try:
 				self.model.fit_validation(self.data.learn_x, self.data.valid_x, self.data.learn_y, self.data.valid_y, self.learning_rate, self.valid_mdrmse_stop, self.valid_mdrmse_memory, self.valid_max_epochs)
 			except:
