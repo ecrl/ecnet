@@ -142,6 +142,26 @@ class multilayer_perceptron:
 			saver.save(self.sess, "./_ckpt")
 		self.sess.close()
 		
+	### Return numerical values for weights
+	def export_weights(self):
+		weights = []
+		with tf.Session() as self.sess:
+			saver = tf.train.Saver()
+			saver.restore(self.sess, "./_ckpt")
+			for i in range(0,len(self.weights)):
+				weights.append(self.weights[i].eval())
+		return weights
+		
+	### Return numerical values for biases
+	def export_biases(self):
+		biases = []
+		with tf.Session() as self.sess:
+			saver = tf.train.Saver()
+			saver.restore(self.sess, "./_ckpt")
+			for i in range(0,len(self.biases)):
+				biases.append(self.biases[i].eval())
+		return biases
+		
 def calc_valid_rmse(x, y):
 	try:
 		return(np.sqrt(((x-y)**2).mean()))
