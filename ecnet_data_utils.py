@@ -275,7 +275,10 @@ class initialize_data:
 			maxVal = beforeNormal.max() # IMPORTANT VARIABLE for de-normalizing predicted data into final predicted format
 			minMaxList.append([minAdjust,maxVal])
 			for b in range(0,len(beforeNormal)):
-				beforeNormal[b] = beforeNormal[b]/maxVal
+				if maxVal != 0:
+					beforeNormal[b] = beforeNormal[b]/maxVal
+				else:
+					beforeNormal[b] = 0
 			if i is 0:
 				normalized_list = beforeNormal
 				maxVal = maxVal

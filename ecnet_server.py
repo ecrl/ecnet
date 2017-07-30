@@ -270,48 +270,57 @@ class Server:
 
 	### Tests the model's RMSE on the currently loaded data set	(in its entirety)		
 	def test_model_rmse(self):
-		### SINGLE MODEL ###
-		if self.folder_structs_built == False:
-			preds = self.use_mlp_model_all()
-			rmse = ecnet_data_utils.calc_rmse(preds, self.data.y)
-			return rmse			
-		### PROJECT ###
+		if self.normals_use == False:
+			### SINGLE MODEL ###
+			if self.folder_structs_built == False:
+				preds = self.use_mlp_model_all()
+				rmse = ecnet_data_utils.calc_rmse(preds, self.data.y)
+				return rmse			
+			### PROJECT ###
+			else:
+				final_preds = self.use_mlp_model_all()
+				rmse_list = []
+				for i in range(0,len(final_preds)):
+					rmse_list.append(ecnet_data_utils.calc_rmse(final_preds[i], self.data.y))
+				return rmse_list
 		else:
-			final_preds = self.use_mlp_model_all()
-			rmse_list = []
-			for i in range(0,len(final_preds)):
-				rmse_list.append(ecnet_data_utils.calc_rmse(final_preds[i], self.data.y))
-			return rmse_list
+			print("Normalization not available for error calculations.")
 			
 	### Tests the model's mean absolute error on the currently loaded data set (in its entirety)
 	def test_model_mae(self):
-		### SINGLE MODEL ###
-		if self.folder_structs_built == False:
-			preds = self.use_mlp_model_all()
-			mae = ecnet_data_utils.calc_mae(preds, self.data.y)
-			return mae	
-		### PROJECT ###
+		if self.normals_use == False:
+			### SINGLE MODEL ###
+			if self.folder_structs_built == False:
+				preds = self.use_mlp_model_all()
+				mae = ecnet_data_utils.calc_mae(preds, self.data.y)
+				return mae	
+			### PROJECT ###
+			else:
+				final_preds = self.use_mlp_model_all()
+				mae_list = []
+				for i in range(0,len(final_preds)):
+					mae_list.append(ecnet_data_utils.calc_mae(final_preds[i], self.data.y))
+				return mae_list
 		else:
-			final_preds = self.use_mlp_model_all()
-			mae_list = []
-			for i in range(0,len(final_preds)):
-				mae_list.append(ecnet_data_utils.calc_mae(final_preds[i], self.data.y))
-			return mae_list
+			print("Normalization not available for error calculations.")
 		
 	### Tests the model's coefficient of determination, or r-squared value
 	def test_model_r2(self):
-		### SINGLE MODEL ###
-		if self.folder_structs_built == False:
-			preds = self.use_mlp_model_all()
-			r2 = ecnet_data_utils.calc_r2(preds, self.data.y)
-			return r2
-		### PROJECT ###
+		if self.normals_use == False:
+			### SINGLE MODEL ###
+			if self.folder_structs_built == False:
+				preds = self.use_mlp_model_all()
+				r2 = ecnet_data_utils.calc_r2(preds, self.data.y)
+				return r2
+			### PROJECT ###
+			else:
+				final_preds = self.use_mlp_model_all()
+				r2_list = []
+				for i in range(0,len(final_preds)):
+					r2_list.append(ecnet_data_utils.calc_r2(final_preds[i], self.data.y))
+				return r2_list
 		else:
-			final_preds = self.use_mlp_model_all()
-			r2_list = []
-			for i in range(0,len(final_preds)):
-				r2_list.append(ecnet_data_utils.calc_r2(final_preds[i], self.data.y))
-			return r2_list
+			print("Normalization not available for error calculations.")
 		
 	### Outputs results to desired .csv file	
 	def output_results(self, results, which_data, filename):
