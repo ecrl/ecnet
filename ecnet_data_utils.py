@@ -14,6 +14,7 @@ import pickle
 import numpy as np
 from math import sqrt
 import sys
+import copy
 
 # Calculates the RMSE of the model result and the target data	
 def calc_rmse(results, target):
@@ -178,10 +179,11 @@ def output_results(results, data, which_data = "A", filename = "results.csv"):
 # Denormalizes resultant data using parameter file
 def denormalize_result(results, param_filepath):
 	normalParams = pickle.load(open(param_filepath + ".ecnet","rb"))
-	for i in range(0,len(results[0])):
-		for j in range(0,len(results)):
-			results[j][i] = (results[j][i]*normalParams[i][1])-normalParams[i][0]
-	return(results)
+	dn_res = copy.copy(results)
+	for i in range(0,len(dn_res[0])):
+		for j in range(0,len(dn_res)):
+			dn_res[j][i] = (dn_res[j][i]*normalParams[i][1])-normalParams[i][0]
+	return(dn_res)
 	
 ### Initial definition of data object
 class initialize_data:  

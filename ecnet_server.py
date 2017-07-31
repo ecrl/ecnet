@@ -270,57 +270,66 @@ class Server:
 
 	### Tests the model's RMSE on the currently loaded data set	(in its entirety)		
 	def test_model_rmse(self):
-		if self.normals_use == False:
-			### SINGLE MODEL ###
-			if self.folder_structs_built == False:
-				preds = self.use_mlp_model_all()
-				rmse = ecnet_data_utils.calc_rmse(preds, self.data.y)
-				return rmse			
-			### PROJECT ###
+		### SINGLE MODEL ###
+		if self.folder_structs_built == False:
+			preds = self.use_mlp_model_all()
+			if self.normals_use == True:
+				rmse = ecnet_data_utils.calc_rmse(preds, ecnet_data_utils.denormalize_result(self.data.y, self.normal_params_filename))
 			else:
-				final_preds = self.use_mlp_model_all()
-				rmse_list = []
-				for i in range(0,len(final_preds)):
-					rmse_list.append(ecnet_data_utils.calc_rmse(final_preds[i], self.data.y))
-				return rmse_list
+				rmse = ecnet_data_utils.calc_rmse(preds, self.data.y)
+			return rmse			
+		### PROJECT ###
 		else:
-			print("Normalization not available for error calculations.")
+			final_preds = self.use_mlp_model_all()
+			rmse_list = []
+			for i in range(0,len(final_preds)):
+				if self.normals_use == True:
+					rmse_list.append(ecnet_data_utils.calc_rmse(final_preds[i], ecnet_data_utils.denormalize_result(self.data.y, self.normal_params_filename)))
+				else:
+					rmse_list.append(ecnet_data_utils.calc_rmse(final_preds[i], self.data.y))
+			return rmse_list
 			
 	### Tests the model's mean absolute error on the currently loaded data set (in its entirety)
 	def test_model_mae(self):
-		if self.normals_use == False:
-			### SINGLE MODEL ###
-			if self.folder_structs_built == False:
-				preds = self.use_mlp_model_all()
-				mae = ecnet_data_utils.calc_mae(preds, self.data.y)
-				return mae	
-			### PROJECT ###
+		### SINGLE MODEL ###
+		if self.folder_structs_built == False:
+			preds = self.use_mlp_model_all()
+			if self.normals_use == True:
+				mae = ecnet_data_utils.calc_mae(preds, ecnet_data_utils.denormalize_result(self.data.y, self.normal_params_filename))
 			else:
-				final_preds = self.use_mlp_model_all()
-				mae_list = []
-				for i in range(0,len(final_preds)):
-					mae_list.append(ecnet_data_utils.calc_mae(final_preds[i], self.data.y))
-				return mae_list
+				mae = ecnet_data_utils.calc_mae(preds, self.data.y)
+			return mae	
+		### PROJECT ###
 		else:
-			print("Normalization not available for error calculations.")
+			final_preds = self.use_mlp_model_all()
+			mae_list = []
+			for i in range(0,len(final_preds)):
+				if self.normals_use == True:
+					mae_list.append(ecnet_data_utils.calc_mae(final_preds[i], ecnet_data_utils.denormalize_result(self.data.y, self.normal_params_filename)))
+				else:
+					mae_list.append(ecnet_data_utils.calc_mae(final_preds[i], self.data.y))
+			return mae_list
 		
 	### Tests the model's coefficient of determination, or r-squared value
 	def test_model_r2(self):
-		if self.normals_use == False:
-			### SINGLE MODEL ###
-			if self.folder_structs_built == False:
-				preds = self.use_mlp_model_all()
-				r2 = ecnet_data_utils.calc_r2(preds, self.data.y)
-				return r2
-			### PROJECT ###
+		### SINGLE MODEL ###
+		if self.folder_structs_built == False:
+			preds = self.use_mlp_model_all()
+			if self.normals_use == True:
+				r2 = ecnet_data_utils.calc_r2(preds, ecnet_data_utils.denormalize_result(self.data.y, self.normal_params_filename))
 			else:
-				final_preds = self.use_mlp_model_all()
-				r2_list = []
-				for i in range(0,len(final_preds)):
-					r2_list.append(ecnet_data_utils.calc_r2(final_preds[i], self.data.y))
-				return r2_list
+				r2 = ecnet_data_utils.calc_r2(preds, self.data.y)
+			return r2
+		### PROJECT ###
 		else:
-			print("Normalization not available for error calculations.")
+			final_preds = self.use_mlp_model_all()
+			r2_list = []
+			for i in range(0,len(final_preds)):
+				if self.normals_use == True:
+					r2_list.append(ecnet_data_utils.calc_r2(final_preds[i], ecnet_data_utils.denormalize_result(self.data.y, self.normal_params_filename)))
+				else:
+					r2_list.append(ecnet_data_utils.calc_r2(final_preds[i], self.data.y))
+			return r2_list
 		
 	### Outputs results to desired .csv file	
 	def output_results(self, results, which_data, filename):
