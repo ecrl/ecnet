@@ -3,7 +3,7 @@
 #
 #  ecnet_data_utils.py
 #  
-#  Developed in 2017 by Travis Kessler <travis.j.kessler@gmail.com>
+#  Developed in 2017 by Travis Kessler <Travis_Kessler@student.uml.edu>
 #  
 #  This program contains the data object class, and functions for manipulating/importing/outputting data
 #

@@ -3,7 +3,7 @@
 #
 #  ecnet_server.py
 #  
-#  Developed in 2017 by Travis Kessler <travis.j.kessler@gmail.com>
+#  Developed in 2017 by Travis Kessler <Travis_Kessler@student.uml.edu>
 #
 #  This program contains all the necessary config parameters and network serving functions
 #
@@ -50,8 +50,7 @@ class Server:
 	
 	### Determines which parameters contribute to an accurate output - number is determined by param_limit_num in config; supply an output filename
 	def limit_parameters(self, limited_database_output_filename):
-		return
-		params = ecnet_limit_parameters.limit(self.data, self.param_limit_num)
+		params = ecnet_limit_parameters.limit(self.data, self.param_limit_num, self.project_print_feedback)
 		ecnet_limit_parameters.output(self.data, params, limited_database_output_filename)
 
 	### Creates the save environment

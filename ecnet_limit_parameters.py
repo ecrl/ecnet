@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+#  ecnet_limit_parameters.py
+#  
+#  Developed in 2017 by Travis Kessler <Travis_Kessler@student.uml.edu>
+#  
+#  This program contains the functions necessary for reducing the input dimensionality of a database to the most influential input parameters
+#
+
 import ecnet_server
 import csv
 
@@ -181,11 +191,3 @@ def output(data, param_list, filename):
 		wr = csv.writer(output_file, quoting = csv.QUOTE_ALL, lineterminator = '\n')
 		for row in range(0,len(rows)):
 			wr.writerow(rows[row])
-		
-
-### Example function call ###
-if __name__ == "__main__":
-	server = ecnet_server.Server()
-	server.import_data()
-	param_list = limit(server.data, server.param_limit_num, feedback = True)
-	output(server.data, param_list, "test_param_output.csv")
