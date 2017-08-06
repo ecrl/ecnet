@@ -1,14 +1,14 @@
-data_filename: data.csv
+data_filename: my_database.csv
 data_sort_type: random
 data_split: [0.65, 0.25, 0.1]
-learning_rate: 0.08
+learning_rate: 0.05
 mlp_hidden_layers:
 - [32, relu]
 - [32, relu]
 mlp_in_layer_activ: relu
 mlp_out_layer_activ: linear
 normal_params_filename: normal_params
-normals_use: false
+normals_use: False
 param_limit_num: 15
 project_name: my_project
 project_num_builds: 1
@@ -16,6 +16,6 @@ project_num_nodes: 1
 project_num_trials: 1
 project_print_feedback: True
 train_epochs: 12500
-valid_max_epochs: 1250
-valid_mdrmse_stop: 0.07
-valid_mdrmse_memory: 50
+valid_max_epochs: 7500
+valid_mdrmse_stop: 0.00007
+valid_mdrmse_memory: 250
