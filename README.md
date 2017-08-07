@@ -1,5 +1,5 @@
 # ECNet
-UMass Lowell Energy and Combustion Research Laboratory Neural Network Software
+UMass Lowell Energy and Combustion Research Laboratory machine learning software for fuel property prediction
 
 	Developed by Travis Kessler with direction from Professor John Hunter Mack
 
