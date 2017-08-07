@@ -14,5 +14,7 @@ Installation:
 	
 	Method 2: From source
 	- Download the ECNet repository, navigate to the download location on the command line/terminal, 
-	and execute "python setup.py install". Additional package dependencies (TensorFlow, PyYaml) will be 
-	installed during the ECNet installation process.
+	and execute "python setup.py install". 
+	
+	Additional package dependencies (TensorFlow, PyYaml) will be installed during the ECNet 
+	installation process.
