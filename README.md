@@ -7,7 +7,7 @@
 
 [T. Sennott et al.](https://www.researchgate.net/publication/267576682_Artificial_Neural_Network_for_Predicting_Cetane_Number_of_Biofuel_Candidates_Based_on_Molecular_Structure) have shown that artificial neural networks (ANN's) can be applied to cetane number prediction with relatively little error. ECNet provides scientists an open source tool for predicting key fuel properties of potential next-generation biofuels, reducing the need for costly fuel synthesis and experimentation.
 
-Using ECNet, [T. Kessler et al.](https://www.researchgate.net/publication/317569746_Artificial_neural_network_based_predictions_of_cetane_number_for_furanic_biofuel_additives) have increased the generalizability of ANN's to a variety of molecular classes represented in the cetane number database, and have increased the accuracy of ANN's for underrepresented molecular classes through targeted database expansion.
+Using ECNet, [T. Kessler et al.](https://www.researchgate.net/publication/317569746_Artificial_neural_network_based_predictions_of_cetane_number_for_furanic_biofuel_additives) have increased the generalizability of ANN's to predict the cetane numbers of a variety of molecular classes represented in the cetane number database, and have increased the accuracy of ANN's for predicting the cetane numbers of underrepresented molecular classes through targeted database expansion.
 
 ## Installation:
 
