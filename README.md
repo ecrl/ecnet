@@ -24,7 +24,7 @@ Additional package dependencies (TensorFlow, PyYaml) will be installed during th
 
 ## Usage:
 
-ECNet operates using a **Server** object that interfaces with data utility methods and neural network creation methods. Configurable variables like your project's name, number of builds and nodes, ANN learning and architecture variables, data splitting controls, and more are found in a __config.yml__ file in your working directory. Here's what a config.yml file for cetane number prediction looks like:
+ECNet operates using a **Server** object that interfaces with data utility classes and neural network creation classes. Configurable variables like your project's name, number of builds and nodes, ANN learning and architecture variables, data splitting controls, and more are found in a __config.yml__ file in your working directory. Here's what a config.yml file for cetane number prediction looks like:
 
 ```yml
 data_filename: cn_model_v1.0.csv
