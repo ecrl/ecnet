@@ -125,7 +125,7 @@ Here's an overview of the Server object's methods:
 - **use_mlp_model()**: predicts values for the data's testing group; returns a list of values for each build
 - **use_mlp_model_all()**: predicts values for the data's learning, validation and testing groups; returns a list of values for each build
 - **test_model_rmse()**: tests the model's root-mean-square error relative to the entire database; returns a list containing RMSE's for each build
-- **test_model_mae()**: tests the model's mean absolute error relative to the entire database; returns a list containing MAE's for each build
+- **test_model_mae()**: tests the model's mean average error relative to the entire database; returns a list containing MAE's for each build
 - **test_model_r2()**: tests the model's coefficient of determination, or r-squared value, relative to the entire database; returns a list containing r-squared values for each build
 - **output_results(results, which_data, output_filename)**: saves your results to a specified output file; which_data is either 'test' or 'all', for results from 'use_mlp_model()' and 'use_mlp_model_all()' respectively
 - **limit_parameters(limited_db_output_filename)**: reduces the input dimensionality of an input database through a "retain the best" process; view the databases directory for the full cetane number database and an example limited database with 15/1666 QSPR descriptors
