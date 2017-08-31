@@ -103,7 +103,7 @@ class Server:
 				raise
 				sys.exit()
 			try:
-				self.model.save_net("model_output")
+				self.model.save_net("./tmp/model_output")
 			except:
 				raise
 				sys.exit()
@@ -142,7 +142,7 @@ class Server:
 				raise
 				sys.exit()
 			try:
-				self.model.save_net("model_output")
+				self.model.save_net("./tmp/model_output")
 			except:
 				raise
 				sys.exit()
@@ -179,7 +179,7 @@ class Server:
 		if self.folder_structs_built == False:
 			self.model = ecnet.model.multilayer_perceptron()
 			try:
-				self.model.load_net("model_output")
+				self.model.load_net("./tmp/model_output")
 			except:
 				raise
 				sys.exit()
@@ -226,7 +226,7 @@ class Server:
 		if self.folder_structs_built == False:
 			self.model = ecnet.model.multilayer_perceptron()
 			try:
-				self.model.load_net("model_output")
+				self.model.load_net("./tmp/model_output")
 			except:
 				raise
 				sys.exit()

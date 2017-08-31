@@ -70,7 +70,7 @@ class multilayer_perceptron:
 				self.sess.run(optimizer, feed_dict = {x: x_l, y: y_l})
 			# saves a temporary output file, variables (weights, biases) included
 			saver = tf.train.Saver()
-			saver.save(self.sess,"./_ckpt")
+			saver.save(self.sess,"./tmp/_ckpt")
 		self.sess.close()
 	
 	### Data is served to the model, and fits the model to the data using periodic validation
@@ -110,14 +110,14 @@ class multilayer_perceptron:
 						mdRMSE = reduce(lambda x, y: x + y, delta_list) / len(delta_list)
 			
 			saver = tf.train.Saver()
-			saver.save(self.sess, "./_ckpt")
+			saver.save(self.sess, "./tmp/_ckpt")
 		self.sess.close()
 		
 	### Tests the test data from the server
 	def test_new(self, x):
 		with tf.Session() as self.sess:
 			saver = tf.train.Saver()
-			saver.restore(self.sess, "./_ckpt")
+			saver.restore(self.sess, "./tmp/_ckpt")
 			result = self.feed_forward(x)
 			result = result.eval()
 		self.sess.close()
@@ -127,7 +127,7 @@ class multilayer_perceptron:
 	def save_net(self, output_filepath):
 		with tf.Session() as self.sess:
 			saver = tf.train.Saver()
-			saver.restore(self.sess, "./_ckpt")
+			saver.restore(self.sess, "./tmp/_ckpt")
 			saver.save(self.sess, "./" + output_filepath + ".sess")
 		self.sess.close()
 		pickle.dump(self.layers, open("./" + output_filepath + ".struct", "wb"))
@@ -139,7 +139,7 @@ class multilayer_perceptron:
 		with tf.Session() as self.sess:
 			saver = tf.train.Saver()
 			saver.restore(self.sess, "./" + model_load_filename + ".sess")
-			saver.save(self.sess, "./_ckpt")
+			saver.save(self.sess, "./tmp/_ckpt")
 		self.sess.close()
 		
 	### Return numerical values for weights
@@ -147,7 +147,7 @@ class multilayer_perceptron:
 		weights = []
 		with tf.Session() as self.sess:
 			saver = tf.train.Saver()
-			saver.restore(self.sess, "./_ckpt")
+			saver.restore(self.sess, "./tmp/_ckpt")
 			for i in range(0,len(self.weights)):
 				weights.append(self.weights[i].eval())
 		return weights
@@ -157,7 +157,7 @@ class multilayer_perceptron:
 		biases = []
 		with tf.Session() as self.sess:
 			saver = tf.train.Saver()
-			saver.restore(self.sess, "./_ckpt")
+			saver.restore(self.sess, "./tmp/_ckpt")
 			for i in range(0,len(self.biases)):
 				biases.append(self.biases[i].eval())
 		return biases
