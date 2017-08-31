@@ -89,10 +89,10 @@ sv = Server()						# Create server object
 sv.create_save_env()					# Create a folder structure for your project
 sv.import_data()					# Import data
 sv.create_mlp_model()					# Create a multilayer perceptron (neural network)
-sv.fit_mlp_model_validation()				# Fits the mlp using the input database (with a validation set)
+sv.fit_mlp_model_validation()				# Fits the mlp using the input database (w/ validation set)
 sv.select_best()					# Select best trial from each build node
 
-results = sv.use_mlp_model_all()			# Calculate results from data (all values, not just test set)
+results = sv.use_mlp_model_all()			# Calculate results from data (all sets)
 sv.output_results(results, "all", "cn_results.csv")	# Output results to specified file
 
 rmse = sv.test_model_rmse()				# Root-mean-square error
