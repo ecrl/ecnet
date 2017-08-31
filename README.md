@@ -108,7 +108,7 @@ print(r2)
 You can change all the configuration variables from your Python script, without having to edit and reopen your config.yml file. For example, changing the filename for your input database looks like this:
 
 ```python
-from ecnet.server import Server()
+from ecnet.server import Server
 
 sv = Server()
 sv.data_filename = 'my_database.csv'
