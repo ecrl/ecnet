@@ -22,7 +22,7 @@ If you are working in a Linux/Mac environment:
 Alternatively, in a Windows or virtualenv environment:
 - **pip install ecnet**
 
-Note: if multiple Python releases are installed on your system (e.g. 2.7 and 3.5), you may need to execute the correct version of pip. For Python 3.5, change 'pip install ecnet' to 'pip3 install ecnet'.
+Note: if multiple Python releases are installed on your system (e.g. 2.7 and 3.5), you may need to execute the correct version of pip. For Python 3.5, change **'pip install ecnet'** to **'pip3 install ecnet'**.
 
 ### Method 2: From source
 - Download the ECNet repository, navigate to the download location on the command line/terminal, and execute 
