@@ -7,16 +7,24 @@
 
 [T. Sennott et al.](https://www.researchgate.net/publication/267576682_Artificial_Neural_Network_for_Predicting_Cetane_Number_of_Biofuel_Candidates_Based_on_Molecular_Structure) have shown that artificial neural networks (ANN's) can be applied to cetane number prediction with relatively little error. ECNet provides scientists an open source tool for predicting key fuel properties of potential next-generation biofuels, reducing the need for costly fuel synthesis and experimentation.
 
+Using ECNet, [T. Kessler et al.](https://www.researchgate.net/publication/317569746_Artificial_neural_network_based_predictions_of_cetane_number_for_furanic_biofuel_additives) have increased the generalizability of ANN's to a variety of molecular classes represented in the cetane number database, and have increased the accuracy of ANN's for underrepresented molecular classes through targeted database expansion.
+
 ## Installation:
 
-Prerequisites:
-- Python 3.5
-- Ability to install Python packages
+### Prerequisites:
+- Have Python 3.5 installed
+- Have the ability to install Python packages
 
-Method 1: pip
+### Method 1: pip
+If you are working in a Linux/Mac environment:
+- **sudo pip install ecnet**
+
+Alternatively, in a Windows or virtualenv environment:
 - **pip install ecnet**
 
-Method 2: From source
+Note: if multiple Python releases are installed on your system (e.g. 2.7 and 3.5), you may need to execute the correct version of pip. For Python 3.5, change 'pip install ecnet' to 'pip3 install ecnet'.
+
+### Method 2: From source
 - Download the ECNet repository, navigate to the download location on the command line/terminal, and execute 
 **"python setup.py install"**. 
 
@@ -24,7 +32,7 @@ Additional package dependencies (TensorFlow, PyYaml) will be installed during th
 
 ## Usage:
 
-ECNet operates using a **Server** object that interfaces with data utility classes and neural network creation classes. Configurable variables like your project's name, number of builds and nodes, ANN learning and architecture variables, data splitting controls, and more are found in a __config.yml__ file in your working directory. Here's what a config.yml file for cetane number prediction looks like:
+ECNet operates using a **Server** object that interfaces with data utility classes and neural network creation classes. The Server object handles importing data and model creation for your project, and serves the data to the model. Configurable variables like your project's name, number of builds and nodes, ANN learning and architecture variables, data splitting controls, and more are found in a __config.yml__ file in your working directory. Here's what a config.yml file for cetane number prediction looks like:
 
 ```yml
 data_filename: cn_model_v1.0.csv
@@ -75,21 +83,21 @@ Here are brief explanations of each of these variables:
 Now let's look at a driver script for building a project, and predicting values of cetane number for molecules in the cetane number database. 
 
 ```python
-import ecnet
+from ecnet.server import Server
 
-server = ecnet.server.Server()					# Create server object
-server.create_save_env()					# Create a folder structure for your project
-server.import_data()						# Import data
-server.create_mlp_model()					# Create a multilayer perceptron (neural network)
-server.fit_mlp_model_validation()				# Fits the mlp using the input database (with a validation set)
-server.select_best()						# Select best trial from each build node
+sv = Server()						# Create server object
+sv.create_save_env()					# Create a folder structure for your project
+sv.import_data()					# Import data
+sv.create_mlp_model()					# Create a multilayer perceptron (neural network)
+sv.fit_mlp_model_validation()				# Fits the mlp using the input database (with a validation set)
+sv.select_best()					# Select best trial from each build node
 
-results = server.use_mlp_model_all()				# Calculate results from data (all values, not just test set)
-server.output_results(results, "all", "sigmoid_results.csv")	# Output results to specified file
+results = sv.use_mlp_model_all()			# Calculate results from data (all values, not just test set)
+sv.output_results(results, "all", "cn_results.csv")	# Output results to specified file
 
-rmse = server.test_model_rmse()					# Root-mean-square error
-mae = server.test_model_mae()					# Mean average error
-r2 = server.test_model_r2()					# Coeffecient of determination (r-squared)
+rmse = sv.test_model_rmse()				# Root-mean-square error
+mae = sv.test_model_mae()				# Mean average error
+r2 = sv.test_model_r2()					# Coeffecient of determination (r-squared)
 
 print(rmse)
 print(mae)
@@ -97,7 +105,28 @@ print(r2)
 
 ```
 
-Working directly with the Server object to handle model creation and data management allows for speedy scripting, but you can still work with the model and data objects directly. View the Server source code, and see how it interfaces with the model and data_utils files.
+You can change all the configuration variables from your Python script, without having to edit and reopen your config.yml file. For example, changing the filename for your input database looks like this:
 
-Here's an overview of the Server's methods:
-TODO: this.
+```python
+from ecnet.server import Server()
+
+sv = Server()
+sv.data_filename = 'my_database.csv'
+```
+
+Here's an overview of the Server object's methods:
+
+- **create_save_env()**: creates the folder hierarchy for your project, contained in a folder named after your project name
+- **import_data()**: imports the data from the database specified in 'data_filename', splits the data into learning/validation/testing groups, and packages the data so it's ready to be sent to the model
+- **create_mlp_model()**: creates a multilayer-perceptron (aka, a feed-forward neural network) based on the input/output dimensionality of the imported data and the hidden layer architecture specified in the config
+- **fit_mlp_model()**: fits the multilayer-perceptron to the data, for 'train_epochs' learning iterations; no validation done here
+- **fit_mlp_model_validation()**: fits the multilayer-perceptron to the data, using the validation set to determine when to stop learning
+- **select_best()**: selects the best performing model to represent each node of each build; requires a folder hierarchy to be created
+- **use_mlp_model()**: predicts values for the data's testing group; returns a list of values for each build
+- **use_mlp_model_all()**: predicts values for the data's learning, validation and testing groups; returns a list of values for each build
+- **test_model_rmse()**: tests the model's root-mean-square error relative to the entire database; returns a list containing RMSE's for each build
+- **test_model_mae()**: tests the model's mean absolute error relative to the entire database; returns a list containing MAE's for each build
+- **test_model_r2()**: tests the model's coefficient of determination, or r-squared value, relative to the entire database; returns a list containing r-squared values for each build
+- **output_results(results, which_data, output_filename)**: saves your results to a specified output file; which_data is either 'test' or 'all', for results from 'use_mlp_model()' and 'use_mlp_model_all()' respectively
+
+Working directly with the Server object to handle model creation and data management allows for speedy scripting, but you can still work with the model and data classes directly. View the model and data_utils source code to learn more about lower-level usage.
