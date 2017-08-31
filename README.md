@@ -128,5 +128,6 @@ Here's an overview of the Server object's methods:
 - **test_model_mae()**: tests the model's mean absolute error relative to the entire database; returns a list containing MAE's for each build
 - **test_model_r2()**: tests the model's coefficient of determination, or r-squared value, relative to the entire database; returns a list containing r-squared values for each build
 - **output_results(results, which_data, output_filename)**: saves your results to a specified output file; which_data is either 'test' or 'all', for results from 'use_mlp_model()' and 'use_mlp_model_all()' respectively
+- **limit_parameters(limited_db_output_filename)**: reduces the input dimensionality of an input database through a "retain the best" process; view the databases directory for the full cetane number database and an example limited database with 15/1666 QSPR descriptors
 
-Working directly with the Server object to handle model creation and data management allows for speedy scripting, but you can still work with the model and data classes directly. View the model and data_utils source code to learn more about lower-level usage.
+Working directly with the Server object to handle model creation and data management allows for speedy scripting, but you can still work with the model and data classes directly. View the source code README.md for more information on low-level usage.
