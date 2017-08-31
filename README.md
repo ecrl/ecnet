@@ -81,7 +81,7 @@ Here are brief explanations of each of these variables:
 - **valid_mdrmse_stop** - the threshold to determine learning cutoff (looks at the change in validation RMSE over time)
 - **valid_mdrmse_memory** - how many epochs back the validation process looks in determining the change in validation RMSE over time
 
-Now let's look at a driver script for building a project, and predicting values of cetane number for molecules in the cetane number database. 
+Now let's look at a script for building a project, predicting values of cetane number for molecules in the cetane number database, and saving the results to an output file: 
 
 ```python
 from ecnet.server import Server
