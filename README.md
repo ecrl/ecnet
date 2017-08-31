@@ -65,6 +65,7 @@ Here are brief explanations of each of these variables:
 - **data_split** - [learning, validation, testing]: proportions used for the random sort type
 - **learning_rate**: value passed to the AdamOptimizer to use as its learning rate during training
 - **mlp_hidden_layers** - [[num_neurons_0, layer_type_0],...,[num_neurons_n, layer_type_n]]: the architecture of the ANN between the input and output layers
+	- Rectified linear unit ('relu') and Sigmoid ('sigmoid') activation functions are currently supported
 - **mlp_in_layer_activ** - the layer type of the input layer; number of nodes is determined by data dimensions
 - **mlp_out_layer_activ** - the layer type of the output layer; number of nodes is determined by data dimensions
 - **normal_params_filename** - filename for the normalization parameters (if used)
