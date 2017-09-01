@@ -66,20 +66,20 @@ Here are brief explanations of each of these variables:
 - **learning_rate**: value passed to the AdamOptimizer to use as its learning rate during training
 - **mlp_hidden_layers** - [[num_neurons_0, layer_type_0],...,[num_neurons_n, layer_type_n]]: the architecture of the ANN between the input and output layers
 	- Rectified linear unit ('relu') and Sigmoid ('sigmoid') layer types are currently supported
-- **mlp_in_layer_activ** - the layer type of the input layer; number of nodes is determined by data dimensions
-- **mlp_out_layer_activ** - the layer type of the output layer; number of nodes is determined by data dimensions
-- **normal_params_filename** - filename for the normalization parameters (if used)
-- **normals_use** - boolean to determine if parameters should be normalized (min-max, between 0 and 1)
-- **param_limit_num** - used by the parameter limiting methods, determines how many optimal parameters to retain from a very large dimensional database
-- **project_name** - the name of your project
-- **project_num_builds** - the number of builds in your project
-- **project_num_nodes** - the number of nodes in each build
-- **project_num_trials** - the number of ANN's to be constructed in each node
-- **project_print_feedback** - whether the console will show status messages
-- **train_epochs** - number of training iterations (not used with validation)
-- **valid_max_epochs** - the maximum number of training iterations during the validation process
-- **valid_mdrmse_stop** - the threshold to determine learning cutoff (looks at the change in validation RMSE over time)
-- **valid_mdrmse_memory** - how many epochs back the validation process looks in determining the change in validation RMSE over time
+- **mlp_in_layer_activ** - the layer type of the input layer: number of nodes is determined by data dimensions
+- **mlp_out_layer_activ** - the layer type of the output layer: number of nodes is determined by data dimensions
+- **normal_params_filename**: filename for the normalization parameters (if used)
+- **normals_use**: boolean to determine if parameters should be normalized (min-max, between 0 and 1)
+- **param_limit_num**: used by the parameter limiting methods, determines how many optimal parameters to retain from a very large dimensional database
+- **project_name**: the name of your project
+- **project_num_builds**: the number of builds in your project
+- **project_num_nodes**: the number of nodes in each build
+- **project_num_trials**: the number of ANN's to be constructed in each node
+- **project_print_feedback**: whether the console will show status messages
+- **train_epochs**: number of training iterations (not used with validation)
+- **valid_max_epochs**: the maximum number of training iterations during the validation process
+- **valid_mdrmse_stop**: the threshold to determine learning cutoff (looks at the change in validation RMSE over time)
+- **valid_mdrmse_memory**: how many epochs back the validation process looks in determining the change in validation RMSE over time
 
 Now let's look at a script for building a project, predicting values of cetane number for molecules in the cetane number database, and saving the results to an output file: 
 
