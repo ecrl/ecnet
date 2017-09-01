@@ -97,6 +97,7 @@ results = sv.use_mlp_model_all()			# Calculate results from data (all sets)
 sv.output_results(results, "all", "cn_results.csv")	# Output results to specified file
 
 errors = sv.calc_error('rmse','r2','mean_abs_error','med_abs_error')	# Calculates errors for dataset predictions
+print(errors)
 
 ```
 
