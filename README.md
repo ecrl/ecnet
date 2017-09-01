@@ -1,4 +1,4 @@
-![UML Energy & Combustion Research Laboratory](http://faculty.uml.edu/Hunter_Mack/uploads/9/7/1/3/97138798/1481826668_2.png)
+[![UML Energy & Combustion Research Laboratory](http://faculty.uml.edu/Hunter_Mack/uploads/9/7/1/3/97138798/1481826668_2.png)](http://faculty.uml.edu/Hunter_Mack/)
 
 # ECNet - Large scale machine learning projects for fuel property prediction
 ### Developed by Travis Kessler with direction from Professor John Hunter Mack
