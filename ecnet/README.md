@@ -47,9 +47,9 @@ Misc. Functions:
 - **denormalize_result(results, param_filepath)**: denormalizes a result, using min-max normalization paramters found in the param_filepath; returns denormalized results list
 
 ## error_utils.py
-- **Notation:**
-  - y_hat - predicted values
-  - y - known/experimental/training values
+Notation:
+- **y_hat** - predicted values
+- **y** - known/experimental/training values
   
 Error Functions:
 - **calc_rmse(y_hat, y)**: returns the root-mean-squared error
