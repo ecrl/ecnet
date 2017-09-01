@@ -1,6 +1,6 @@
-## Lower-level usage of model, data_utils, error_utils, and limit_parameters
+# Lower-level usage of model, data_utils, error_utils, and limit_parameters
 
-### model.py
+## model.py
 #### Class: multilayer_perceptron
 Attributes:
 - **layers**: list of layers; layers contain information about the number of neurons and the activation function in form [num, func]
@@ -27,7 +27,7 @@ Methods:
 Misc. Functions:
 - **calc_valid_rmse(x, y)**: calculates the root-mean-squared error during 'fit_validation()'
 
-### data_utils.py
+## data_utils.py
 #### Class: initialize_data(data_filename)
 Methods:
 - **build()**: imports a formatted database, parses controls, sets up groupings and data I/O locations
@@ -46,7 +46,7 @@ Misc. Functions:
   - which_data: 'all' or 'test', corresponding to which data set(s) are contained in your results
 - **denormalize_result(results, param_filepath)**: denormalizes a result, using min-max normalization paramters found in the param_filepath
 
-### error_utils.py
+## error_utils.py
 - **Notation:**
   - y_hat - predicted values
   - y - known/experimental/training values
@@ -57,7 +57,7 @@ Error Functions:
 - **calc_med_abs_error(y_hat, y)**: calculates the median absolute error
 - **calc_r2(y_hat, y)**: calculates the correlation of determination, or r-squared value
 
-### limit_parameters.py
+## limit_parameters.py
 Functions:
 - **limit(server)**: limits the number of input parameters to an integer value specified in the server config.yml file, using a "retain the best" process, where the best performing input parameter (based on RMSE) is retained, paired with every other input parameter until a best pair is found, repeated until the limit number has been reached
   - returns a list of parameters
