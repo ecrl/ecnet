@@ -48,8 +48,8 @@ Misc. Functions:
 
 ## error_utils.py
 Notation:
-- **y_hat** - predicted values
-- **y** - known/experimental/training values
+- **y_hat**: predicted values
+- **y**: known/experimental/training values
   
 Error Functions:
 - **calc_rmse(y_hat, y)**: returns the root-mean-squared error
