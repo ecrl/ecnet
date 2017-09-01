@@ -1,4 +1,4 @@
-# Lower-level usage of model, data_utils, error_utils, and limit_parameters
+# Low-level usage of model, data_utils, error_utils, and limit_parameters
 
 ## model.py
 #### Class: multilayer_perceptron
