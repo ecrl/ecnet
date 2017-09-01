@@ -18,7 +18,7 @@ Methods:
   - mdrmse_stop is the cutoff point, where the function ceases learning (mdrmse approaches zero as epochs increases)
   - mdrmse_memory is used to determine how far back (number of epochs) the function looks in determining mdrmse
   - max_epochs is the cutoff point if mdrmse has not fallen below mdrmse_stop
-- **test_new(x)**: used to pass data through the model to get a prediction, without training it
+- **test_new(x)**: used to pass data through the model to get a prediction, without training it; returns predicted values
 - **save_net(output_filepath)**: saves the TensorFlow session (.sess) and model architecture information (.struct) to specified filename
 - **load_net(model_load_filename)**: opens a TensorFlow session (.sess) and model architecture information (.struct) to work with
 - **export_weights()**: returns numerical versions of the model's TensorFlow weight variables
@@ -44,7 +44,7 @@ Misc. Functions:
 - **create_static_test_set(data)**: taking an initialize_data object, this function will create separate files for the test and learning/validation data; useful for when you need a static test set for completely blind model testing
 - **output_results(results, data, which_data, filename)**: outputs your prediction results from your model to a specified filename
   - which_data: 'all' or 'test', corresponding to which data set(s) are contained in your results
-- **denormalize_result(results, param_filepath)**: denormalizes a result, using min-max normalization paramters found in the param_filepath
+- **denormalize_result(results, param_filepath)**: denormalizes a result, using min-max normalization paramters found in the param_filepath; returns denormalized results list
 
 ## error_utils.py
 - **Notation:**
@@ -52,10 +52,10 @@ Misc. Functions:
   - y - known/experimental/training values
   
 Error Functions:
-- **calc_rmse(y_hat, y)**: calculates the root-mean-squared error
-- **calc_mean_abs_error(y_hat, y)**: calculates the mean absolute error
-- **calc_med_abs_error(y_hat, y)**: calculates the median absolute error
-- **calc_r2(y_hat, y)**: calculates the correlation of determination, or r-squared value
+- **calc_rmse(y_hat, y)**: returns the root-mean-squared error
+- **calc_mean_abs_error(y_hat, y)**: returns the mean absolute error
+- **calc_med_abs_error(y_hat, y)**: returns the median absolute error
+- **calc_r2(y_hat, y)**: returns the correlation of determination, or r-squared value
 
 ## limit_parameters.py
 Functions:
