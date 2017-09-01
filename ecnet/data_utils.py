@@ -16,47 +16,6 @@ from math import sqrt
 import sys
 import copy
 
-# Calculates the RMSE of the model result and the target data	
-def calc_rmse(results, target):
-	try:
-		return(np.sqrt(((results-target)**2).mean()))
-	except:
-		try:
-			return(np.sqrt(((np.asarray(results)-np.asarray(target))**2).mean()))
-		except:
-			print("Error in calculating RMSE. Check input data format.")
-			raise
-			sys.exit()
-			
-# Calculates the MAE of the model result and the target data 
-def calc_mae(results, target):
-	try:
-		return(np.absolute(results-target).mean())
-	except:
-		try:
-			return(np.absolute(np.asarray(results)-np.asarray(target)).mean())
-		except:
-			print("Error in calculating MAE. Check input data format.")
-			raise
-			sys.exit()
-
-# Calculates the correlation of determination, or r-squared value		
-def calc_r2(results, target):
-	target_mean = target.mean()
-	try:
-		s_res = np.sum((results-target)**2)
-		s_tot = np.sum((target-target_mean)**2)
-		return(1 - (s_res/s_tot))
-	except:
-		try:
-			s_res = np.sum((np.asarray(results)-np.asarray(target))**2)
-			s_tot = np.sum((np.asarray(target)-target_mean)**2)
-			return(1 - (s_res/s_tot))
-		except:
-			print("Error in calculating r-squared. Check input data format.")
-			raise
-			sys.exit()
-
 # Creates a static test set, as well as a static learning/validation set with remaining data
 def create_static_test_set(data):
 	filename = data.file.split(".")[0]
