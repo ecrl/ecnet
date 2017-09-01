@@ -18,6 +18,7 @@ import os
 import ecnet.data_utils
 import ecnet.model
 import ecnet.limit_parameters
+import ecnet.error_utils
 
 ### Config/server object; to be referenced by most other files ###
 class Server:
@@ -266,69 +267,94 @@ class Server:
 					finalpred.append([np.mean(local_raw)])
 				final_preds.append(finalpred)
 			return final_preds
-
-	### Tests the model's RMSE on the currently loaded data set	(in its entirety)		
-	def test_model_rmse(self):
-		### SINGLE MODEL ###
-		if self.folder_structs_built == False:
-			preds = self.use_mlp_model_all()
-			if self.normals_use == True:
-				rmse = ecnet.data_utils.calc_rmse(preds, ecnet.data_utils.denormalize_result(self.data.y, self.normal_params_filename))
-			else:
-				rmse = ecnet.data_utils.calc_rmse(preds, self.data.y)
-			return rmse			
-		### PROJECT ###
-		else:
-			final_preds = self.use_mlp_model_all()
-			rmse_list = []
-			for i in range(0,len(final_preds)):
-				if self.normals_use == True:
-					rmse_list.append(ecnet.data_utils.calc_rmse(final_preds[i], ecnet.data_utils.denormalize_result(self.data.y, self.normal_params_filename)))
-				else:
-					rmse_list.append(ecnet.data_utils.calc_rmse(final_preds[i], self.data.y))
-			return rmse_list
 			
-	### Tests the model's mean absolute error on the currently loaded data set (in its entirety)
-	def test_model_mae(self):
-		### SINGLE MODEL ###
-		if self.folder_structs_built == False:
-			preds = self.use_mlp_model_all()
-			if self.normals_use == True:
-				mae = ecnet.data_utils.calc_mae(preds, ecnet.data_utils.denormalize_result(self.data.y, self.normal_params_filename))
-			else:
-				mae = ecnet.data_utils.calc_mae(preds, self.data.y)
-			return mae	
-		### PROJECT ###
-		else:
-			final_preds = self.use_mlp_model_all()
-			mae_list = []
-			for i in range(0,len(final_preds)):
-				if self.normals_use == True:
-					mae_list.append(ecnet.data_utils.calc_mae(final_preds[i], ecnet.data_utils.denormalize_result(self.data.y, self.normal_params_filename)))
+	def calc_error(self, *args):
+		error_dict = {}
+		for arg in args:
+			### Tests the model's RMSE on the currently loaded data set	(in its entirety)
+			if arg is 'rmse':
+				### SINGLE MODEL ###
+				if self.folder_structs_built == False:
+					preds = self.use_mlp_model_all()
+					if self.normals_use == True:
+						rmse = ecnet.error_utils.calc_rmse(preds, ecnet.data_utils.denormalize_result(self.data.y, self.normal_params_filename))
+					else:
+						rmse = ecnet.error_utils.calc_rmse(preds, self.data.y)
+					error_dict['RMSE'] = rmse		
+				### PROJECT ###
 				else:
-					mae_list.append(ecnet.data_utils.calc_mae(final_preds[i], self.data.y))
-			return mae_list
-		
-	### Tests the model's coefficient of determination, or r-squared value
-	def test_model_r2(self):
-		### SINGLE MODEL ###
-		if self.folder_structs_built == False:
-			preds = self.use_mlp_model_all()
-			if self.normals_use == True:
-				r2 = ecnet.data_utils.calc_r2(preds, ecnet.data_utils.denormalize_result(self.data.y, self.normal_params_filename))
-			else:
-				r2 = ecnet.data_utils.calc_r2(preds, self.data.y)
-			return r2
-		### PROJECT ###
-		else:
-			final_preds = self.use_mlp_model_all()
-			r2_list = []
-			for i in range(0,len(final_preds)):
-				if self.normals_use == True:
-					r2_list.append(ecnet.data_utils.calc_r2(final_preds[i], ecnet.data_utils.denormalize_result(self.data.y, self.normal_params_filename)))
+					final_preds = self.use_mlp_model_all()
+					rmse_list = []
+					for i in range(0,len(final_preds)):
+						if self.normals_use == True:
+							rmse_list.append(ecnet.error_utils.calc_rmse(final_preds[i], ecnet.data_utils.denormalize_result(self.data.y, self.normal_params_filename)))
+						else:
+							rmse_list.append(ecnet.error_utils.calc_rmse(final_preds[i], self.data.y))
+					error_dict['RMSE'] = rmse_list
+			### Tests the model's coefficient of determination, or r-squared value
+			elif arg is 'r2':
+				### SINGLE MODEL ###
+				if self.folder_structs_built == False:
+					preds = self.use_mlp_model_all()
+					if self.normals_use == True:
+						r2 = ecnet.error_utils.calc_r2(preds, ecnet.data_utils.denormalize_result(self.data.y, self.normal_params_filename))
+					else:
+						r2 = ecnet.error_utils.calc_r2(preds, self.data.y)
+					error_dict['R-Squared'] = r2
+				### PROJECT ###
 				else:
-					r2_list.append(ecnet.data_utils.calc_r2(final_preds[i], self.data.y))
-			return r2_list
+					final_preds = self.use_mlp_model_all()
+					r2_list = []
+					for i in range(0,len(final_preds)):
+						if self.normals_use == True:
+							r2_list.append(ecnet.error_utils.calc_r2(final_preds[i], ecnet.data_utils.denormalize_result(self.data.y, self.normal_params_filename)))
+						else:
+							r2_list.append(ecnet.error_utils.calc_r2(final_preds[i], self.data.y))
+					error_dict['R-Squared'] = r2_list
+			### Tests the model's mean absolute error on the currently loaded data set (in its entirety)
+			elif arg is 'mean_abs_error':
+				### SINGLE MODEL ###
+				if self.folder_structs_built == False:
+					preds = self.use_mlp_model_all()
+					if self.normals_use == True:
+						mae = ecnet.error_utils.calc_mean_abs_error(preds, ecnet.data_utils.denormalize_result(self.data.y, self.normal_params_filename))
+					else:
+						mae = ecnet.error_utils.calc_mean_abs_error(preds, self.data.y)
+					error_dict['Mean Average Error'] = mae
+				### PROJECT ###
+				else:
+					final_preds = self.use_mlp_model_all()
+					mae_list = []
+					for i in range(0,len(final_preds)):
+						if self.normals_use == True:
+							mae_list.append(ecnet.error_utils.calc_mean_abs_error(final_preds[i], ecnet.data_utils.denormalize_result(self.data.y, self.normal_params_filename)))
+						else:
+							mae_list.append(ecnet.error_utils.calc_mean_abs_error(final_preds[i], self.data.y))
+					error_dict['Mean Average Error'] = mae_list
+			### Tests the model's median absolute error on the currently loaded data set (in its entirety)
+			elif arg is 'med_abs_error':
+				### SINGLE MODEL ###
+				if self.folder_structs_built == False:
+					preds = self.use_mlp_model_all()
+					if self.normals_use == True:
+						medae = ecnet.error_utils.calc_med_abs_error(preds, ecnet.data_utils.denormalize_result(self.data.y, self.normal_params_filename))
+					else:
+						medae = ecnet.error_utils.calc_med_abs_error(preds, self.data.y)
+					error_dict['Median Absolute Error'] = medae
+				### PROJECT ###
+				else:
+					final_preds = self.use_mlp_model_all()
+					medae_list = []
+					for i in range(0,len(final_preds)):
+						if self.normals_use == True:
+							medae_list.append(ecnet.error_utils.calc_med_abs_error(final_preds[i], ecnet.data_utils.denormalize_result(self.data.y, self.normal_params_filename)))
+						else:
+							medae_list.append(ecnet.error_utils.calc_med_abs_error(final_preds[i], self.data.y))
+					error_dict['Median Absolute Error'] = medae_list
+			else:
+				print("Error: unknown/unsupported error function - ",arg)
+				return
+		return error_dict
 		
 	### Outputs results to desired .csv file	
 	def output_results(self, results, which_data, filename):
