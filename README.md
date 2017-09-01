@@ -96,13 +96,7 @@ sv.select_best()					# Select best trial from each build node
 results = sv.use_mlp_model_all()			# Calculate results from data (all sets)
 sv.output_results(results, "all", "cn_results.csv")	# Output results to specified file
 
-rmse = sv.test_model_rmse()				# Root-mean-square error
-mae = sv.test_model_mae()				# Mean average error
-r2 = sv.test_model_r2()					# Coeffecient of determination (r-squared)
-
-print(rmse)
-print(mae)
-print(r2)
+errors = sv.calc_error('rmse','r2','mean_abs_error','med_abs_error')	# Calculates metrics of error for all database predictions
 
 ```
 
