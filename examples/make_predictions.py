@@ -5,7 +5,7 @@ creating the folder hierarchy for your project (project name, number of build se
 importing data from database (specified in config), fitting X machine learning models (where X is number of trials/node,
 specified in config), selecting the best performing trial from each node for the final build set, testing for multiple 
 errors on your database, predicting values for the database and outputting them to an output file.
-"""
+""" 
 from ecnet.server import Server
 
 sv = Server()							# Create server object
