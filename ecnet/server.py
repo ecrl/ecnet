@@ -10,6 +10,7 @@
 
 # 3rd party packages (open src.)
 import yaml
+import pickle
 import numpy as np
 import sys
 import os
@@ -26,13 +27,14 @@ import ecnet.error_utils
 class Server:
     ### Initial declaration, handles config import
 	def __init__(self):
-		self.__dict__.update(import_config())
+		self.vars = {}
+		self.vars.update(import_config(filename = 'config.yml'))
 		self.folder_structs_built = False
 
 	### Imports the data and stores it in the server	
 	def import_data(self):
 		try:
-			self.data = ecnet.data_utils.initialize_data(self.data_filename)
+			self.data = ecnet.data_utils.initialize_data(self.vars['data_filename'])
 		except:
 			raise
 			sys.exit()
@@ -42,18 +44,18 @@ class Server:
 			raise
 			sys.exit()
 		try:
-			self.data.buildTVL(self.data_sort_type, self.data_split)
-			if self.normals_use == True:
-				self.data.normalize(self.normal_params_filename)
+			self.data.buildTVL(self.vars['data_sort_type'], self.vars['data_split'])
+			if self.vars['normals_use'] == True:
+				self.data.normalize('normal_params')
 			self.data.applyTVL()
 			self.data.package()
 		except:
 			raise
 			sys.exit()
 	
-	### Determines which parameters contribute to an accurate output - number is determined by param_limit_num in config; supply an output filename
-	def limit_parameters(self, limited_database_output_filename):
-		params = ecnet.limit_parameters.limit(self)
+	### Determines which 'param_num' parameters contribute to an accurate output; supply the number of parameters to limit to, and the output filename
+	def limit_parameters(self, param_num, limited_database_output_filename):
+		params = ecnet.limit_parameters.limit(self, param_num)
 		ecnet.limit_parameters.output(self, params, limited_database_output_filename)
 
 	### Creates the save environment
@@ -76,18 +78,18 @@ class Server:
 	def fit_mlp_model(self):
         ### PROJECT ###
 		if self.folder_structs_built == True:
-			for build in range(0,self.project_num_builds):
-				if self.project_print_feedback == True:
-					print("Build %d of %d"%(build+1,self.project_num_builds))
-				for node in range(0,self.project_num_nodes):
-					if self.project_print_feedback == True:
-						print("Node %d of %d"%(node+1,self.project_num_nodes))
-					for trial in range(0,self.project_num_trials):
-						if self.project_print_feedback == True:
-							print("Trial %d of %d"%(trial+1,self.project_num_trials))
-						self.output_filepath = os.path.join(os.path.join(os.path.join(self.project_name, self.build_dirs[build]), self.node_dirs[build][node]), "model_output" + "_%d"%(trial + 1))
+			for build in range(0,self.vars['project_num_builds']):
+				if self.vars['project_print_feedback'] == True:
+					print("Build %d of %d"%(build+1,self.vars['project_num_builds']))
+				for node in range(0,self.vars['project_num_nodes']):
+					if self.vars['project_print_feedback'] == True:
+						print("Node %d of %d"%(node+1,self.vars['project_num_nodes']))
+					for trial in range(0,self.vars['project_num_trials']):
+						if self.vars['project_print_feedback'] == True:
+							print("Trial %d of %d"%(trial+1,self.vars['project_num_trials']))
+						self.output_filepath = os.path.join(os.path.join(os.path.join(self.vars['project_name'], self.build_dirs[build]), self.node_dirs[build][node]), "model_output" + "_%d"%(trial + 1))
 						try:
-							self.model.fit(self.data.learn_x, self.data.learn_y, self.learning_rate, self.train_epochs)
+							self.model.fit(self.data.learn_x, self.data.learn_y, self.vars['learning_rate'], self.vars['train_epochs'])
 						except:
 							raise
 							sys.exit()
@@ -101,7 +103,7 @@ class Server:
 		### SINGLE NET ###
 		else:
 			try:
-				self.model.fit(self.data.learn_x, self.data.learn_y, self.learning_rate, self.train_epochs)
+				self.model.fit(self.data.learn_x, self.data.learn_y, self.vars['learning_rate'], self.vars['train_epochs'])
 			except:
 				raise
 				sys.exit()
@@ -115,18 +117,18 @@ class Server:
 	def fit_mlp_model_validation(self):
 		### PROJECT ###
 		if self.folder_structs_built == True:
-			for build in range(0,self.project_num_builds):
-				if self.project_print_feedback == True:
-					print("Build %d of %d"%(build+1,self.project_num_builds))
-				for node in range(0,self.project_num_nodes):
-					if self.project_print_feedback == True:
-						print("Node %d of %d"%(node+1,self.project_num_nodes))
-					for trial in range(0,self.project_num_trials):
-						if self.project_print_feedback == True:
-							print("Trial %d of %d"%(trial+1,self.project_num_trials))
-						self.output_filepath = os.path.join(os.path.join(os.path.join(self.project_name, self.build_dirs[build]), self.node_dirs[build][node]), "model_output" + "_%d"%(trial + 1))
+			for build in range(0,self.vars['project_num_builds']):
+				if self.vars['project_print_feedback'] == True:
+					print("Build %d of %d"%(build+1,self.vars['project_num_builds']))
+				for node in range(0,self.vars['project_num_nodes']):
+					if self.vars['project_print_feedback'] == True:
+						print("Node %d of %d"%(node+1,self.vars['project_num_nodes']))
+					for trial in range(0,self.vars['project_num_trials']):
+						if self.vars['project_print_feedback'] == True:
+							print("Trial %d of %d"%(trial+1,self.vars['project_num_trials']))
+						self.output_filepath = os.path.join(os.path.join(os.path.join(self.vars['project_name'], self.build_dirs[build]), self.node_dirs[build][node]), "model_output" + "_%d"%(trial + 1))
 						try:
-							self.model.fit_validation(self.data.learn_x, self.data.valid_x, self.data.learn_y, self.data.valid_y, self.learning_rate, self.valid_mdrmse_stop, self.valid_mdrmse_memory, self.valid_max_epochs)
+							self.model.fit_validation(self.data.learn_x, self.data.valid_x, self.data.learn_y, self.data.valid_y, self.vars['learning_rate'], self.vars['valid_mdrmse_stop'], self.vars['valid_mdrmse_memory'], self.vars['valid_max_epochs'])
 						except:
 							raise
 							sys.exit()
@@ -140,7 +142,7 @@ class Server:
 		### SINGLE NET ###
 		else:
 			try:
-				self.model.fit_validation(self.data.learn_x, self.data.valid_x, self.data.learn_y, self.data.valid_y, self.learning_rate, self.valid_mdrmse_stop, self.valid_mdrmse_memory, self.valid_max_epochs)
+				self.model.fit_validation(self.data.learn_x, self.data.valid_x, self.data.learn_y, self.data.valid_y, self.vars['learning_rate'], self.vars['valid_mdrmse_stop'], self.vars['valid_mdrmse_memory'], self.vars['valid_max_epochs'])
 			except:
 				raise
 				sys.exit()
@@ -158,11 +160,11 @@ class Server:
 			sys.exit()
 		### PROJECT ###
 		else:
-			for i in range(0,self.project_num_builds):
-				for j in range(0,self.project_num_nodes):
+			for i in range(0,self.vars['project_num_builds']):
+				for j in range(0,self.vars['project_num_nodes']):
 					rmse_list = []
-					for k in range(0,self.project_num_trials):
-						self.model_load_filename = os.path.join(os.path.join(self.project_name, "build_%d"%(i+1)),os.path.join("node_%d"%(j+1), "model_output" + "_%d"%(k+1)))
+					for k in range(0,self.vars['project_num_trials']):
+						self.model_load_filename = os.path.join(os.path.join(self.vars['project_name'], "build_%d"%(i+1)),os.path.join("node_%d"%(j+1), "model_output" + "_%d"%(k+1)))
 						self.model = ecnet.model.multilayer_perceptron()
 						self.model.load_net(self.model_load_filename)
 						res = self.model.test_new(self.data.x)
@@ -172,8 +174,8 @@ class Server:
 					for error in range(0,len(rmse_list)):
 						if rmse_list[error] < rmse_list[current_min]:
 							current_min = error
-					self.model_load_filename = os.path.join(os.path.join(self.project_name, "build_%d"%(i+1)),os.path.join("node_%d"%(j+1), "model_output" + "_%d"%(current_min+1)))
-					self.output_filepath = os.path.join(os.path.join(self.project_name, "build_%d"%(i+1)),os.path.join("node_%d"%(j+1),"final_net_%d"%(j+1)))
+					self.model_load_filename = os.path.join(os.path.join(self.vars['project_name'], "build_%d"%(i+1)),os.path.join("node_%d"%(j+1), "model_output" + "_%d"%(current_min+1)))
+					self.output_filepath = os.path.join(os.path.join(self.vars['project_name'], "build_%d"%(i+1)),os.path.join("node_%d"%(j+1),"final_net_%d"%(j+1)))
 					self.resave_net(self.output_filepath)
 	
 	### Predicts values for the current test set data
@@ -182,13 +184,13 @@ class Server:
 		if self.folder_structs_built == False:
 			self.model = ecnet.model.multilayer_perceptron()
 			try:
-				self.model.load_net("./tmp/model_output")
+				self.model.load_net("tmp/model_output")
 			except:
 				raise
 				sys.exit()
 			try:
-				if self.normals_use == True:
-					res = ecnet.data_utils.denormalize_result(self.model.test_new(self.data.test_x), self.normal_params_filename)
+				if self.vars['normals_use'] == True:
+					res = ecnet.data_utils.denormalize_result(self.model.test_new(self.data.test_x), 'normal_params')
 				else:
 					res = self.model.test_new(self.data.test_x)
 				return [res]
@@ -199,15 +201,15 @@ class Server:
 		### PROJECT ###
 		else:
 			final_preds = []
-			for i in range(0,self.project_num_builds):
+			for i in range(0,self.vars['project_num_builds']):
 				predlist = []
-				for j in range(0,self.project_num_nodes):
-					self.model_load_filename = os.path.join(os.path.join(self.project_name, "build_%d"%(i+1)),os.path.join("node_%d"%(j+1),"final_net_%d"%(j+1)))
+				for j in range(0,self.vars['project_num_nodes']):
+					self.model_load_filename = os.path.join(os.path.join(self.vars['project_name'], "build_%d"%(i+1)),os.path.join("node_%d"%(j+1),"final_net_%d"%(j+1)))
 					self.model = ecnet.model.multilayer_perceptron()
 					self.model.load_net(self.model_load_filename)
 					try:
-						if self.normals_use == True:
-							pred = ecnet.data_utils.denormalize_result(self.model.test_new(self.data.test_x), self.normal_params_filename)
+						if self.vars['normals_use'] == True:
+							pred = ecnet.data_utils.denormalize_result(self.model.test_new(self.data.test_x), 'normal_params')
 						else:
 							pred = self.model.test_new(self.data.test_x)
 						predlist.append(pred)
@@ -229,13 +231,13 @@ class Server:
 		if self.folder_structs_built == False:
 			self.model = ecnet.model.multilayer_perceptron()
 			try:
-				self.model.load_net("./tmp/model_output")
+				self.model.load_net("tmp/model_output")
 			except:
 				raise
 				sys.exit()
 			try:
-				if self.normals_use == True:
-					res = ecnet.data_utils.denormalize_result(self.model.test_new(self.data.x), self.normal_params_filename)
+				if self.vars['normals_use'] == True:
+					res = ecnet.data_utils.denormalize_result(self.model.test_new(self.data.x), 'normal_params')
 				else:
 					res = self.model.test_new(self.data.x)
 				return [res]
@@ -246,15 +248,15 @@ class Server:
 		### PROJECT ###
 		else:
 			final_preds = []
-			for i in range(0,self.project_num_builds):
+			for i in range(0,self.vars['project_num_builds']):
 				predlist = []
-				for j in range(0,self.project_num_nodes):
-					self.model_load_filename = os.path.join(os.path.join(self.project_name, "build_%d"%(i+1)),os.path.join("node_%d"%(j+1),"final_net_%d"%(j+1)))
+				for j in range(0,self.vars['project_num_nodes']):
+					self.model_load_filename = os.path.join(os.path.join(self.vars['project_name'], "build_%d"%(i+1)),os.path.join("node_%d"%(j+1),"final_net_%d"%(j+1)))
 					self.model = ecnet.model.multilayer_perceptron()
 					self.model.load_net(self.model_load_filename)
 					try:
-						if self.normals_use == True:
-							pred = ecnet.data_utils.denormalize_result(self.model.test_new(self.data.x), self.normal_params_filename)
+						if self.vars['normals_use'] == True:
+							pred = ecnet.data_utils.denormalize_result(self.model.test_new(self.data.x), 'normal_params')
 						else:
 							pred = self.model.test_new(self.data.x)
 						predlist.append(pred)
@@ -279,8 +281,8 @@ class Server:
 				### SINGLE MODEL ###
 				if self.folder_structs_built == False:
 					preds = self.use_mlp_model_all()
-					if self.normals_use == True:
-						rmse = ecnet.error_utils.calc_rmse(preds, ecnet.data_utils.denormalize_result(self.data.y, self.normal_params_filename))
+					if self.vars['normals_use'] == True:
+						rmse = ecnet.error_utils.calc_rmse(preds, ecnet.data_utils.denormalize_result(self.data.y, 'normal_params'))
 					else:
 						rmse = ecnet.error_utils.calc_rmse(preds, self.data.y)
 					error_dict['RMSE'] = rmse		
@@ -289,8 +291,8 @@ class Server:
 					final_preds = self.use_mlp_model_all()
 					rmse_list = []
 					for i in range(0,len(final_preds)):
-						if self.normals_use == True:
-							rmse_list.append(ecnet.error_utils.calc_rmse(final_preds[i], ecnet.data_utils.denormalize_result(self.data.y, self.normal_params_filename)))
+						if self.vars['normals_use'] == True:
+							rmse_list.append(ecnet.error_utils.calc_rmse(final_preds[i], ecnet.data_utils.denormalize_result(self.data.y, 'normal_params')))
 						else:
 							rmse_list.append(ecnet.error_utils.calc_rmse(final_preds[i], self.data.y))
 					error_dict['RMSE'] = rmse_list
@@ -299,8 +301,8 @@ class Server:
 				### SINGLE MODEL ###
 				if self.folder_structs_built == False:
 					preds = self.use_mlp_model_all()
-					if self.normals_use == True:
-						r2 = ecnet.error_utils.calc_r2(preds, ecnet.data_utils.denormalize_result(self.data.y, self.normal_params_filename))
+					if self.vars['normals_use'] == True:
+						r2 = ecnet.error_utils.calc_r2(preds, ecnet.data_utils.denormalize_result(self.data.y, 'normal_params'))
 					else:
 						r2 = ecnet.error_utils.calc_r2(preds, self.data.y)
 					error_dict['R-Squared'] = r2
@@ -309,8 +311,8 @@ class Server:
 					final_preds = self.use_mlp_model_all()
 					r2_list = []
 					for i in range(0,len(final_preds)):
-						if self.normals_use == True:
-							r2_list.append(ecnet.error_utils.calc_r2(final_preds[i], ecnet.data_utils.denormalize_result(self.data.y, self.normal_params_filename)))
+						if self.vars['normals_use'] == True:
+							r2_list.append(ecnet.error_utils.calc_r2(final_preds[i], ecnet.data_utils.denormalize_result(self.data.y, 'normal_params')))
 						else:
 							r2_list.append(ecnet.error_utils.calc_r2(final_preds[i], self.data.y))
 					error_dict['R-Squared'] = r2_list
@@ -319,8 +321,8 @@ class Server:
 				### SINGLE MODEL ###
 				if self.folder_structs_built == False:
 					preds = self.use_mlp_model_all()
-					if self.normals_use == True:
-						mae = ecnet.error_utils.calc_mean_abs_error(preds, ecnet.data_utils.denormalize_result(self.data.y, self.normal_params_filename))
+					if self.vars['normals_use'] == True:
+						mae = ecnet.error_utils.calc_mean_abs_error(preds, ecnet.data_utils.denormalize_result(self.data.y, 'normal_params'))
 					else:
 						mae = ecnet.error_utils.calc_mean_abs_error(preds, self.data.y)
 					error_dict['Mean Average Error'] = mae
@@ -329,8 +331,8 @@ class Server:
 					final_preds = self.use_mlp_model_all()
 					mae_list = []
 					for i in range(0,len(final_preds)):
-						if self.normals_use == True:
-							mae_list.append(ecnet.error_utils.calc_mean_abs_error(final_preds[i], ecnet.data_utils.denormalize_result(self.data.y, self.normal_params_filename)))
+						if self.vars['normals_use'] == True:
+							mae_list.append(ecnet.error_utils.calc_mean_abs_error(final_preds[i], ecnet.data_utils.denormalize_result(self.data.y, 'normal_params')))
 						else:
 							mae_list.append(ecnet.error_utils.calc_mean_abs_error(final_preds[i], self.data.y))
 					error_dict['Mean Average Error'] = mae_list
@@ -339,8 +341,8 @@ class Server:
 				### SINGLE MODEL ###
 				if self.folder_structs_built == False:
 					preds = self.use_mlp_model_all()
-					if self.normals_use == True:
-						medae = ecnet.error_utils.calc_med_abs_error(preds, ecnet.data_utils.denormalize_result(self.data.y, self.normal_params_filename))
+					if self.vars['normals_use'] == True:
+						medae = ecnet.error_utils.calc_med_abs_error(preds, ecnet.data_utils.denormalize_result(self.data.y, 'normal_params'))
 					else:
 						medae = ecnet.error_utils.calc_med_abs_error(preds, self.data.y)
 					error_dict['Median Absolute Error'] = medae
@@ -349,8 +351,8 @@ class Server:
 					final_preds = self.use_mlp_model_all()
 					medae_list = []
 					for i in range(0,len(final_preds)):
-						if self.normals_use == True:
-							medae_list.append(ecnet.error_utils.calc_med_abs_error(final_preds[i], ecnet.data_utils.denormalize_result(self.data.y, self.normal_params_filename)))
+						if self.vars['normals_use'] == True:
+							medae_list.append(ecnet.error_utils.calc_med_abs_error(final_preds[i], ecnet.data_utils.denormalize_result(self.data.y, 'normal_params')))
 						else:
 							medae_list.append(ecnet.error_utils.calc_med_abs_error(final_preds[i], self.data.y))
 					error_dict['Median Absolute Error'] = medae_list
@@ -377,41 +379,71 @@ class Server:
 			raise
 			sys.exit()
 			
-	### Cleans up the project directory (only keep final node NN's), copies the config and normal params (if present) files to the directory, and zips the directory for publication
-	### STILL IN DEV
+	### Cleans up the project directory (only keep final node NN's), copies the config, data and normal params (if present) files to the directory, and zips the directory for publication
 	def publish_project(self):
 		# Clean up project directory
-		for build in range(self.project_num_builds):
-			for node in range(self.project_num_nodes):
-				directory = os.path.join(self.project_name, os.path.join('build_%d'%(build+1), 'node_%d'%(node+1)))
+		for build in range(self.vars['project_num_builds']):
+			for node in range(self.vars['project_num_nodes']):
+				directory = os.path.join(self.vars['project_name'], os.path.join('build_%d'%(build+1), 'node_%d'%(node+1)))
 				filelist = [f for f in os.listdir(directory) if 'model_output' in f]
 				for f in filelist:
 					os.remove(os.path.join(directory, f))
 		# Copy config.yml and normal parameters file to the project directory
-		save_config(self.__dict__.update())
-		copyfile('config.yml', os.path.join(self.project_name, 'config.yml'))
-		if self.normals_use is True:
-			copyfile(self.normal_params_filename + '.ecnet', os.path.join(self.project_name, self.normal_params_filename + '.ecnet'))
+		save_config(self.vars)
+		copyfile('config.yml', os.path.join(self.vars['project_name'], 'config.yml'))
+		if self.vars['normals_use'] is True:
+			copyfile('normal_params' + '.ecnet', os.path.join(self.vars['project_name'], 'normal_params' + '.ecnet'))
+		# Export the currently loaded dataset
+		try:
+			pickle.dump(self.data, open(os.path.join(self.vars['project_name'],'data.d'),'wb'))
+		except:
+			pass
 		# Zip up the project
-		zipf = zipfile.ZipFile(self.project_name + '.project', 'w', zipfile.ZIP_DEFLATED)
-		for root, dirs, files in os.walk(self.project_name):
+		zipf = zipfile.ZipFile(self.vars['project_name'] + '.project', 'w', zipfile.ZIP_DEFLATED)
+		for root, dirs, files in os.walk(self.vars['project_name']):
 			for file in files:
 				zipf.write(os.path.join(root,file))
 		zipf.close()
+	
+	### Opens a published project, importing model, data, config, normal params
+	def open_project(self, project_name):
+		# Check naming scheme
+		if '.project' not in project_name:
+			zip_loc = project_name + '.project'
+		else:
+			project_name = project_name.replace('.project', '')
+			zip_loc = project_name + '.project'
+		# Unzip project to directory
+		zip_ref = zipfile.ZipFile(zip_loc, 'r')
+		zip_ref.extractall('./')
+		zip_ref.close()
+		# Update config to project config
+		self.vars.update(import_config(filename = os.path.join(project_name,'config.yml')))
+		save_config(self.vars)
+		# Unpack data
+		try:
+			self.data = pickle.load(open(os.path.join(project_name, 'data.d'),'rb'))
+		except:
+			print('Error: unable to load data.')
+			pass
+		# Set up model environment
+		self.folder_structs_built = True
+		create_folder_structure(self)
+		create_model(self)
 
 # Creates the default folder structure, outlined in the file config by number of builds and nodes.
 def create_folder_structure(server_obj):
 	server_obj.build_dirs = []
-	for build_dirs in range(0,server_obj.project_num_builds):
+	for build_dirs in range(0,server_obj.vars['project_num_builds']):
 		server_obj.build_dirs.append('build_%d'%(build_dirs + 1))
 	server_obj.node_dirs = []
-	for build_dirs in range(0,server_obj.project_num_builds):
+	for build_dirs in range(0,server_obj.vars['project_num_builds']):
 		local_nodes = []
-		for node_dirs in range(0,server_obj.project_num_nodes):
+		for node_dirs in range(0,server_obj.vars['project_num_nodes']):
 			local_nodes.append('node_%d'%(node_dirs + 1))
 		server_obj.node_dirs.append(local_nodes)
 	for build in range(0,len(server_obj.build_dirs)):
-		path = os.path.join(server_obj.project_name, server_obj.build_dirs[build])
+		path = os.path.join(server_obj.vars['project_name'], server_obj.build_dirs[build])
 		if not os.path.exists(path):
 			os.makedirs(path)
 		for node in range(0,len(server_obj.node_dirs[build])):
@@ -423,22 +455,22 @@ def create_folder_structure(server_obj):
 # Creates a model using config.yaml		
 def create_model(server_obj):
 	net = ecnet.model.multilayer_perceptron()
-	net.addLayer(len(server_obj.data.x[0]), server_obj.mlp_in_layer_activ)
-	for hidden in range(0,len(server_obj.mlp_hidden_layers)):
-		net.addLayer(server_obj.mlp_hidden_layers[hidden][0], server_obj.mlp_hidden_layers[hidden][1])
-	net.addLayer(len(server_obj.data.y[0]), server_obj.mlp_out_layer_activ)
+	net.addLayer(len(server_obj.data.x[0]), server_obj.vars['mlp_in_layer_activ'])
+	for hidden in range(0,len(server_obj.vars['mlp_hidden_layers'])):
+		net.addLayer(server_obj.vars['mlp_hidden_layers'][hidden][0], server_obj.vars['mlp_hidden_layers'][hidden][1])
+	net.addLayer(len(server_obj.data.y[0]), server_obj.vars['mlp_out_layer_activ'])
 	net.connectLayers()
 	return net
 
 # Imports 'config.yaml'; creates a default file if none is found	
-def import_config():
+def import_config(filename = 'config.yml'):
 	try:
-		stream = open('config.yml', 'r')
+		stream = open(filename, 'r')
 		return(yaml.load(stream))
 	except:
 		print("Caught exception: config not found. Creating default config file.")
 		create_default_config()
-		stream = open('config.yml', 'r')
+		stream = open(filename, 'r')
 		return(yaml.load(stream))
 
 # Saves all server variables to config.yml
@@ -457,9 +489,7 @@ def create_default_config():
 		'mlp_hidden_layers' : [[5, 'relu'], [5, 'relu']],
 		'mlp_in_layer_activ' : 'relu',
 		'mlp_out_layer_activ' : 'linear',
-		'normal_params_filename' : 'normal_params',
 		'normals_use' : False,
-		'param_limit_num' : 15,
 		'project_name' : 'my_project',
 		'project_num_builds' : 1,
 		'project_num_nodes' : 1,
