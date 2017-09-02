@@ -72,7 +72,7 @@ Here are brief explanations of each of these variables:
 	- Rectified linear unit ('relu') and Sigmoid ('sigmoid') layer types are currently supported
 - **mlp_in_layer_activ** - the layer type of the input layer: number of nodes is determined by data dimensions
 - **mlp_out_layer_activ** - the layer type of the output layer: number of nodes is determined by data dimensions
-- **normals_use**: boolean to determine if parameters should be normalized (min-max, between 0 and 1)
+- **normals_use**: boolean to determine if I/O parameters should be normalized (min-max, between 0 and 1)
 - **project_name**: the name of your project
 - **project_num_builds**: the number of builds in your project
 - **project_num_nodes**: the number of nodes in each build
