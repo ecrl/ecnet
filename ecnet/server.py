@@ -13,6 +13,8 @@ import yaml
 import numpy as np
 import sys
 import os
+import zipfile
+from shutil import copyfile
 
 # ECNet program files
 import ecnet.data_utils
@@ -164,7 +166,7 @@ class Server:
 						self.model = ecnet.model.multilayer_perceptron()
 						self.model.load_net(self.model_load_filename)
 						res = self.model.test_new(self.data.x)
-						rmse = ecnet.data_utils.calc_rmse(res, self.data.y)
+						rmse = ecnet.error_utils.calc_rmse(res, self.data.y)
 						rmse_list.append(rmse)
 					current_min = 0
 					for error in range(0,len(rmse_list)):
@@ -267,7 +269,8 @@ class Server:
 					finalpred.append([np.mean(local_raw)])
 				final_preds.append(finalpred)
 			return final_preds
-			
+	
+	### Calculates errors for each given argument		
 	def calc_error(self, *args):
 		error_dict = {}
 		for arg in args:
@@ -373,6 +376,28 @@ class Server:
 		except:
 			raise
 			sys.exit()
+			
+	### Cleans up the project directory (only keep final node NN's), copies the config and normal params (if present) files to the directory, and zips the directory for publication
+	### STILL IN DEV
+	def publish_project(self):
+		# Clean up project directory
+		for build in range(self.project_num_builds):
+			for node in range(self.project_num_nodes):
+				directory = os.path.join(self.project_name, os.path.join('build_%d'%(build+1), 'node_%d'%(node+1)))
+				filelist = [f for f in os.listdir(directory) if 'model_output' in f]
+				for f in filelist:
+					os.remove(os.path.join(directory, f))
+		# Copy config.yml and normal parameters file to the project directory
+		save_config(self.__dict__.update())
+		copyfile('config.yml', os.path.join(self.project_name, 'config.yml'))
+		if self.normals_use is True:
+			copyfile(self.normal_params_filename + '.ecnet', os.path.join(self.project_name, self.normal_params_filename + '.ecnet'))
+		# Zip up the project
+		zipf = zipfile.ZipFile(self.project_name + '.project', 'w', zipfile.ZIP_DEFLATED)
+		for root, dirs, files in os.walk(self.project_name):
+			for file in files:
+				zipf.write(os.path.join(root,file))
+		zipf.close()
 
 # Creates the default folder structure, outlined in the file config by number of builds and nodes.
 def create_folder_structure(server_obj):
@@ -415,6 +440,11 @@ def import_config():
 		create_default_config()
 		stream = open('config.yml', 'r')
 		return(yaml.load(stream))
+
+# Saves all server variables to config.yml
+def save_config(config_dict):
+	with open('config.yml', 'w') as outfile:
+		yaml.dump(config_dict, outfile, default_flow_style = False, explicit_start = True)
 
 # Creates a default 'config.yaml' file	 			
 def create_default_config():
