@@ -94,21 +94,21 @@ Here is an overview of the Server object's methods:
 - **create_save_env()**: creates the folder hierarchy for your project, contained in a folder named after your project name
 	- note: if this is not done, a project will not be created, and single models will be saved to the 'tmp' folder in your working directory
 - **import_data(*data_filename = None*)**: imports the data from the database specified in 'data_filename', splits the data into learning/validation/testing groups, and packages the data so it's ready to be sent to the model
-	- arguments: None (default config filename is used), data_filename (specified database is used)
+	- arguments: **None** (default config filename is used), **data_filename** (specified database is used)
 - **fit_mlp_model(*args*)**: fits multilayer-perceptron(s) to the data, for 'train_epochs' learning iterations
-	- arguments: None (no re-shuffling between trials), 'shuffle_lv' (shuffles learning and validation sets between trials), 'shuffle_lvt' (shuffles all sets between trials)
+	- arguments: **None** (no re-shuffling between trials), **'shuffle_lv'** (shuffles learning and validation sets between trials), **'shuffle_lvt'** (shuffles all sets between trials)
 - **fit_mlp_model_validation(*args*)**: fits multilayer-perceptron(s) to the data, using the validation set to determine when to stop learning
-	- arguments: None (no re-shuffling between trials), 'shuffle_lv' (shuffles learning and validation sets between trials), 'shuffle_lvt' (shuffles all sets between trials)
+	- arguments: **None** (no re-shuffling between trials), **'shuffle_lv'** (shuffles learning and validation sets between trials), **'shuffle_lvt'** (shuffles all sets between trials)
 - **select_best()**: selects the best performing model to represent each node of each build; requires a folder hierarchy to be created
 - **use_mlp_model(*args*)**: predicts values for the data's testing group; returns a list of values for each build
-	- arguments: None (just test set is predicted), 'all' (obtains results for entire dataset)
+	- arguments: **None** (just test set is predicted), **'all'** (obtains results for entire dataset)
 - **calc_error(*args*)**: calculates various metrics for error
-	- arguments: None, 'rmse' (root-mean-squared error), 'r2' (r-squared value), 'mean_abs_error' (mean absolute error), 'med_abs_error' (median absolute error)
+	- arguments: **None**, **'rmse'** (root-mean-squared error), **'r2'** (r-squared value), **'mean_abs_error'** (mean absolute error), **'med_abs_error'** (median absolute error)
 - **output_results(*results, output_filename, args*)**: saves your results to a specified output file
-	- arguments: None (just test set is exported), 'all' (results and data for entire dataset is exported)
-- **limit_parameters(*param_num, filename*)**: reduces the input dimensionality of an input database through a "retain the best" process; param_num = number of parameters to limit to, filename = save location for new database; view the databases directory for the full cetane number database and an example limited database with 15/1666 QSPR descriptors
+	- arguments: **None** (just test set is exported), **'all'** (results and data for entire dataset is exported)
+- **limit_parameters(*param_num, filename*)**: reduces the input dimensionality of an input database through a "retain the best" process; **param_num** = number of parameters to limit to, **filename** = save location for new database; view the databases directory for the full cetane number database and an example limited database with 15/1666 QSPR descriptors
 - **publish_project()**: cleans the project directory, copies config, normal_params, and currently loaded dataset into the directory, and creates a '.project' file
-- **open_project(*project_name*)**: opens a '.project' file, importing the project's config, normal_params, and dataset to the Server object
+- **open_project(*project_name*)**: opens a '**project_name**.project' file, importing the project's config, normal_params, and dataset to the Server object
 
 Working directly with the Server object to handle model creation and data management allows for speedy scripting, but you can still work with the model and data classes directly. View the source code README.md for more information on low-level usage.
 
