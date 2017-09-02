@@ -95,7 +95,7 @@ sv.create_mlp_model()					# Create a multilayer perceptron (neural network)
 sv.fit_mlp_model_validation()				# Fits the mlp using input database (w/ validation set)
 sv.select_best()					# Select best trial from each build node
 
-train_results = sv.use_mlp_model_all()			# Calculate results from data (all sets)
+train_results = sv.use_mlp_model_all()			# Predict values for the training dataset
 sv.output_results(train_results, "all", "cn_results.csv")	# Output results to specified file
 
 train_errors = sv.calc_error('rmse','r2','mean_abs_error','med_abs_error')	# Calculates errors for dataset
