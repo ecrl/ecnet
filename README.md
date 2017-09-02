@@ -35,27 +35,31 @@ Additional package dependencies (TensorFlow, PyYaml) will be installed during th
 ECNet operates using a **Server** object that interfaces with data utility classes and neural network creation classes. The Server object handles importing data and model creation for your project, and serves the data to the model. Configurable variables like your project's name, number of builds and nodes, ANN learning and architecture variables, data splitting controls, and more are found in a __config.yml__ file in your working directory. Here's what a config.yml file for cetane number prediction looks like:
 
 ```yml
+---
 data_filename: cn_model_v1.0.csv
 data_sort_type: random
-data_split: [0.65, 0.25, 0.1]
+data_split:
+- 0.65
+- 0.25
+- 0.1
 learning_rate: 0.05
 mlp_hidden_layers:
-- [32, relu]
-- [32, relu]
+- - 32
+  - relu
+- - 32
+  - relu
 mlp_in_layer_activ: relu
 mlp_out_layer_activ: linear
-normal_params_filename: normalization_parameters
-normals_use: False
-param_limit_num: 15
+normals_use: false
 project_name: cn_v1.0_project
-project_num_builds: 25
-project_num_nodes: 5
-project_num_trials: 75
-project_print_feedback: True
-train_epochs: 12500
-valid_max_epochs: 7000
-valid_mdrmse_stop: 0.0001
-valid_mdrmse_memory: 1000
+project_num_builds: 1
+project_num_nodes: 1
+project_num_trials: 5
+project_print_feedback: true
+train_epochs: 2500
+valid_max_epochs: 7500
+valid_mdrmse_memory: 250
+valid_mdrmse_stop: 0.00007
 ```
 
 Here are brief explanations of each of these variables:
@@ -68,7 +72,6 @@ Here are brief explanations of each of these variables:
 	- Rectified linear unit ('relu') and Sigmoid ('sigmoid') layer types are currently supported
 - **mlp_in_layer_activ** - the layer type of the input layer: number of nodes is determined by data dimensions
 - **mlp_out_layer_activ** - the layer type of the output layer: number of nodes is determined by data dimensions
-- **normal_params_filename**: filename for the normalization parameters (if used)
 - **normals_use**: boolean to determine if parameters should be normalized (min-max, between 0 and 1)
 - **param_limit_num**: used by the parameter limiting methods, determines how many optimal parameters to retain from a very large dimensional database
 - **project_name**: the name of your project
@@ -78,10 +81,10 @@ Here are brief explanations of each of these variables:
 - **project_print_feedback**: whether the console will show status messages
 - **train_epochs**: number of training iterations (not used with validation)
 - **valid_max_epochs**: the maximum number of training iterations during the validation process
-- **valid_mdrmse_stop**: the threshold to determine learning cutoff (looks at the change in validation RMSE over time)
 - **valid_mdrmse_memory**: how many epochs back the validation process looks in determining the change in validation RMSE over time
+- **valid_mdrmse_stop**: the threshold to determine learning cutoff (looks at the change in validation RMSE over time)
 
-Now let's look at a script for building a project, predicting values of cetane number for molecules in the cetane number database, and saving the results to an output file: 
+Now let's look at a script for building a project, importing the dataset, creating models for each build, training the models, selecting the best model for each node, grabbing results and errors for the dataset, and publishing the project:
 
 ```python
 from ecnet.server import Server
@@ -107,7 +110,7 @@ You can change all the configuration variables from your Python script, without 
 from ecnet.server import Server
 
 sv = Server()
-sv.data_filename = 'my_database.csv'
+sv.vars['data_filename'] = 'my_database.csv'
 ```
 
 Here's an overview of the Server object's methods:
@@ -124,6 +127,8 @@ Here's an overview of the Server object's methods:
 - **test_model_mae()**: tests the model's mean average error relative to the entire database; returns a list containing MAE's for each build
 - **test_model_r2()**: tests the model's coefficient of determination, or r-squared value, relative to the entire database; returns a list containing r-squared values for each build
 - **output_results(results, which_data, output_filename)**: saves your results to a specified output file; which_data is either 'test' or 'all', for results from 'use_mlp_model()' and 'use_mlp_model_all()' respectively
-- **limit_parameters(limited_db_output_filename)**: reduces the input dimensionality of an input database through a "retain the best" process; view the databases directory for the full cetane number database and an example limited database with 15/1666 QSPR descriptors
+- **limit_parameters(param_num, filename)**: reduces the input dimensionality of an input database through a "retain the best" process; param_num = number of parameters to limit to, filename = save location for new database; view the databases directory for the full cetane number database and an example limited database with 15/1666 QSPR descriptors
+- **publish_project()**: cleans the project directory, copies config, normal_params, and currently loaded dataset into the directory, and creates a '.project' file
+- **open_project(project_name)**: opens a '.project' file, importing the project's config, normal_params, and dataset to the Server object
 
 Working directly with the Server object to handle model creation and data management allows for speedy scripting, but you can still work with the model and data classes directly. View the source code README.md for more information on low-level usage.
