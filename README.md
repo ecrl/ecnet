@@ -32,7 +32,9 @@ Additional package dependencies (TensorFlow, PyYaml) will be installed during th
 
 ## Usage:
 
-ECNet operates using a **Server** object that interfaces with data utility classes and neural network creation classes. The Server object handles importing data and model creation for your project, and serves the data to the model. Configurable variables like your project's name, number of builds and nodes, ANN learning and architecture variables, data splitting controls, and more are found in a __config.yml__ file in your working directory. Here's what a config.yml file for cetane number prediction looks like:
+ECNet operates using a **Server** object that interfaces with data utility classes and neural network creation classes. The Server object handles importing data and model creation for your project, and serves the data to the model. Configurable variables like your project's name, number of builds and nodes, ANN learning and architecture variables, data splitting controls, and more are found in a __config.yml__ file in your working directory.
+
+### config.yml format and variables:
 
 ```yml
 ---
@@ -83,7 +85,31 @@ Here are brief explanations of each of these variables:
 - **valid_mdrmse_memory**: how many epochs back the validation process looks in determining the change in validation RMSE over time
 - **valid_mdrmse_stop**: the threshold to determine learning cutoff (looks at the change in validation RMSE over time)
 
-Now let's look at a script for building a project, importing the dataset, creating models for each build node, training the models, selecting the best model for each build node, grabbing results and errors for the dataset, and publishing the project:
+### Server methods:
+
+Here's an overview of the Server object's methods:
+
+- **create_save_env()**: creates the folder hierarchy for your project, contained in a folder named after your project name
+- **import_data()**: imports the data from the database specified in 'data_filename', splits the data into learning/validation/testing groups, and packages the data so it's ready to be sent to the model
+- **create_mlp_model()**: creates a multilayer-perceptron (aka, a feed-forward neural network) based on the input/output dimensionality of the imported data and the hidden layer architecture specified in the config
+- **fit_mlp_model()**: fits the multilayer-perceptron to the data, for 'train_epochs' learning iterations; no validation done here
+- **fit_mlp_model_validation()**: fits the multilayer-perceptron to the data, using the validation set to determine when to stop learning
+- **select_best()**: selects the best performing model to represent each node of each build; requires a folder hierarchy to be created
+- **use_mlp_model()**: predicts values for the data's testing group; returns a list of values for each build
+- **use_mlp_model_all()**: predicts values for the data's learning, validation and testing groups; returns a list of values for each build
+- **test_model_rmse()**: tests the model's root-mean-square error relative to the entire database; returns a list containing RMSE's for each build
+- **test_model_mae()**: tests the model's mean average error relative to the entire database; returns a list containing MAE's for each build
+- **test_model_r2()**: tests the model's coefficient of determination, or r-squared value, relative to the entire database; returns a list containing r-squared values for each build
+- **output_results(results, which_data, output_filename)**: saves your results to a specified output file; which_data is either 'test' or 'all', for results from 'use_mlp_model()' and 'use_mlp_model_all()' respectively
+- **limit_parameters(param_num, filename)**: reduces the input dimensionality of an input database through a "retain the best" process; param_num = number of parameters to limit to, filename = save location for new database; view the databases directory for the full cetane number database and an example limited database with 15/1666 QSPR descriptors
+- **publish_project()**: cleans the project directory, copies config, normal_params, and currently loaded dataset into the directory, and creates a '.project' file
+- **open_project(project_name)**: opens a '.project' file, importing the project's config, normal_params, and dataset to the Server object
+
+Working directly with the Server object to handle model creation and data management allows for speedy scripting, but you can still work with the model and data classes directly. View the source code README.md for more information on low-level usage.
+
+### Examples:
+
+Let's look at a script for building a project, importing the dataset, creating models for each build node, training the models, selecting the best model for each build node, grabbing results and errors for the dataset, and publishing the project:
 
 ```python
 from ecnet.server import Server
@@ -126,23 +152,3 @@ sv.vars['data_filename'] = 'new_data.csv'
 sv.import_data()
 results = sv.use_mlp_model_all()
 ```
-
-Here's an overview of the Server object's methods:
-
-- **create_save_env()**: creates the folder hierarchy for your project, contained in a folder named after your project name
-- **import_data()**: imports the data from the database specified in 'data_filename', splits the data into learning/validation/testing groups, and packages the data so it's ready to be sent to the model
-- **create_mlp_model()**: creates a multilayer-perceptron (aka, a feed-forward neural network) based on the input/output dimensionality of the imported data and the hidden layer architecture specified in the config
-- **fit_mlp_model()**: fits the multilayer-perceptron to the data, for 'train_epochs' learning iterations; no validation done here
-- **fit_mlp_model_validation()**: fits the multilayer-perceptron to the data, using the validation set to determine when to stop learning
-- **select_best()**: selects the best performing model to represent each node of each build; requires a folder hierarchy to be created
-- **use_mlp_model()**: predicts values for the data's testing group; returns a list of values for each build
-- **use_mlp_model_all()**: predicts values for the data's learning, validation and testing groups; returns a list of values for each build
-- **test_model_rmse()**: tests the model's root-mean-square error relative to the entire database; returns a list containing RMSE's for each build
-- **test_model_mae()**: tests the model's mean average error relative to the entire database; returns a list containing MAE's for each build
-- **test_model_r2()**: tests the model's coefficient of determination, or r-squared value, relative to the entire database; returns a list containing r-squared values for each build
-- **output_results(results, which_data, output_filename)**: saves your results to a specified output file; which_data is either 'test' or 'all', for results from 'use_mlp_model()' and 'use_mlp_model_all()' respectively
-- **limit_parameters(param_num, filename)**: reduces the input dimensionality of an input database through a "retain the best" process; param_num = number of parameters to limit to, filename = save location for new database; view the databases directory for the full cetane number database and an example limited database with 15/1666 QSPR descriptors
-- **publish_project()**: cleans the project directory, copies config, normal_params, and currently loaded dataset into the directory, and creates a '.project' file
-- **open_project(project_name)**: opens a '.project' file, importing the project's config, normal_params, and dataset to the Server object
-
-Working directly with the Server object to handle model creation and data management allows for speedy scripting, but you can still work with the model and data classes directly. View the source code README.md for more information on low-level usage.
