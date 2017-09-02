@@ -59,6 +59,6 @@ Error Functions:
 
 ## limit_parameters.py
 Functions:
-- **limit(server)**: limits the number of input parameters to an integer value specified in the server config.yml file, using a "retain the best" process, where the best performing input parameter (based on RMSE) is retained, paired with every other input parameter until a best pair is found, repeated until the limit number has been reached
+- **limit(num_params, server)**: limits the number of input parameters to an integer value specified by num_params, using a "retain the best" process, where the best performing input parameter (based on RMSE) is retained, paired with every other input parameter until a best pair is found, repeated until the limit number has been reached
   - returns a list of parameters
 - **output(data, param_list, filename)**: saves a new .csv formatted database, using a generated parameter list and an output filename
