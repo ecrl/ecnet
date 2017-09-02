@@ -11,7 +11,7 @@
 import csv
 import copy
 
-def limit(server):
+def limit(server, param_num):
 	# 
 	data = copy.copy(server.data)
 	
@@ -29,7 +29,7 @@ def limit(server):
 	total_params = []
 	
 	# Until the param_list is populated with specified number of params:	
-	while len(param_list) < server.param_limit_num:
+	while len(param_list) < param_num:
 		
 		# Used for determining which paramter at the current iteration performs the best
 		param_RMSE_list = []
@@ -94,7 +94,7 @@ def limit(server):
 			server.fit_mlp_model_validation()
 			
 			# Determines the RMSE of the model with the current inputs, adds it to total list
-			local_rmse = server.test_model_rmse()
+			local_rmse = server.calc_error('rmse')
 			param_RMSE_list.append(local_rmse)
 			
 		# Determines lowest RMSE of the current iteration, which corresponds to the best performing parameter
