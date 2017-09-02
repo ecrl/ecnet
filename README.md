@@ -92,20 +92,23 @@ Here are brief explanations of each of these variables:
 Here is an overview of the Server object's methods:
 
 - **create_save_env()**: creates the folder hierarchy for your project, contained in a folder named after your project name
-- **import_data()**: imports the data from the database specified in 'data_filename', splits the data into learning/validation/testing groups, and packages the data so it's ready to be sent to the model
-- **create_mlp_model()**: creates a multilayer-perceptron (aka, a feed-forward neural network) based on the input/output dimensionality of the imported data and the hidden layer architecture specified in the config
-- **fit_mlp_model()**: fits the multilayer-perceptron to the data, for 'train_epochs' learning iterations; no validation done here
-- **fit_mlp_model_validation()**: fits the multilayer-perceptron to the data, using the validation set to determine when to stop learning
+	- note: if this is not done, a project will not be created, and single models will be saved to the 'tmp' folder
+- **import_data(*data_filename = None*)**: imports the data from the database specified in 'data_filename', splits the data into learning/validation/testing groups, and packages the data so it's ready to be sent to the model
+	- arguments: None (default config filename is used), data_filename (specified database is used)
+- **fit_mlp_model(*args*)**: fits multilayer-perceptron(s) to the data, for 'train_epochs' learning iterations
+	- arguments: None, 'shuffle_lv' (shuffles learning and validation sets between trials), 'shuffle_lvt' (shuffles all sets between trials)
+- **fit_mlp_model_validation(*args*)**: fits multilayer-perceptron(s) to the data, using the validation set to determine when to stop learning
+	- arguments: None, 'shuffle_lv' (shuffles learning and validation sets between trials), 'shuffle_lvt' (shuffles all sets between trials)
 - **select_best()**: selects the best performing model to represent each node of each build; requires a folder hierarchy to be created
-- **use_mlp_model()**: predicts values for the data's testing group; returns a list of values for each build
-- **use_mlp_model_all()**: predicts values for the data's learning, validation and testing groups; returns a list of values for each build
-- **test_model_rmse()**: tests the model's root-mean-square error relative to the entire database; returns a list containing RMSE's for each build
-- **test_model_mae()**: tests the model's mean average error relative to the entire database; returns a list containing MAE's for each build
-- **test_model_r2()**: tests the model's coefficient of determination, or r-squared value, relative to the entire database; returns a list containing r-squared values for each build
-- **output_results(results, which_data, output_filename)**: saves your results to a specified output file; which_data is either 'test' or 'all', for results from 'use_mlp_model()' and 'use_mlp_model_all()' respectively
+- **use_mlp_model(*args*)**: predicts values for the data's testing group; returns a list of values for each build
+	- arguments: None (just test set is predicted), 'all' (obtains results for entire dataset)
+- **calc_error(*args*)**: calculates various metrics for error
+	- arguments: None, 'rmse' (root-mean-squared error), 'r2' (r-squared value), 'mean_abs_error' (mean absolute error), 'med_abs_error' (median absolute error)
+- **output_results(results, output_filename, *args*)**: saves your results to a specified output file
+	- arguments: None (just test set is exported), 'all' (results and data for entire dataset is exported)
 - **limit_parameters(param_num, filename)**: reduces the input dimensionality of an input database through a "retain the best" process; param_num = number of parameters to limit to, filename = save location for new database; view the databases directory for the full cetane number database and an example limited database with 15/1666 QSPR descriptors
 - **publish_project()**: cleans the project directory, copies config, normal_params, and currently loaded dataset into the directory, and creates a '.project' file
-- **open_project(project_name)**: opens a '.project' file, importing the project's config, normal_params, and dataset to the Server object
+- **open_project(*project_name*)**: opens a '.project' file, importing the project's config, normal_params, and dataset to the Server object
 
 Working directly with the Server object to handle model creation and data management allows for speedy scripting, but you can still work with the model and data classes directly. View the source code README.md for more information on low-level usage.
 
@@ -119,12 +122,11 @@ from ecnet.server import Server
 sv = Server()						# Create server object
 sv.create_save_env()					# Create a folder structure for your project
 sv.import_data()					# Import data
-sv.create_mlp_model()					# Create a multilayer perceptron (neural network)
-sv.fit_mlp_model_validation()				# Fits the mlp using input database (w/ validation set)
+sv.fit_mlp_model_validation('shuffle_lv')		# Fits model(s), shuffling learn and validate sets between trials
 sv.select_best()					# Select best trial from each build node
 
-train_results = sv.use_mlp_model_all()			# Predict values for the training dataset
-sv.output_results(train_results, "all", "cn_results.csv")	# Output results to specified file
+train_results = sv.use_mlp_model('all')			# Predict values for the training dataset
+sv.output_results(train_results,'cn_results.csv','all')	# Output results to specified file
 
 train_errors = sv.calc_error('rmse','r2','mean_abs_error','med_abs_error')	# Calculates errors for dataset
 print(train_errors)
@@ -150,7 +152,6 @@ from ecnet.server import Server
 sv = Server()
 sv.open_project('my_project.project')
 
-sv.vars['data_filename'] = 'new_data.csv'
-sv.import_data()
-results = sv.use_mlp_model_all()
+sv.import_data('new_data.csv')
+results = sv.use_mlp_model('all')
 ```
