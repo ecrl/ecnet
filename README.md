@@ -36,6 +36,8 @@ ECNet operates using a **Server** object that interfaces with data utility class
 
 ### config.yml format and variables:
 
+Here is what a config.yml file for cetane number prediction looks like:
+
 ```yml
 ---
 data_filename: cn_model_v1.0.csv
@@ -87,7 +89,7 @@ Here are brief explanations of each of these variables:
 
 ### Server methods:
 
-Here's an overview of the Server object's methods:
+Here is an overview of the Server object's methods:
 
 - **create_save_env()**: creates the folder hierarchy for your project, contained in a folder named after your project name
 - **import_data()**: imports the data from the database specified in 'data_filename', splits the data into learning/validation/testing groups, and packages the data so it's ready to be sent to the model
@@ -109,7 +111,7 @@ Working directly with the Server object to handle model creation and data manage
 
 ### Examples:
 
-Let's look at a script for building a project, importing the dataset, creating models for each build node, training the models, selecting the best model for each build node, grabbing results and errors for the dataset, and publishing the project:
+Here is a script for building a project, importing the dataset, creating models for each build node, training the models, selecting the best model for each build node, grabbing results and errors for the dataset, and publishing the project:
 
 ```python
 from ecnet.server import Server
