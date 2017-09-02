@@ -83,7 +83,7 @@ Here are brief explanations of each of these variables:
 - **valid_mdrmse_memory**: how many epochs back the validation process looks in determining the change in validation RMSE over time
 - **valid_mdrmse_stop**: the threshold to determine learning cutoff (looks at the change in validation RMSE over time)
 
-Now let's look at a script for building a project, importing the dataset, creating models for each build, training the models, selecting the best model for each node, grabbing results and errors for the dataset, and publishing the project:
+Now let's look at a script for building a project, importing the dataset, creating models for each build node, training the models, selecting the best model for each build node, grabbing results and errors for the dataset, and publishing the project:
 
 ```python
 from ecnet.server import Server
