@@ -51,7 +51,7 @@ mlp_hidden_layers:
 mlp_in_layer_activ: relu
 mlp_out_layer_activ: linear
 normals_use: false
-project_name: cn_v1.0_project
+project_name: my_project
 project_num_builds: 1
 project_num_nodes: 1
 project_num_trials: 5
@@ -95,21 +95,36 @@ sv.create_mlp_model()					# Create a multilayer perceptron (neural network)
 sv.fit_mlp_model_validation()				# Fits the mlp using input database (w/ validation set)
 sv.select_best()					# Select best trial from each build node
 
-results = sv.use_mlp_model_all()			# Calculate results from data (all sets)
-sv.output_results(results, "all", "cn_results.csv")	# Output results to specified file
+train_results = sv.use_mlp_model_all()			# Calculate results from data (all sets)
+sv.output_results(train_results, "all", "cn_results.csv")	# Output results to specified file
 
-errors = sv.calc_error('rmse','r2','mean_abs_error','med_abs_error')	# Calculates errors for dataset predictions
-print(errors)
+train_errors = sv.calc_error('rmse','r2','mean_abs_error','med_abs_error')	# Calculates errors for dataset
+print(train_errors)
+
+sv.publish_project()
 
 ```
 
-You can change all the configuration variables from your Python script, without having to edit and reopen your config.yml file. For example, changing the filename for your input database looks like this:
+You can change all the configuration variables from your Python script, without having to edit and reopen your config.yml file. For example, changing the project name looks like this:
 
 ```python
 from ecnet.server import Server
 
 sv = Server()
-sv.vars['data_filename'] = 'my_database.csv'
+sv.vars['project_name'] = 'my_project_2'
+```
+
+Once you publish a project, the .project file can be opened, and used for predictions:
+
+```python
+from ecnet.server import Server
+
+sv = Server()
+sv.open_project('my_project.project')
+
+sv.vars['data_filename'] = 'new_data.csv'
+sv.import_data()
+results = sv.use_mlp_model_all()
 ```
 
 Here's an overview of the Server object's methods:
