@@ -73,7 +73,6 @@ Here are brief explanations of each of these variables:
 - **mlp_in_layer_activ** - the layer type of the input layer: number of nodes is determined by data dimensions
 - **mlp_out_layer_activ** - the layer type of the output layer: number of nodes is determined by data dimensions
 - **normals_use**: boolean to determine if parameters should be normalized (min-max, between 0 and 1)
-- **param_limit_num**: used by the parameter limiting methods, determines how many optimal parameters to retain from a very large dimensional database
 - **project_name**: the name of your project
 - **project_num_builds**: the number of builds in your project
 - **project_num_nodes**: the number of nodes in each build
