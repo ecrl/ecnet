@@ -135,13 +135,16 @@ sv.publish_project()
 
 ```
 
-You can change all the configuration variables from your Python script, without having to edit and reopen your config.yml file. For example, changing the project name looks like this:
+You can change all the configuration variables from your Python script, without having to edit and reopen your config.yml file:
 
 ```python
 from ecnet.server import Server
 
 sv = Server()
-sv.vars['project_name'] = 'my_project_2'
+sv.vars['data_filename'] = 'data.csv'
+sv.vars['learning_rate'] = 0.05
+sv.vars['mlp_hidden_layers'] = [[32, 'relu'], [32, 'relu']]
+sv.vars['project_print_feedback'] = False
 ```
 
 Once you publish a project, the .project file can be opened and used for predictions:
