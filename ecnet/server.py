@@ -32,9 +32,11 @@ class Server:
 		self.folder_structs_built = False
 
 	### Imports the data and stores it in the server	
-	def import_data(self):
+	def import_data(self, data_filename = None):
+		if data_filename is None:
+			data_filename = self.vars['data_filename']
 		try:
-			self.data = ecnet.data_utils.initialize_data(self.vars['data_filename'])
+			self.data = ecnet.data_utils.initialize_data(data_filename)
 		except:
 			raise
 			sys.exit()
@@ -65,17 +67,9 @@ class Server:
 		except:
 			raise
 			sys.exit()
-
-	### Creates the model once the data is loaded		
-	def create_mlp_model(self):
-		try:
-			self.model = create_model(self)
-		except:
-			raise
-			sys.exit()
 	
-	### Fits the model using predetermined number of learning epochs	
-	def fit_mlp_model(self):
+	### Fits the model(s) using predetermined number of learning epochs	
+	def fit_mlp_model(self, *args):
         ### PROJECT ###
 		if self.folder_structs_built == True:
 			for build in range(0,self.vars['project_num_builds']):
@@ -88,6 +82,7 @@ class Server:
 						if self.vars['project_print_feedback'] == True:
 							print("Trial %d of %d"%(trial+1,self.vars['project_num_trials']))
 						self.output_filepath = os.path.join(os.path.join(os.path.join(self.vars['project_name'], self.build_dirs[build]), self.node_dirs[build][node]), "model_output" + "_%d"%(trial + 1))
+						self.model = create_model(self)
 						try:
 							self.model.fit(self.data.learn_x, self.data.learn_y, self.vars['learning_rate'], self.vars['train_epochs'])
 						except:
@@ -98,10 +93,13 @@ class Server:
 						except:
 							raise
 							sys.exit()
-						self.import_data()
-						self.create_mlp_model()
+						if 'shuffle_lv' in args:
+							self.data.shuffle('l', 'v', data_split = self.vars['data_split'])
+						elif 'shuffle_lvt' in args:
+							self.data.shuffle('l', 'v', 't', data_split = self.vars['data_split'])
 		### SINGLE NET ###
 		else:
+			self.model = create_model(self)
 			try:
 				self.model.fit(self.data.learn_x, self.data.learn_y, self.vars['learning_rate'], self.vars['train_epochs'])
 			except:
@@ -113,8 +111,8 @@ class Server:
 				raise
 				sys.exit()
 
-	### Fits the model using validation RMSE cutoff method, or max epochs
-	def fit_mlp_model_validation(self):
+	### Fits the model(s) using validation RMSE cutoff method, or max epochs
+	def fit_mlp_model_validation(self, *args):
 		### PROJECT ###
 		if self.folder_structs_built == True:
 			for build in range(0,self.vars['project_num_builds']):
@@ -127,6 +125,7 @@ class Server:
 						if self.vars['project_print_feedback'] == True:
 							print("Trial %d of %d"%(trial+1,self.vars['project_num_trials']))
 						self.output_filepath = os.path.join(os.path.join(os.path.join(self.vars['project_name'], self.build_dirs[build]), self.node_dirs[build][node]), "model_output" + "_%d"%(trial + 1))
+						self.model = create_model(self)
 						try:
 							self.model.fit_validation(self.data.learn_x, self.data.valid_x, self.data.learn_y, self.data.valid_y, self.vars['learning_rate'], self.vars['valid_mdrmse_stop'], self.vars['valid_mdrmse_memory'], self.vars['valid_max_epochs'])
 						except:
@@ -137,10 +136,13 @@ class Server:
 						except:
 							raise
 							sys.exit()
-						self.import_data()
-						self.create_mlp_model()
+						if 'lv' in args:
+							self.data.shuffle('l', 'v', data_split = self.vars['data_split'])
+						elif 'lvt' in args:
+							self.data.shuffle('l', 'v', 't', data_split = self.vars['data_split'])
 		### SINGLE NET ###
 		else:
+			self.model = create_model(self)
 			try:
 				self.model.fit_validation(self.data.learn_x, self.data.valid_x, self.data.learn_y, self.data.valid_y, self.vars['learning_rate'], self.vars['valid_mdrmse_stop'], self.vars['valid_mdrmse_memory'], self.vars['valid_max_epochs'])
 			except:
@@ -179,7 +181,7 @@ class Server:
 					self.resave_net(self.output_filepath)
 	
 	### Predicts values for the current test set data
-	def use_mlp_model(self):
+	def use_mlp_model(self, *args):
 		### SINGLE MODEL ###
 		if self.folder_structs_built == False:
 			self.model = ecnet.model.multilayer_perceptron()
@@ -190,9 +192,15 @@ class Server:
 				sys.exit()
 			try:
 				if self.vars['normals_use'] == True:
-					res = ecnet.data_utils.denormalize_result(self.model.test_new(self.data.test_x), 'normal_params')
+					if 'all' in args:
+						res = ecnet.data_utils.denormalize_result(self.model.test_new(self.data.x), 'normal_params')
+					else:
+						res = ecnet.data_utils.denormalize_result(self.model.test_new(self.data.test_x), 'normal_params')
 				else:
-					res = self.model.test_new(self.data.test_x)
+					if 'all' in args:
+						res = self.model.test_new(self.data.x)
+					else:
+						res = self.model.test_new(self.data.test_x)
 				return [res]
 			except:
 				raise
@@ -209,9 +217,15 @@ class Server:
 					self.model.load_net(self.model_load_filename)
 					try:
 						if self.vars['normals_use'] == True:
-							pred = ecnet.data_utils.denormalize_result(self.model.test_new(self.data.test_x), 'normal_params')
+							if 'all' in args:
+								pred = ecnet.data_utils.denormalize_result(self.model.test_new(self.data.x), 'normal_params')
+							else:
+								pred = ecnet.data_utils.denormalize_result(self.model.test_new(self.data.test_x), 'normal_params')
 						else:
-							pred = self.model.test_new(self.data.test_x)
+							if 'all' in args:
+								pred = self.model.test_new(self.data.x)
+							else:
+								pred = self.model.test_new(self.data.test_x)
 						predlist.append(pred)
 					except:
 						raise
@@ -224,7 +238,8 @@ class Server:
 					finalpred.append([np.mean(local_raw)])
 				final_preds.append(finalpred)
 			return final_preds
-		
+	
+	"""	
 	### Predicts values for the current data set (whole)
 	def use_mlp_model_all(self):
 		### SINGLE MODEL ###
@@ -271,6 +286,7 @@ class Server:
 					finalpred.append([np.mean(local_raw)])
 				final_preds.append(finalpred)
 			return final_preds
+	"""
 	
 	### Calculates errors for each given argument		
 	def calc_error(self, *args):
@@ -362,8 +378,8 @@ class Server:
 		return error_dict
 		
 	### Outputs results to desired .csv file	
-	def output_results(self, results, which_data, filename):
-		ecnet.data_utils.output_results(results, self.data, which_data, filename)
+	def output_results(self, results, filename, *args):
+		ecnet.data_utils.output_results(results, self.data, filename, *args)
 
 	### Resaves the file under 'self.model_load_filename' to specified output filepath
 	def resave_net(self, output):
@@ -429,7 +445,7 @@ class Server:
 		# Set up model environment
 		self.folder_structs_built = True
 		create_folder_structure(self)
-		create_model(self)
+		self.model = create_model(self)
 
 # Creates the default folder structure, outlined in the file config by number of builds and nodes.
 def create_folder_structure(server_obj):
