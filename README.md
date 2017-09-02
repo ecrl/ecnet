@@ -96,9 +96,9 @@ Here is an overview of the Server object's methods:
 - **import_data(*data_filename = None*)**: imports the data from the database specified in 'data_filename', splits the data into learning/validation/testing groups, and packages the data so it's ready to be sent to the model
 	- arguments: None (default config filename is used), data_filename (specified database is used)
 - **fit_mlp_model(*args*)**: fits multilayer-perceptron(s) to the data, for 'train_epochs' learning iterations
-	- arguments: None, 'shuffle_lv' (shuffles learning and validation sets between trials), 'shuffle_lvt' (shuffles all sets between trials)
+	- arguments: None (no re-shuffling between trials), 'shuffle_lv' (shuffles learning and validation sets between trials), 'shuffle_lvt' (shuffles all sets between trials)
 - **fit_mlp_model_validation(*args*)**: fits multilayer-perceptron(s) to the data, using the validation set to determine when to stop learning
-	- arguments: None, 'shuffle_lv' (shuffles learning and validation sets between trials), 'shuffle_lvt' (shuffles all sets between trials)
+	- arguments: None (no re-shuffling between trials), 'shuffle_lv' (shuffles learning and validation sets between trials), 'shuffle_lvt' (shuffles all sets between trials)
 - **select_best()**: selects the best performing model to represent each node of each build; requires a folder hierarchy to be created
 - **use_mlp_model(*args*)**: predicts values for the data's testing group; returns a list of values for each build
 	- arguments: None (just test set is predicted), 'all' (obtains results for entire dataset)
