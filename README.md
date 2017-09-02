@@ -9,7 +9,7 @@
 
 Using ECNet, [T. Kessler et al.](https://www.researchgate.net/publication/317569746_Artificial_neural_network_based_predictions_of_cetane_number_for_furanic_biofuel_additives) have increased the generalizability of ANN's to predict the cetane numbers for a variety of molecular classes represented in the cetane number database, and have increased the accuracy of ANN's for predicting the cetane numbers of underrepresented molecular classes through targeted database expansion.
 
-## Installation:
+# Installation:
 
 ### Prerequisites:
 - Have Python 3.5 installed
@@ -30,11 +30,11 @@ Note: if multiple Python releases are installed on your system (e.g. 2.7 and 3.5
 
 Additional package dependencies (TensorFlow, PyYaml) will be installed during the ECNet installation process.
 
-## Usage:
+# Usage:
 
 ECNet operates using a **Server** object that interfaces with data utility classes and neural network creation classes. The Server object handles importing data and model creation for your project, and serves the data to the model. Configurable variables like your project's name, number of builds and nodes, ANN learning and architecture variables, data splitting controls, and more are found in a __config.yml__ file in your working directory.
 
-### config.yml format and variables:
+## config.yml format and variables:
 
 Here is what a config.yml file for cetane number prediction looks like:
 
@@ -87,7 +87,7 @@ Here are brief explanations of each of these variables:
 - **valid_mdrmse_memory**: how many epochs back the validation process looks in determining the change in validation RMSE over time
 - **valid_mdrmse_stop**: the threshold to determine learning cutoff (looks at the change in validation RMSE over time)
 
-### Server methods:
+## Server methods:
 
 Here is an overview of the Server object's methods:
 
@@ -109,9 +109,9 @@ Here is an overview of the Server object's methods:
 
 Working directly with the Server object to handle model creation and data management allows for speedy scripting, but you can still work with the model and data classes directly. View the source code README.md for more information on low-level usage.
 
-### Examples:
+## Examples:
 
-Here is a script for building a project, importing the dataset, creating models for each build node, training the models, selecting the best model for each build node, grabbing results and errors for the dataset, and publishing the project:
+Here is a script for building a project, importing the dataset, creating models for each build node, training the models, selecting the best model for each build node, grabbing results and errors for the dataset and publishing the project:
 
 ```python
 from ecnet.server import Server
@@ -142,7 +142,7 @@ sv = Server()
 sv.vars['project_name'] = 'my_project_2'
 ```
 
-Once you publish a project, the .project file can be opened, and used for predictions:
+Once you publish a project, the .project file can be opened and used for predictions:
 
 ```python
 from ecnet.server import Server
