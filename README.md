@@ -104,9 +104,9 @@ Here is an overview of the Server object's methods:
 	- arguments: None (just test set is predicted), 'all' (obtains results for entire dataset)
 - **calc_error(*args*)**: calculates various metrics for error
 	- arguments: None, 'rmse' (root-mean-squared error), 'r2' (r-squared value), 'mean_abs_error' (mean absolute error), 'med_abs_error' (median absolute error)
-- **output_results(results, output_filename, *args*)**: saves your results to a specified output file
+- **output_results(*results, output_filename, args*)**: saves your results to a specified output file
 	- arguments: None (just test set is exported), 'all' (results and data for entire dataset is exported)
-- **limit_parameters(param_num, filename)**: reduces the input dimensionality of an input database through a "retain the best" process; param_num = number of parameters to limit to, filename = save location for new database; view the databases directory for the full cetane number database and an example limited database with 15/1666 QSPR descriptors
+- **limit_parameters(*param_num, filename*)**: reduces the input dimensionality of an input database through a "retain the best" process; param_num = number of parameters to limit to, filename = save location for new database; view the databases directory for the full cetane number database and an example limited database with 15/1666 QSPR descriptors
 - **publish_project()**: cleans the project directory, copies config, normal_params, and currently loaded dataset into the directory, and creates a '.project' file
 - **open_project(*project_name*)**: opens a '.project' file, importing the project's config, normal_params, and dataset to the Server object
 
