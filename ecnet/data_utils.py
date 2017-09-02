@@ -92,7 +92,7 @@ def create_static_test_set(data):
 			wr.writerow(lv_rows[row])
 
 # Saves test results, data strings, groups to desired output .csv file			
-def output_results(results, data, which_data = "A", filename = "results.csv"):
+def output_results(results, data, filename, *args):
 	# Makes sure filetype is csv
 	if ".csv" not in filename:
 		filename = filename + ".csv"
@@ -112,20 +112,20 @@ def output_results(results, data, which_data = "A", filename = "results.csv"):
 	# Adds data ID's, strings, groups, DB values and predictions for each test result to the rows list
 	for result in range(0,len(results[0])):
 		local_row = []
-		if which_data == "test":
-			local_row.append(data.test_dataid[result])
-			for string in range(0,len(data.test_strings[result])):
-				local_row.append(data.test_strings[result][string])
-			for group in range(0,len(data.test_groups[result])):
-				local_row.append(data.test_groups[result][group])
-			local_row.append(data.test_y[result][0])
-		elif which_data == "all":
+		if 'all' in args:
 			local_row.append(data.dataid[result])
 			for string in range(0,len(data.strings[result])):
 				local_row.append(data.strings[result][string])
 			for group in range(0,len(data.groups[result])):
 				local_row.append(data.groups[result][group])
 			local_row.append(data.y[result][0])
+		else:
+			local_row.append(data.test_dataid[result])
+			for string in range(0,len(data.test_strings[result])):
+				local_row.append(data.test_strings[result][string])
+			for group in range(0,len(data.test_groups[result])):
+				local_row.append(data.test_groups[result][group])
+			local_row.append(data.test_y[result][0])
 		for i in range(0,len(results)):
 			local_row.append(results[i][result][0])
 		rows.append(local_row)
@@ -310,6 +310,61 @@ class initialize_data:
 			(self.validIndex).sort()
 		self.learnIndex = randIndex
 		(self.learnIndex).sort()
+		
+	# Shuffles specified sets
+	def shuffle(self, *args, data_split):
+		if ('l' or 'learn') and ('v' or 'validate') and ('t' or 'test') in args:
+			self.buildTVL('random', data_split)
+			self.applyTVL()
+			self.package()
+		elif ('l' or 'learn') and ('v' or 'validate') in args:
+			lv_dataid = []
+			lv_params = []
+			lv_strings = []
+			lv_groups = []
+			for i in range(0,len(self.learn_dataid)):
+				lv_dataid.append(self.learn_dataid[i])
+				lv_params.append(self.learn_params[i])
+				lv_strings.append(self.learn_strings[i])
+				lv_groups.append(self.learn_groups[i])
+			for i in range(0,len(self.valid_dataid)):
+				lv_dataid.append(self.valid_dataid[i])
+				lv_params.append(self.valid_params[i])
+				lv_strings.append(self.valid_strings[i])
+				lv_groups.append(self.valid_groups[i])
+			randIndex = random.sample(range(len(lv_dataid)),len(lv_dataid))
+			
+			new_learn_index = []
+			for i in range(len(self.learn_dataid)):
+				new_learn_index.append(randIndex[i])
+			
+			new_valid_index = []
+			for i in range(len(self.valid_dataid)):
+				new_valid_index.append(randIndex[-(i+1)])
+
+			new_learn_index.sort()
+			new_valid_index.sort()
+			self.valid_dataid = []
+			self.valid_params = []
+			self.valid_strings = []
+			self.valid_groups = []
+			self.learn_dataid = []
+			self.learn_params = []
+			self.learn_strings = []
+			self.learn_groups = []
+			for i in range(len(new_learn_index)):
+				(self.learn_dataid).append(self.dataid[new_learn_index[i]])
+				(self.learn_params).append(self.params[new_learn_index[i]])
+				(self.learn_strings).append(self.strings[new_learn_index[i]])
+				(self.learn_groups).append(self.groups[new_learn_index[i]])
+			for i in range(len(new_valid_index)):
+				(self.valid_dataid).append(self.dataid[new_valid_index[i]])
+				(self.valid_params).append(self.params[new_valid_index[i]])
+				(self.valid_strings).append(self.strings[new_valid_index[i]])
+				(self.valid_groups).append(self.groups[new_valid_index[i]])
+			self.package()
+		else:
+			print('Error: set shuffling arguments must be all sets ("learn", "validate", "test"), or training sets ("learn", "validate")')
 
 	# Application of index values to data
 	def applyTVL(self):
