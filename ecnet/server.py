@@ -136,9 +136,9 @@ class Server:
 						except:
 							raise
 							sys.exit()
-						if 'lv' in args:
+						if 'shuffle_lv' in args:
 							self.data.shuffle('l', 'v', data_split = self.vars['data_split'])
-						elif 'lvt' in args:
+						elif 'shuffle_lvt' in args:
 							self.data.shuffle('l', 'v', 't', data_split = self.vars['data_split'])
 		### SINGLE NET ###
 		else:

@@ -112,20 +112,34 @@ def output_results(results, data, filename, *args):
 	# Adds data ID's, strings, groups, DB values and predictions for each test result to the rows list
 	for result in range(0,len(results[0])):
 		local_row = []
-		if 'all' in args:
-			local_row.append(data.dataid[result])
-			for string in range(0,len(data.strings[result])):
-				local_row.append(data.strings[result][string])
-			for group in range(0,len(data.groups[result])):
-				local_row.append(data.groups[result][group])
-			local_row.append(data.y[result][0])
-		else:
+		if 'learn' in args:
+			local_row.append(data.learn_dataid[result])
+			for string in range(0,len(data.learn_strings[result])):
+				local_row.append(data.learn_strings[result][string])
+			for group in range(0,len(data.learn_groups[result])):
+				local_row.append(data.learn_groups[result][group])
+			local_row.append(data.learn_y[result][0])
+		elif 'valid' in args:
+			local_row.append(data.valid_dataid[result])
+			for string in range(0,len(data.valid_strings[result])):
+				local_row.append(data.valid_strings[result][string])
+			for group in range(0,len(data.valid_groups[result])):
+				local_row.append(data.valid_groups[result][group])
+			local_row.append(data.valid_y[result][0])
+		elif 'test' in args:
 			local_row.append(data.test_dataid[result])
 			for string in range(0,len(data.test_strings[result])):
 				local_row.append(data.test_strings[result][string])
 			for group in range(0,len(data.test_groups[result])):
 				local_row.append(data.test_groups[result][group])
 			local_row.append(data.test_y[result][0])
+		else:
+			local_row.append(data.dataid[result])
+			for string in range(0,len(data.strings[result])):
+				local_row.append(data.strings[result][string])
+			for group in range(0,len(data.groups[result])):
+				local_row.append(data.groups[result][group])
+			local_row.append(data.y[result][0])
 		for i in range(0,len(results)):
 			local_row.append(results[i][result][0])
 		rows.append(local_row)
