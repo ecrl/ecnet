@@ -121,7 +121,7 @@ from ecnet.server import Server
 
 sv = Server()						# Create server object
 sv.create_save_env()					# Create a folder structure for your project
-sv.import_data()					# Import data
+sv.import_data()					# Import data from file specified in config
 sv.fit_mlp_model_validation('shuffle_lv')		# Fits model(s), shuffling learn and validate sets between trials
 sv.select_best()					# Select best trial from each build node
 
