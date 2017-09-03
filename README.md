@@ -127,7 +127,7 @@ sv.fit_mlp_model_validation('shuffle_lv')		# Fits model(s), shuffling learn and 
 sv.select_best()					# Select best trial from each build node
 
 test_results = sv.use_mlp_model('test')			# Predict values for the test data set
-sv.output_results(test_results, 'test_results.csv')	# Output results to specified file
+sv.output_results(test_results, 'test_results.csv', 'test')	# Output results to specified file
 
 test_errors = sv.calc_error('rmse','r2','mean_abs_error','med_abs_error', dset = 'test') # Calculates errors for the test set
 print(test_errors)
