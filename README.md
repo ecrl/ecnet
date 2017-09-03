@@ -101,9 +101,10 @@ Here is an overview of the Server object's methods:
 	- arguments: **None** (no re-shuffling between trials), **'shuffle_lv'** (shuffles learning and validation sets between trials), **'shuffle_lvt'** (shuffles all sets between trials)
 - **select_best()**: selects the best performing model to represent each node of each build; requires a folder hierarchy to be created
 - **use_mlp_model(*args*)**: predicts values for the data's testing group; returns a list of values for each build
-	- arguments: **None** (just test set is predicted), **'all'** (obtains results for entire dataset)
-- **calc_error(*args*)**: calculates various metrics for error
+	- arguments: **None** (defaults to whole dataset), **'learn'** (obtains results for learning set), **'valid'** (obtains results for validation set), **'train'** (obtains results for learning & validation sets), **'test'** (obtains results for test set)
+- **calc_error(*args*, *dset = None*)**: calculates various metrics for error
 	- arguments: **None**, **'rmse'** (root-mean-squared error), **'r2'** (r-squared value), **'mean_abs_error'** (mean absolute error), **'med_abs_error'** (median absolute error)
+	- dset values: **None** (defaults to calculating error for whole dataset), **'learn'** (errors for learning set), **'valid'** (errors for validation set), **'train'** (errors for learning & validation sets), **'test'** (errors for test set)
 - **output_results(*results, output_filename, args*)**: saves your results to a specified output file
 	- arguments: **None** (just test set is exported), **'all'** (results and data for entire dataset is exported)
 - **limit_parameters(*param_num, filename*)**: reduces the input dimensionality of an input database through a "retain the best" process; **param_num** = number of parameters to limit to, **filename** = save location for new database; view the databases directory for the full cetane number database and an example limited database with 15/1666 QSPR descriptors
