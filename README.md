@@ -94,9 +94,9 @@ Here is an overview of the Server object's methods:
 - **create_save_env()**: creates the folder hierarchy for your project, contained in a folder named after your project name
 	- note: if this is not done, a project will not be created, and single models will be saved to the 'tmp' folder in your working directory
 - **import_data(*data_filename = None*)**: imports the data from the database specified in 'data_filename', splits the data into learning/validation/testing groups, and packages the data so it's ready to be sent to the model
-	- arguments: 
+	- data_filename values: 
 		- **None** (default config filename is used)
-		- **data_filename** (specified database is used)
+		- **str** (specified database at location is used)
 - **fit_mlp_model(*args*)**: fits multilayer-perceptron(s) to the data, for 'train_epochs' learning iterations
 	- arguments: 
 		- **None** (no re-shuffling between trials)
