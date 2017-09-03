@@ -9,12 +9,11 @@ build node, and publishes the project to a '.project' file
 
 from ecnet.server import Server
 
-sv = Server()				# Create the Server
-sv.create_save_env()			# Create project save environment
+sv = Server()				         # Create the Server
+sv.create_save_env()			         # Create project save environment
 
-sv.import_data()			# Import data from sv.vars['data_filename']
-sv.create_mlp_model()			# Create a multilayer-perceptron (neural network)
-sv.fit_mlp_model_validation() 	        # Fits models for each node in each build
-sv.select_best()			# Selects the best performing model for each build's node
+sv.import_data()			         # Import data from sv.vars['data_filename']
+sv.fit_mlp_model_validation('shuffle_lv') 	 # Fits models for each node in each build, shuffling learn and validate sets
+sv.select_best()			         # Selects the best performing model for each build's node
 
-sv.publish_project()			# Saves the project environment to a '.project' file
+sv.publish_project()			         # Saves the project environment to a '.project' file
