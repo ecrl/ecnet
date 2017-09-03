@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  ecnet_server.py
-#  
+#  ecnet/server.py
+#  v.1.2.3.dev1
 #  Developed in 2017 by Travis Kessler <Travis_Kessler@student.uml.edu>
 #
 #  This program contains all the necessary config parameters and network serving functions
@@ -48,7 +48,7 @@ class Server:
 		try:
 			self.data.buildTVL(self.vars['data_sort_type'], self.vars['data_split'])
 			if self.vars['normals_use'] == True:
-				self.data.normalize('normal_params')
+				self.data.normalize('./tmp/normal_params')
 			self.data.applyTVL()
 			self.data.package()
 		except:
@@ -193,7 +193,7 @@ class Server:
 				sys.exit()
 			try:
 				if self.vars['normals_use'] == True:
-					res = ecnet.data_utils.denormalize_result(self.model.test_new(x_vals), 'normal_params')
+					res = ecnet.data_utils.denormalize_result(self.model.test_new(x_vals), './tmp/normal_params')
 				else:
 					res = self.model.test_new(x_vals)
 				return [res]
@@ -204,15 +204,17 @@ class Server:
 		### PROJECT ###
 		else:
 			final_preds = []
+			# For each build
 			for i in range(0,self.vars['project_num_builds']):
 				predlist = []
+				# For each node
 				for j in range(0,self.vars['project_num_nodes']):
 					self.model_load_filename = os.path.join(os.path.join(self.vars['project_name'], "build_%d"%(i+1)),os.path.join("node_%d"%(j+1),"final_net_%d"%(j+1)))
 					self.model = ecnet.model.multilayer_perceptron()
 					self.model.load_net(self.model_load_filename)
 					try:
 						if self.vars['normals_use'] == True:
-							res = ecnet.data_utils.denormalize_result(self.model.test_new(x_vals), 'normal_params')
+							res = ecnet.data_utils.denormalize_result(self.model.test_new(x_vals), './tmp/normal_params')
 						else:
 							res = self.model.test_new(x_vals)
 						predlist.append(res)
@@ -220,12 +222,21 @@ class Server:
 						raise
 						sys.exit()
 				finalpred = []
-				for j in range(0,len(predlist[0])):
-					local_raw = []
-					for k in range(0,len(predlist)):
-						local_raw.append(predlist[k][j])
-					finalpred.append([np.mean(local_raw)])
-				final_preds.append(finalpred)
+				# Check for one, or multiple outputs
+				if self.data.controls_num_outputs is 1:
+					for j in range(0,len(predlist[0])):
+						local_raw = []
+						for k in range(len(predlist)):
+							local_raw.append(predlist[k][j])
+						finalpred.append([np.mean(local_raw)])
+					final_preds.append(finalpred)
+				else:
+					for j in range(len(predlist[0])):
+						build_ave = []
+						for k in range(len(predlist)):
+							build_ave.append(predlist[k][j])
+						finalpred.append(sum(build_ave)/len(build_ave))
+					final_preds.append(list(finalpred))
 			return final_preds
 	
 	### Calculates errors for each given argument		
@@ -239,7 +250,7 @@ class Server:
 				### SINGLE MODEL ###
 				if self.folder_structs_built == False:
 					if self.vars['normals_use'] == True:
-						rmse = ecnet.error_utils.calc_rmse(preds, ecnet.data_utils.denormalize_result(yvals, 'normal_params'))
+						rmse = ecnet.error_utils.calc_rmse(preds, ecnet.data_utils.denormalize_result(yvals, './tmp/normal_params'))
 					else:
 						rmse = ecnet.error_utils.calc_rmse(preds, y_vals)
 					error_dict['RMSE'] = rmse		
@@ -248,7 +259,7 @@ class Server:
 					rmse_list = []
 					for i in range(0,len(preds)):
 						if self.vars['normals_use'] == True:
-							rmse_list.append(ecnet.error_utils.calc_rmse(preds[i], ecnet.data_utils.denormalize_result(y_vals, 'normal_params')))
+							rmse_list.append(ecnet.error_utils.calc_rmse(preds[i], ecnet.data_utils.denormalize_result(y_vals, './tmp/normal_params')))
 						else:
 							rmse_list.append(ecnet.error_utils.calc_rmse(preds[i], y_vals))
 					error_dict['RMSE'] = rmse_list
@@ -257,7 +268,7 @@ class Server:
 				### SINGLE MODEL ###
 				if self.folder_structs_built == False:
 					if self.vars['normals_use'] == True:
-						r2 = ecnet.error_utils.calc_r2(preds, ecnet.data_utils.denormalize_result(y_vals, 'normal_params'))
+						r2 = ecnet.error_utils.calc_r2(preds, ecnet.data_utils.denormalize_result(y_vals, './tmp/normal_params'))
 					else:
 						r2 = ecnet.error_utils.calc_r2(preds, y_vals)
 					error_dict['R-Squared'] = r2
@@ -266,7 +277,7 @@ class Server:
 					r2_list = []
 					for i in range(0,len(preds)):
 						if self.vars['normals_use'] == True:
-							r2_list.append(ecnet.error_utils.calc_r2(preds[i], ecnet.data_utils.denormalize_result(y_vals, 'normal_params')))
+							r2_list.append(ecnet.error_utils.calc_r2(preds[i], ecnet.data_utils.denormalize_result(y_vals, './tmp/normal_params')))
 						else:
 							r2_list.append(ecnet.error_utils.calc_r2(preds[i], y_vals))
 					error_dict['R-Squared'] = r2_list
@@ -275,7 +286,7 @@ class Server:
 				### SINGLE MODEL ###
 				if self.folder_structs_built == False:
 					if self.vars['normals_use'] == True:
-						mae = ecnet.error_utils.calc_mean_abs_error(preds, ecnet.data_utils.denormalize_result(y_vals, 'normal_params'))
+						mae = ecnet.error_utils.calc_mean_abs_error(preds, ecnet.data_utils.denormalize_result(y_vals, './tmp/normal_params'))
 					else:
 						mae = ecnet.error_utils.calc_mean_abs_error(preds, self.data.y)
 					error_dict['Mean Average Error'] = mae
@@ -284,7 +295,7 @@ class Server:
 					mae_list = []
 					for i in range(0,len(preds)):
 						if self.vars['normals_use'] == True:
-							mae_list.append(ecnet.error_utils.calc_mean_abs_error(preds[i], ecnet.data_utils.denormalize_result(y_vals, 'normal_params')))
+							mae_list.append(ecnet.error_utils.calc_mean_abs_error(preds[i], ecnet.data_utils.denormalize_result(y_vals, './tmp/normal_params')))
 						else:
 							mae_list.append(ecnet.error_utils.calc_mean_abs_error(preds[i], y_vals))
 					error_dict['Mean Average Error'] = mae_list
@@ -293,7 +304,7 @@ class Server:
 				### SINGLE MODEL ###
 				if self.folder_structs_built == False:
 					if self.vars['normals_use'] == True:
-						medae = ecnet.error_utils.calc_med_abs_error(preds, ecnet.data_utils.denormalize_result(y_vals, 'normal_params'))
+						medae = ecnet.error_utils.calc_med_abs_error(preds, ecnet.data_utils.denormalize_result(y_vals, './tmp/normal_params'))
 					else:
 						medae = ecnet.error_utils.calc_med_abs_error(preds, y_vals)
 					error_dict['Median Absolute Error'] = medae
@@ -302,7 +313,7 @@ class Server:
 					medae_list = []
 					for i in range(0,len(preds)):
 						if self.vars['normals_use'] == True:
-							medae_list.append(ecnet.error_utils.calc_med_abs_error(preds[i], ecnet.data_utils.denormalize_result(y_vals, 'normal_params')))
+							medae_list.append(ecnet.error_utils.calc_med_abs_error(preds[i], ecnet.data_utils.denormalize_result(y_vals, './tmp/normal_params')))
 						else:
 							medae_list.append(ecnet.error_utils.calc_med_abs_error(preds[i], y_vals))
 					error_dict['Median Absolute Error'] = medae_list
@@ -342,7 +353,7 @@ class Server:
 		save_config(self.vars)
 		copyfile('config.yml', os.path.join(self.vars['project_name'], 'config.yml'))
 		if self.vars['normals_use'] is True:
-			copyfile('normal_params' + '.ecnet', os.path.join(self.vars['project_name'], 'normal_params' + '.ecnet'))
+			copyfile('./tmp/normal_params.ecnet', os.path.join(self.vars['project_name'], 'normal_params.ecnet'))
 		# Export the currently loaded dataset
 		try:
 			pickle.dump(self.data, open(os.path.join(self.vars['project_name'],'data.d'),'wb'))
@@ -454,7 +465,6 @@ def import_config(filename = 'config.yml'):
 		stream = open(filename, 'r')
 		return(yaml.load(stream))
 	except:
-		print("Caught exception: config not found. Creating default config file.")
 		create_default_config()
 		stream = open(filename, 'r')
 		return(yaml.load(stream))
