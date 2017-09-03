@@ -126,13 +126,13 @@ sv.import_data()					# Import data from file specified in config
 sv.fit_mlp_model_validation('shuffle_lv')		# Fits model(s), shuffling learn and validate sets between trials
 sv.select_best()					# Select best trial from each build node
 
-test_results = sv.use_mlp_model()			# Predict values for the test data set
+test_results = sv.use_mlp_model('test')			# Predict values for the test data set
 sv.output_results(test_results, 'test_results.csv')	# Output results to specified file
 
-db_errors = sv.calc_error('rmse','r2','mean_abs_error','med_abs_error')	# Calculates errors for the loaded database
-print(db_errors)
+test_errors = sv.calc_error('rmse','r2','mean_abs_error','med_abs_error', dset = 'test') # Calculates errors for the test set
+print(test_errors)
 
-sv.publish_project()
+sv.publish_project()					# Publish the project to a .project file
 
 ```
 
@@ -157,5 +157,5 @@ sv = Server()
 sv.open_project('my_project.project')
 
 sv.import_data('new_data.csv')
-results = sv.use_mlp_model('all')
+results = sv.use_mlp_model()
 ```
