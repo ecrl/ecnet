@@ -11,7 +11,7 @@ from ecnet.server import Server
 # Create the Server
 sv = Server()
 
-# Imports config. database
+# Imports config. file database
 sv.import_data()
 
 # Limits input dimensionality to 15, saves to specified file
