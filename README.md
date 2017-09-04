@@ -4,9 +4,9 @@
 	
 **ECNet** is an open source Python package for creating large scale machine learning projects with a focus on fuel property prediction. A __project__ is considered a collection of __builds__, and each build is a collection of __nodes__. Nodes are averaged to obtain a final predicted value for the build. For each node in a build, multiple neural networks are constructed and the best performing neural network is used as that node's predictor.
 
-[T. Sennott et al.](https://www.researchgate.net/publication/267576682_Artificial_Neural_Network_for_Predicting_Cetane_Number_of_Biofuel_Candidates_Based_on_Molecular_Structure) have shown that artificial neural networks (ANN's) can be applied to cetane number prediction with relatively little error. ECNet provides scientists an open source tool for predicting key fuel properties of potential next-generation biofuels, reducing the need for costly fuel synthesis and experimentation.
+[T. Sennott et al.](https://doi.org/10.1115/ICEF2013-19185) have shown that artificial neural networks (ANN's) can be applied to cetane number prediction with relatively little error. ECNet provides scientists an open source tool for predicting key fuel properties of potential next-generation biofuels, reducing the need for costly fuel synthesis and experimentation.
 
-Using ECNet, [T. Kessler et al.](https://www.researchgate.net/publication/317569746_Artificial_neural_network_based_predictions_of_cetane_number_for_furanic_biofuel_additives) have increased the generalizability of ANN's to predict the cetane numbers for molecules from a variety of molecular classes represented in the cetane number database, and have increased the accuracy of ANN's for predicting the cetane numbers for molecules from underrepresented molecular classes through targeted database expansion.
+Using ECNet, [T. Kessler et al.](https://doi.org/10.1016/j.fuel.2017.06.015) have increased the generalizability of ANN's to predict the cetane numbers for molecules from a variety of molecular classes represented in the cetane number database, and have increased the accuracy of ANN's for predicting the cetane numbers for molecules from underrepresented molecular classes through targeted database expansion.
 
 # Installation:
 
