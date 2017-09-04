@@ -146,19 +146,33 @@ Here is a script for building a project, importing the dataset, creating models 
 ```python
 from ecnet.server import Server
 
-sv = Server()						# Create server object
-sv.create_save_env()					# Create a folder structure for your project
-sv.import_data()					# Import data from file specified in config
-sv.fit_mlp_model_validation('shuffle_lv')		# Fits model(s), shuffling learn and validate sets between trials
-sv.select_best()					# Select best trial from each build node
+# Create server object
+sv = Server()
 
-test_results = sv.use_mlp_model('test')			# Predict values for the test data set
-sv.output_results(test_results, 'test_results.csv', 'test')	# Output results to specified file
+# Create a folder structure for your project
+sv.create_save_env()
 
-test_errors = sv.calc_error('rmse','r2','mean_abs_error','med_abs_error', dset = 'test') # Calculates errors for the test set
+# Import data from file specified in config
+sv.import_data()
+
+# Fits model(s), shuffling learn and validate sets between trials
+sv.fit_mlp_model_validation('shuffle_lv')
+
+# Select best trial from each build node
+sv.select_best()
+
+# Predict values for the test data set
+test_results = sv.use_mlp_model('test')	
+
+# Output results to specified file
+sv.output_results(test_results, 'test_results.csv', 'test')	
+
+# Calculates errors for the test set
+test_errors = sv.calc_error('rmse','r2','mean_abs_error','med_abs_error', dset = 'test')
 print(test_errors)
 
-sv.publish_project()					# Publish the project to a .project file
+# Publish the project to a .project file
+sv.publish_project()
 
 ```
 
@@ -168,6 +182,8 @@ You can change all the configuration variables from your Python script, without 
 from ecnet.server import Server
 
 sv = Server()
+
+# Configuration variables are found in the server's 'vars' dictionary
 sv.vars['data_filename'] = 'data.csv'
 sv.vars['learning_rate'] = 0.05
 sv.vars['mlp_hidden_layers'] = [[32, 'relu'], [32, 'relu']]
@@ -180,9 +196,14 @@ Once you publish a project, the .project file can be opened and used for predict
 from ecnet.server import Server
 
 sv = Server()
+
+# Opens a pre-existing project
 sv.open_project('my_project.project')
 
+# Open a new dataset
 sv.import_data('new_data.csv')
-results = sv.use_mlp_model()
+
+# Save results to output file
+sv.output_results(results = sv.use_mlp_model(), 'new_data_results.csv')
 ```
 To view more examples of common ECNet tasks, view the examples directory.
