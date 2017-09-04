@@ -8,13 +8,22 @@ dataset, obtain results and errors for testing dataset
 
 from ecnet.server import Server
 
-sv = Server()					    # Create the Server
-sv.open_project('cn_v1.0_project')	            # Opens pre-existing project
 
-sv.import_data('testing_data.csv')				    # Import a new set to test
+# Create the Server
+sv = Server()
 
-results = sv.use_mlp_model()				            # Grab results for whole test set
-sv.output_results(results, 'testing_results.csv')                  # Save results to file
+# Opens pre-existing project
+sv.open_project('cn_v1.0_project')
 
-errors = sv.calc_error('rmse','r2','mean_abs_error','med_abs_error')	 # Compute errors
-print(errors)	                                                         # List errors
+# Import a new set to predict values for
+sv.import_data('testing_data.csv')
+
+# Grab results (for whole set)
+results = sv.use_mlp_model()
+
+# Save results to file
+sv.output_results(results, 'testing_results.csv')
+
+# Compute and print errors (for whole set)
+errors = sv.calc_error('rmse','r2','mean_abs_error','med_abs_error')
+print(errors)
