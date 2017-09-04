@@ -136,7 +136,7 @@ Working directly with the Server object to handle model creation and data manage
 
 ## Examples:
 
-Here is a script for building a project, importing the dataset, creating models for each build node, training the models, selecting the best model for each build node, grabbing results and errors for the dataset and publishing the project:
+Here is a script for building a project, importing the dataset, creating and training models for each build node, selecting the best model from each build node, grabbing results and errors for the test set, and publishing the project:
 
 ```python
 from ecnet.server import Server
