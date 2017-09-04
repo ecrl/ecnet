@@ -23,7 +23,7 @@ bibliography: paper.bib
 
 ECNet is an open source Python package for creating large scale machine learning projects with a focus on fuel property prediction. A project is considered a collection of builds, and each build is a collection of nodes. Nodes are averaged to obtain a final predicted value for the build. For each node in a build, multiple neural networks are constructed and the best performing neural network is used as that node's predictor.
 
-ECNet aims to provide scientists with an open-source tool for predicting key fuel properties for the next generation of fuels, without having to spend resources on fuel synthesis and experimentation.
+ECNet aims to provide scientists an open-source tool for predicting key fuel properties for the next generation of fuels, without having to spend resources on fuel synthesis and experimentation.
 
 Project(s) using ECNet:
 
