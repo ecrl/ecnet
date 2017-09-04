@@ -8,6 +8,11 @@ on input parameter performance
 
 from ecnet.server import Server
 
-sv = Server()					               # Create the Server
-sv.import_data()				               # Imports database
-sv.limit_parameters(15, 'limited_database.csv')		# Limits input dimensionality to 15
+# Create the Server
+sv = Server()
+
+# Imports config. database
+sv.import_data()
+
+# Limits input dimensionality to 15, saves to specified file
+sv.limit_parameters(15, 'limited_database.csv')
