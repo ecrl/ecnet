@@ -15,7 +15,7 @@ sv = Server()
 # Create project save environment
 sv.create_save_env()
 
-# Import data from config. database
+# Import data from config. file database
 sv.import_data()
 
 # Fits models for each node in each build, shuffling learn and validate sets between trials
