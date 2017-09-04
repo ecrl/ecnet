@@ -31,7 +31,7 @@ Additional package dependencies (TensorFlow, PyYaml) will be installed during th
 
 # Usage:
 
-ECNet operates using a **Server** object that interfaces with data utility classes and neural network creation classes. The Server object handles importing data and model creation for your project, and serves the data to the model. Configurable variables like your project's name, number of builds and nodes, ANN learning and architecture variables, data splitting controls, and more are found in a __config.yml__ file in your working directory.
+ECNet operates using a **Server** object that interfaces with data utility classes, error calculation functions, and neural network creation classes. The Server object handles importing data and model creation for your project, and serves the data to the model. Configurable variables like your project's name, number of builds and nodes, ANN learning and architecture variables, data splitting controls, and more are found in a __config.yml__ file in your working directory.
 
 ## config.yml format and variables:
 
@@ -67,15 +67,15 @@ valid_mdrmse_stop: 0.00007
 
 Here are brief explanations of each of these variables:
 - **data_filename**: the location of your formatted .csv database for training and testing data
-- **data_sort_type** - random or explicit: how the learning, validation and testing data sets should be chosen
+- **data_sort_type** - *random or explicit*: how the learning, validation and testing data sets should be chosen
 	- Note: explicitly split requires set locations to be defined inside the database
-- **data_split** - [learning, validation, testing]: proportions used for the random sort type
+- **data_split** - *[learning, validation, testing]*: proportions used for the random sort type
 - **learning_rate**: value passed to the AdamOptimizer to use as its learning rate during training
-- **mlp_hidden_layers** - [[num_neurons_0, layer_type_0],...,[num_neurons_n, layer_type_n]]: the architecture of the ANN between the input and output layers
-	- Rectified linear unit ('relu') and Sigmoid ('sigmoid') layer types are currently supported
+- **mlp_hidden_layers** - *[[num_neurons_0, layer_type_0],...,[num_neurons_n, layer_type_n]]*: the architecture of the ANN between the input and output layers
+	- Rectified linear unit (**'relu'**), **'sigmoid'**, and **'linear'** *layer_type*s are currently supported
 - **mlp_in_layer_activ** - the layer type of the input layer: number of nodes is determined by data dimensions
 - **mlp_out_layer_activ** - the layer type of the output layer: number of nodes is determined by data dimensions
-- **normals_use**: boolean to determine if I/O parameters should be normalized (min-max, between 0 and 1)
+- **normals_use**: *boolean* to determine if I/O parameters should be normalized (min-max, between 0 and 1)
 - **project_name**: the name of your project
 - **project_num_builds**: the number of builds in your project
 - **project_num_nodes**: the number of nodes in each build
