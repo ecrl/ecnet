@@ -4,5 +4,5 @@
 
   - **config.yml**: example ECNet configuration file, set up for a cetane number prediction project
   - **create_project.py**: creating the project environment, importing data, training trial ANN's with validation, selecting the best performing trial for each build node, and publishing the project to a '.project' file
-  - **use_project.py**: opening a published project, handing the trained model a new database to predict values for, obtaining and saving the results, and calculating and listing various metrics of error/accuracy
+  - **use_project.py**: opening a published project, handing the trained model(s) a new database to predict values for, obtaining and saving the results, and calculating and listing various metrics of error/accuracy regarding the predicted values (if true values are known)
   - **limit_db_parameters.py**: imports a database, reduces the input dimensionality using a "retain the best" algorithm, and saves the reduced database to a specified file
