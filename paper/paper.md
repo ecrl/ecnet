@@ -25,6 +25,9 @@ ECNet is an open source Python package for creating large scale machine learning
 
 ECNet aims to provide scientists with an open-source tool for predicting key fuel properties for the next generation of fuels, without having to spend resources on fuel synthesis and experimentation.
 
+Project(s) using ECNet:
+
+Kessler, Travis. 2017. "Artificial neural network based predictions of cetane number for furanic biofuel additives." [sciencedirect.com](http://www.sciencedirect.com/science/article/pii/S0016236117307068?via%3Dihub)
 
 # References
 
@@ -33,7 +36,3 @@ ECNet aims to provide scientists with an open-source tool for predicting key fue
 [PyPI Package Repository](https://pypi.python.org/pypi/ecnet/)
 
 [UMass Lowell ECRL](http://faculty.uml.edu/Hunter_Mack/)
-
-# Mentions
-
-Kessler, Travis. 2017. "Artificial neural network based predictions of cetane number for furanic biofuel additives." [sciencedirect.com](http://www.sciencedirect.com/science/article/pii/S0016236117307068?via%3Dihub)
