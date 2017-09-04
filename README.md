@@ -1,7 +1,6 @@
 [![UML Energy & Combustion Research Laboratory](http://faculty.uml.edu/Hunter_Mack/uploads/9/7/1/3/97138798/1481826668_2.png)](http://faculty.uml.edu/Hunter_Mack/)
 
 # ECNet - Large scale machine learning projects for fuel property prediction
-### Developed by Travis Kessler with direction from Professor John Hunter Mack
 	
 **ECNet** is an open source Python package for large scale machine learning projects with a focus on fuel property prediction. A __project__ is considered a collection of __builds__, and each build is a collection of __nodes__. Nodes are averaged to obtain a final predicted value for the build. For each node in a build, multiple neural networks are constructed and the best performing neural network is used for that node's predicted value.
 
@@ -186,3 +185,4 @@ sv.open_project('my_project.project')
 sv.import_data('new_data.csv')
 results = sv.use_mlp_model()
 ```
+To view more examples of common ECNet tasks, view the examples directory.
