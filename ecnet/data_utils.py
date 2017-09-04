@@ -107,41 +107,95 @@ def output_results(results, data, filename, *args):
 		title_row.append(data.group_cols[group])
 	title_row.append("DB Value")
 	for i in range(0,len(results)):
-		title_row.append("Predicted Value %d" %i)
+		title_row.append("Predicted Value %d" %(i+1))
+		if data.controls_num_outputs > 1:
+			for output in range(data.controls_num_outputs - 1):
+				title_row.append("")
 	rows.append(title_row)
+
+	# Determines which data set the results are from
+	which_data = None
+	if len(results[0]) == len(data.learn_y):
+		which_data = 'learn'
+	elif len(results[0]) == len(data.valid_y):
+		which_data = 'valid'
+	elif len(results[0]) == len(data.test_y):
+		which_data = 'test'
+	elif len(results[0]) == (len(data.learn_y) + len(data.valid_y)):
+		which_data = 'train'
+	elif len(results[0]) == len(data.y):
+		which_data = 'all'
+
+	# Format training data outputs
+	if which_data is 'train':
+		train_dataid = []
+		train_strings = []
+		train_groups = []
+		train_y = []
+		for i in range(len(data.learn_dataid)):
+			train_dataid.append(data.learn_dataid[i])
+		for i in range(len(data.valid_dataid)):
+			train_dataid.append(data.valid_dataid[i])
+		for i in range(len(data.learn_strings)):
+			train_strings.append(data.learn_strings[i])
+		for i in range(len(data.valid_strings)):
+			train_strings.append(data.valid_strings[i])
+		for i in range(len(data.learn_groups)):
+			train_groups.append(data.learn_groups[i])
+		for i in range(len(data.valid_groups)):
+			train_groups.append(data.valid_groups[i])
+		for i in range(len(data.learn_y)):
+			train_y.append(data.learn_y[i])
+		for i in range(len(data.valid_y)):
+			train_y.append(data.valid_y[i])
+
 	# Adds data ID's, strings, groups, DB values and predictions for each test result to the rows list
 	for result in range(0,len(results[0])):
 		local_row = []
-		if 'learn' in args:
+		# Export learning data results
+		if which_data is 'learn':
 			local_row.append(data.learn_dataid[result])
 			for string in range(0,len(data.learn_strings[result])):
 				local_row.append(data.learn_strings[result][string])
 			for group in range(0,len(data.learn_groups[result])):
 				local_row.append(data.learn_groups[result][group])
 			local_row.append(data.learn_y[result][0])
-		elif 'valid' in args:
+		# Export validation data results
+		elif which_data is 'valid':
 			local_row.append(data.valid_dataid[result])
 			for string in range(0,len(data.valid_strings[result])):
 				local_row.append(data.valid_strings[result][string])
 			for group in range(0,len(data.valid_groups[result])):
 				local_row.append(data.valid_groups[result][group])
 			local_row.append(data.valid_y[result][0])
-		elif 'test' in args:
+		# Export testing data results
+		elif which_data is 'test':
 			local_row.append(data.test_dataid[result])
 			for string in range(0,len(data.test_strings[result])):
 				local_row.append(data.test_strings[result][string])
 			for group in range(0,len(data.test_groups[result])):
 				local_row.append(data.test_groups[result][group])
 			local_row.append(data.test_y[result][0])
-		else:
+		# Export training data results
+		elif which_data is 'train':			
+			local_row.append(train_dataid[result])
+			for string in range(0,len(train_strings[result])):
+				local_row.append(train_strings[result][string])
+			for group in range(0,len(train_groups[result])):
+				local_row.append(train_groups[result][group])
+			local_row.append(train_y[result][0])
+		# Export all data results
+		elif which_data is 'all':
 			local_row.append(data.dataid[result])
 			for string in range(0,len(data.strings[result])):
 				local_row.append(data.strings[result][string])
 			for group in range(0,len(data.groups[result])):
 				local_row.append(data.groups[result][group])
 			local_row.append(data.y[result][0])
-		for i in range(0,len(results)):
-			local_row.append(results[i][result][0])
+		# Append predicted values
+		for i in range(len(results)):
+			for j in range(len(results[i][result])):
+				local_row.append(results[i][result][j])
 		rows.append(local_row)
 	# Outputs each row to the output file
 	with open(filename, 'w') as output_file:
