@@ -107,7 +107,7 @@ Here is an overview of the Server object's methods:
 		- **'shuffle_lv'** (shuffles learning and validation sets between trials)
 		- **'shuffle_lvt'** (shuffles all sets between trials)
 - **select_best()**: selects the best performing model to represent each node of each build; requires a folder hierarchy to be created
-- **use_mlp_model(*args*)**: predicts values for the data's testing group; returns a list of values for each build
+- **use_mlp_model(*args*)**: predicts values for the data's testing group; returns a list of results for each build
 	- arguments: 
 		- **None** (defaults to whole dataset)
 		- **'learn'** (obtains results for learning set)
@@ -127,12 +127,7 @@ Here is an overview of the Server object's methods:
 		- **'valid'** (errors for validation set)
 		- **'train'** (errors for learning & validation sets)
 		- **'test'** (errors for test set)
-- **output_results(*results, output_filename, args*)**: saves your **results** to a specified **output file**
-	- arguments:
-		- **None** (default to exporting all data)
-		- **'learn'** (exports learning set results)
-		- **'valid'** (exports validation set results)
-		- **'test'** (exports test set results)
+- **output_results(*results, output_filename*)**: saves your **results** to a specified **output file**
 - **limit_parameters(*param_num, filename*)**: reduces the input dimensionality of an input database to **param_num** through a "retain the best" process; saves to new database **filename**
 - **publish_project()**: cleans the project directory, copies config, normal_params, and currently loaded dataset into the directory, and creates a '.project' file
 - **open_project(*project_name*)**: opens a '**project_name**.project' file, importing the project's config, normal_params, and dataset to the Server object
