@@ -27,7 +27,7 @@ ECNet aims to provide scientists with an open-source tool for predicting key fue
 
 Project(s) using ECNet:
 
-Kessler, Travis. 2017. "Artificial neural network based predictions of cetane number for furanic biofuel additives." [sciencedirect.com](http://www.sciencedirect.com/science/article/pii/S0016236117307068?via%3Dihub)
+Kessler, Travis. 2017. "Artificial neural network based predictions of cetane number for furanic biofuel additives." [doi.org](https://doi.org/10.1016/j.fuel.2017.06.015)
 
 # References
 
