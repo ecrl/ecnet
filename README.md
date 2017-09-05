@@ -136,6 +136,8 @@ Working directly with the Server object to handle model creation and data manage
 
 ## Examples:
 
+To get started, create a Python script and a config.yml file to handle your task, and copy a formatted database (.csv) file to your working directory. The Server object will create a default configuration file if none are provided. Example scripts, configuration files, and databases are provided.
+
 Here is a script for building a project, importing the dataset, creating and training models for each build node, selecting the best model from each build node, grabbing results and errors for the test set, and publishing the project:
 
 ```python
