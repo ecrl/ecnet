@@ -12,7 +12,7 @@ Methods:
   - supported activation functions: 'relu', 'sigmoid', 'linear'
 - **connectLayers()**: initializes TensorFlow variables for weights and biases between each layer; fully connected
 - **feed_forward(x)**: used by TensorFlow graph to feed data through weights and add biases
-- **fit(x_l, y_l, learning_rate, train_epochs)**: fits the model to the inputs (x_l) and outputs (y_l) for train_epochs iterations
+- **fit(x_l, y_l, learning_rate, train_epochs)**: fits the model to the inputs (**x_l**) and outputs (**y_l**) for **train_epochs** iterations with a learning rate of **learning_rate**
 - **fit_validation(x_l, x_v, y_l, y_v, learning_rate, mdrmse_stop, mdrmse_memory, max_epochs)**: fits the model while using a validation set in order to test the learning performance over time
   - *mdrmse*: mean-delta-root-mean-squared error, or the change in the difference between RMSE values over time
   - **mdrmse_stop** is the cutoff point, where the function ceases learning (mdrmse approaches zero as epochs increases)
