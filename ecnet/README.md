@@ -14,10 +14,10 @@ Methods:
 - **feed_forward(x)**: used by TensorFlow graph to feed data through weights and add biases
 - **fit(x_l, y_l, learning_rate, train_epochs)**: fits the model to the inputs (x_l) and outputs (y_l) for train_epochs iterations
 - **fit_validation(x_l, x_v, y_l, y_v, learning_rate, mdrmse_stop, mdrmse_memory, max_epochs)**: fits the model while using a validation set in order to test the learning performance over time
-  - mdrmse: mean-delta-root-mean-squared error, or the change in the difference between RMSE values over time
-  - mdrmse_stop is the cutoff point, where the function ceases learning (mdrmse approaches zero as epochs increases)
-  - mdrmse_memory is used to determine how far back (number of epochs) the function looks in determining mdrmse
-  - max_epochs is the cutoff point if mdrmse has not fallen below mdrmse_stop
+  - *mdrmse*: mean-delta-root-mean-squared error, or the change in the difference between RMSE values over time
+  - **mdrmse_stop** is the cutoff point, where the function ceases learning (mdrmse approaches zero as epochs increases)
+  - **mdrmse_memory** is used to determine how far back (number of epochs) the function looks in determining mdrmse
+  - **max_epochs** is the cutoff point if mdrmse has not fallen below mdrmse_stop
 - **test_new(x)**: used to pass data through the model to get a prediction, without training it; returns predicted values
 - **save_net(output_filepath)**: saves the TensorFlow session (.sess) and model architecture information (.struct) to specified filename
 - **load_net(model_load_filename)**: opens a TensorFlow session (.sess) and model architecture information (.struct) to work with
@@ -42,8 +42,8 @@ Methods:
 
 Misc. Functions:
 - **create_static_test_set(data)**: taking an initialize_data object, this function will create separate files for the test and learning/validation data; useful for when you need a static test set for completely blind model testing
-- **output_results(results, data, which_data, filename)**: outputs your prediction results from your model to a specified filename
-  - which_data: 'all' or 'test', corresponding to which data set(s) are contained in your results
+- **output_results(results, data, filename)**: outputs your prediction results from your model to a specified filename
+  - arguments are a list of results obtained from model.py, a data object from data_utils.py, and the filename to save to
 - **denormalize_result(results, param_filepath)**: denormalizes a result, using min-max normalization paramters found in the param_filepath; returns denormalized results list
 
 ## error_utils.py
