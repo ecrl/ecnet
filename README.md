@@ -204,7 +204,7 @@ sv.open_project('my_project.project')
 sv.import_data('new_data.csv')
 
 # Save results to output file
-sv.output_results(results = sv.use_mlp_model(), 'new_data_results.csv')
+sv.output_results(results=sv.use_mlp_model(), filename='new_data_results.csv')
 ```
 To view more examples of common ECNet tasks, view the [examples](https://github.com/TJKessler/ECNet/tree/master/examples) directory.
 
