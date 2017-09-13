@@ -139,7 +139,7 @@ Working directly with the Server object to handle model creation and data manage
 
 ## Examples:
 
-To get started, create a Python script and a config.yml file to handle your task, and copy a formatted database (.csv) file to your working directory. The Server object will create a default configuration file if none are provided. Example scripts, configuration files, and databases are provided.
+To get started, create a Python script and a config.yml file to handle your task, and copy a formatted database (.csv) file to your working directory. The Server object will create a default configuration file if none are provided. Example scripts, configuration files, and databases are provided ([examples/config](https://github.com/TJKessler/ECNet/tree/master/examples), [databases](https://github.com/TJKessler/ECNet/tree/master/databases)).
 
 Here is a script for building a project, importing the dataset, creating and training models for each build node, selecting the best model from each build node, grabbing results and errors for the test set, and publishing the project:
 
@@ -206,4 +206,18 @@ sv.import_data('new_data.csv')
 # Save results to output file
 sv.output_results(results = sv.use_mlp_model(), 'new_data_results.csv')
 ```
-To view more examples of common ECNet tasks, view the examples directory.
+To view more examples of common ECNet tasks, view the [examples](https://github.com/TJKessler/ECNet/tree/master/examples) directory.
+
+## Database Format:
+
+ECNet databases are comma-separated value (CSV) formatted files that provide information such as the ID of each molecule (DATAid), an optional explicit sort type (T/V/L), various strings and groups to identify molecules, and input and output/target parameters. The number of strings, groups, outputs/targets and specific DATAID's to automatically drop are determined by the master parameters in rows 1-2. Row 3 contains the headers for each sub-section (DATAID, T/V/L, strings, groups, paramters), and row 4 contains specific string, group, and parameter names. The number of outputs/targets, determined by the "Num of Outputs" master parameter, tells the data importing software how many parameter columns (from left to right) are used as outputs/targets.
+
+The [databases](https://github.com/TJKessler/ECNet/tree/master/databases) directory contains databases for cetane number as well as a database template.
+
+## Contributing, Reporting Issues and Other Support:
+
+To contribute to ECNet, make a pull request. Contributions should include tests for new features added, as well as extensive documentation.
+
+To report problems with the software or feature requests, file an issue. When reporting problems, include information such as error messages, your OS/environment and python version.
+
+For additional support/questions, contact Travis Kessler (Travis_Kessler@student.uml.edu) or John Hunter Mack (Hunter_Mack@uml.edu).
