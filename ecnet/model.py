@@ -48,6 +48,8 @@ class multilayer_perceptron:
 			# linear
 			elif "linear" in self.layers[layer][1]:
 				layerOutput.append(tf.add(tf.matmul(layerOutput[-1], self.weights[layer - 1]), self.biases[layer - 1]))
+			elif "softmax" in self.layers[layer][1]:
+				layerOutput.append(tf.nn.softmax(tf.add(tf.matmul(layerOutput[-1], self.weights[layer - 1]), self.biases[layer - 1])))
 		return(layerOutput[-1])
 	
 	### Data is served to the model, and fits the model to the data
