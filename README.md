@@ -135,7 +135,7 @@ Here is an overview of the Server object's methods:
 - **publish_project()**: cleans the project directory, copies config, normal_params, and currently loaded dataset into the directory, and creates a '.project' file
 - **open_project(*project_name*)**: opens a '**project_name**.project' file, importing the project's config, normal_params, and dataset to the Server object
 
-Working directly with the Server object to handle model creation and data management allows for speedy scripting, but you can still work with the model and data classes directly. View the source code README.md for more information on low-level usage.
+Working directly with the Server object to handle model creation and data management allows for speedy scripting, but you can still work with the model and data classes directly. View the source code [README.md](https://github.com/TJKessler/ECNet/tree/master/ecnet) for more information on low-level usage.
 
 ## Examples:
 
