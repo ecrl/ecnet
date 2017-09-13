@@ -22,7 +22,7 @@ sv.import_data('testing_data.csv')
 results = sv.use_mlp_model()
 
 # Save results to file
-sv.output_results(results, 'testing_results.csv')
+sv.output_results(results, filename='testing_results.csv')
 
 # Compute and print errors (for whole set)
 errors = sv.calc_error('rmse','r2','mean_abs_error','med_abs_error')
