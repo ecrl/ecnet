@@ -72,13 +72,10 @@ class Server:
 	def fit_mlp_model(self, *args):
         ### PROJECT ###
 		if self.folder_structs_built == True:
-			self.fit_rmse_list = []
 			for build in range(0,self.vars['project_num_builds']):
-				build_rmse_list = []
 				if self.vars['project_print_feedback'] == True:
 					print("Build %d of %d"%(build+1,self.vars['project_num_builds']))
 				for node in range(0,self.vars['project_num_nodes']):
-					node_rmse_list = []
 					if self.vars['project_print_feedback'] == True:
 						print("Node %d of %d"%(node+1,self.vars['project_num_nodes']))
 					for trial in range(0,self.vars['project_num_trials']):
@@ -93,8 +90,6 @@ class Server:
 							sys.exit()
 						try:
 							res = self.model.test_new(self.data.x)
-							rmse = ecnet.error_utils.calc_rmse(res, self.data.y)
-							node_rmse_list.append(rmse)
 						except:
 							raise
 							sys.exit()
@@ -107,8 +102,6 @@ class Server:
 							self.data.shuffle('l', 'v', data_split = self.vars['data_split'])
 						elif 'shuffle_lvt' in args:
 							self.data.shuffle('l', 'v', 't', data_split = self.vars['data_split'])
-					build_rmse_list.append(node_rmse_list)
-				self.fit_rmse_list.append(build_rmse_list)
 		### SINGLE NET ###
 		else:
 			self.model = create_model(self)
@@ -127,13 +120,10 @@ class Server:
 	def fit_mlp_model_validation(self, *args):
 		### PROJECT ###
 		if self.folder_structs_built == True:
-			self.fit_rmse_list = []
 			for build in range(0,self.vars['project_num_builds']):
-				build_rmse_list = []
 				if self.vars['project_print_feedback'] == True:
 					print("Build %d of %d"%(build+1,self.vars['project_num_builds']))
 				for node in range(0,self.vars['project_num_nodes']):
-					node_rmse_list = []
 					if self.vars['project_print_feedback'] == True:
 						print("Node %d of %d"%(node+1,self.vars['project_num_nodes']))
 					for trial in range(0,self.vars['project_num_trials']):
@@ -148,8 +138,6 @@ class Server:
 							sys.exit()
 						try:
 							res = self.model.test_new(self.data.x)
-							rmse = ecnet.error_utils.calc_rmse(res, self.data.y)
-							node_rmse_list.append(rmse)
 						except:
 							raise
 							sys.exit()
@@ -162,8 +150,6 @@ class Server:
 							self.data.shuffle('l', 'v', data_split = self.vars['data_split'])
 						elif 'shuffle_lvt' in args:
 							self.data.shuffle('l', 'v', 't', data_split = self.vars['data_split'])
-					build_rmse_list.append(node_rmse_list)
-				self.fit_rmse_list.append(build_rmse_list)
 		### SINGLE NET ###
 		else:
 			self.model = create_model(self)
@@ -186,36 +172,23 @@ class Server:
 			sys.exit()
 		### PROJECT ###
 		else:
-			# if you fit the model in the same script (self.fit_rmse_list is made)
-			try:
-				for build in range(len(self.fit_rmse_list)):
-					for node in range(len(self.fit_rmse_list[build])):
-						min_idx = 0
-						for error in range(len(self.fit_rmse_list[build][node])):
-							if self.fit_rmse_list[build][node][error] < self.fit_rmse_list[build][node][min_idx]:
-								min_idx = error
-						self.model_load_filename = os.path.join(os.path.join(self.vars['project_name'], "build_%d"%(build+1)), os.path.join("node_%d"%(node+1), "model_output" + "_%d"%(min_idx+1)))
-						self.output_filepath = os.path.join(os.path.join(self.vars['project_name'], "build_%d"%(build+1)),os.path.join("node_%d"%(node+1),"final_net_%d"%(node+1)))
-						self.resave_net
-			# if you did not fit the model in the same script (self.fit_rmse_list is not made)
-			except:
-				for i in range(0,self.vars['project_num_builds']):
-					for j in range(0,self.vars['project_num_nodes']):
-						rmse_list = []
-						for k in range(0,self.vars['project_num_trials']):
-							self.model_load_filename = os.path.join(os.path.join(self.vars['project_name'], "build_%d"%(i+1)),os.path.join("node_%d"%(j+1), "model_output" + "_%d"%(k+1)))
-							self.model = ecnet.model.multilayer_perceptron()
-							self.model.load_net(self.model_load_filename)
-							res = self.model.test_new(self.data.x)
-							rmse = ecnet.error_utils.calc_rmse(res, self.data.y)
-							rmse_list.append(rmse)
-						current_min = 0
-						for error in range(0,len(rmse_list)):
-							if rmse_list[error] < rmse_list[current_min]:
-								current_min = error
-						self.model_load_filename = os.path.join(os.path.join(self.vars['project_name'], "build_%d"%(i+1)),os.path.join("node_%d"%(j+1), "model_output" + "_%d"%(current_min+1)))
-						self.output_filepath = os.path.join(os.path.join(self.vars['project_name'], "build_%d"%(i+1)),os.path.join("node_%d"%(j+1),"final_net_%d"%(j+1)))
-						self.resave_net(self.output_filepath)
+			for i in range(0,self.vars['project_num_builds']):
+				for j in range(0,self.vars['project_num_nodes']):
+					rmse_list = []
+					for k in range(0,self.vars['project_num_trials']):
+						self.model_load_filename = os.path.join(os.path.join(self.vars['project_name'], "build_%d"%(i+1)),os.path.join("node_%d"%(j+1), "model_output" + "_%d"%(k+1)))
+						self.model = ecnet.model.multilayer_perceptron()
+						self.model.load_net(self.model_load_filename)
+						res = self.model.test_new(self.data.x)
+						rmse = ecnet.error_utils.calc_rmse(res, self.data.y)
+						rmse_list.append(rmse)
+					current_min = 0
+					for error in range(0,len(rmse_list)):
+						if rmse_list[error] < rmse_list[current_min]:
+							current_min = error
+					self.model_load_filename = os.path.join(os.path.join(self.vars['project_name'], "build_%d"%(i+1)),os.path.join("node_%d"%(j+1), "model_output" + "_%d"%(current_min+1)))
+					self.output_filepath = os.path.join(os.path.join(self.vars['project_name'], "build_%d"%(i+1)),os.path.join("node_%d"%(j+1),"final_net_%d"%(j+1)))
+					self.resave_net(self.output_filepath)
 	
 	### Predicts values for the current test set data
 	def use_mlp_model(self, dset = None):
@@ -287,7 +260,7 @@ class Server:
 				### SINGLE MODEL ###
 				if self.folder_structs_built == False:
 					if self.vars['normals_use'] == True:
-						rmse = ecnet.error_utils.calc_rmse(preds, ecnet.data_utils.denormalize_result(yvals, './tmp/normal_params'))
+						rmse = ecnet.error_utils.calc_rmse(preds, ecnet.data_utils.denormalize_result(y_vals, './tmp/normal_params'))
 					else:
 						rmse = ecnet.error_utils.calc_rmse(preds, y_vals)
 					error_dict['RMSE'] = rmse		
