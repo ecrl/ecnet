@@ -106,6 +106,8 @@ def output_results(results, data, filename, *args):
 	for group in range(0,len(data.group_cols)):
 		title_row.append(data.group_cols[group])
 	title_row.append("DB Value")
+	for i in range(data.controls_num_outputs - 1):
+		title_row.append('')
 	for i in range(0,len(results)):
 		title_row.append("Predicted Value %d" %(i+1))
 		if data.controls_num_outputs > 1:
@@ -159,7 +161,8 @@ def output_results(results, data, filename, *args):
 				local_row.append(data.learn_strings[result][string])
 			for group in range(0,len(data.learn_groups[result])):
 				local_row.append(data.learn_groups[result][group])
-			local_row.append(data.learn_y[result][0])
+			for i in range(len(data.learn_y[result])):
+				local_row.append(data.learn_y[result][i])
 		# Export validation data results
 		elif which_data is 'valid':
 			local_row.append(data.valid_dataid[result])
@@ -167,7 +170,8 @@ def output_results(results, data, filename, *args):
 				local_row.append(data.valid_strings[result][string])
 			for group in range(0,len(data.valid_groups[result])):
 				local_row.append(data.valid_groups[result][group])
-			local_row.append(data.valid_y[result][0])
+			for i in range(len(data.valid_y[result])):
+				local_row.append(data.valid_y[result][i])
 		# Export testing data results
 		elif which_data is 'test':
 			local_row.append(data.test_dataid[result])
@@ -175,7 +179,8 @@ def output_results(results, data, filename, *args):
 				local_row.append(data.test_strings[result][string])
 			for group in range(0,len(data.test_groups[result])):
 				local_row.append(data.test_groups[result][group])
-			local_row.append(data.test_y[result][0])
+			for i in range(len(data.test_y[result])):
+				local_row.append(data.test_y[result][i])
 		# Export training data results
 		elif which_data is 'train':			
 			local_row.append(train_dataid[result])
@@ -183,7 +188,8 @@ def output_results(results, data, filename, *args):
 				local_row.append(train_strings[result][string])
 			for group in range(0,len(train_groups[result])):
 				local_row.append(train_groups[result][group])
-			local_row.append(train_y[result][0])
+			for i in range(len(train_y[result])):
+				local_row.append(train_y[result][i])
 		# Export all data results
 		elif which_data is 'all':
 			local_row.append(data.dataid[result])
@@ -191,7 +197,8 @@ def output_results(results, data, filename, *args):
 				local_row.append(data.strings[result][string])
 			for group in range(0,len(data.groups[result])):
 				local_row.append(data.groups[result][group])
-			local_row.append(data.y[result][0])
+			for i in range(len(data.y[result])):
+				local_row.append(data.y[result][i])
 		# Append predicted values
 		for i in range(len(results)):
 			for j in range(len(results[i][result])):
