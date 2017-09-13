@@ -210,7 +210,7 @@ To view more examples of common ECNet tasks, view the [examples](https://github.
 
 ## Database Format:
 
-ECNet databases are comma-separated value (CSV) formatted files that provide information such as the ID of each molecule (DATAid), an optional explicit sort type (T/V/L), various strings and groups to identify molecules, and input and output/target parameters. The number of strings, groups, outputs/targets and specific DATAID's to automatically drop are determined by the master parameters in rows 1-2. Row 3 contains the headers for each sub-section (DATAID, T/V/L, strings, groups, paramters), and row 4 contains specific string, group, and parameter names. The number of outputs/targets, determined by the "Num of Outputs" master parameter, tells the data importing software how many parameter columns (from left to right) are used as outputs/targets.
+ECNet databases are comma-separated value (CSV) formatted files that provide information such as the ID of each molecule (DATAid), an optional explicit sort type (T/V/L), various strings and groups to identify molecules, and input and output/target parameters. The number of strings, groups, outputs/targets and specific DATAID's to automatically drop are determined by the master parameters in rows 1-2. Row 3 contains the headers for each sub-section (DATAID, T/V/L, strings, groups, paramters), and row 4 contains specific string, group, and parameter names. The number of outputs/targets determined by the "Num of Outputs" master parameter tells the data importing software how many parameter columns (from left to right) are used as outputs/targets.
 
 The [databases](https://github.com/TJKessler/ECNet/tree/master/databases) directory contains databases for cetane number as well as a database template.
 
