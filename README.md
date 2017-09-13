@@ -218,6 +218,6 @@ The [databases](https://github.com/TJKessler/ECNet/tree/master/databases) direct
 
 To contribute to ECNet, make a pull request. Contributions should include tests for new features added, as well as extensive documentation.
 
-To report problems with the software or feature requests, file an issue. When reporting problems, include information such as error messages, your OS/environment and python version.
+To report problems with the software or feature requests, file an issue. When reporting problems, include information such as error messages, your OS/environment and Python version.
 
 For additional support/questions, contact Travis Kessler (Travis_Kessler@student.uml.edu) or John Hunter Mack (Hunter_Mack@uml.edu).
