@@ -133,7 +133,7 @@ Here is an overview of the Server object's methods:
 		- **'valid'** (errors for validation set)
 		- **'train'** (errors for learning & validation sets)
 		- **'test'** (errors for test set)
-- **output_results(*results, output_filename*)**: saves your **results** to a specified **output file**
+- **output_results(*results, filename*)**: saves your **results** to a specified output **filename**
 - **limit_parameters(*param_num, filename*)**: reduces the input dimensionality of an input database to **param_num** through a "retain the best" process; saves to new database **filename**
 - **publish_project()**: cleans the project directory, copies config, normal_params, and currently loaded dataset into the directory, and creates a '.project' file
 - **open_project(*project_name*)**: opens a '**project_name**.project' file, importing the project's config, normal_params, and dataset to the Server object
