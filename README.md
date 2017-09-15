@@ -169,7 +169,7 @@ sv.select_best()
 test_results = sv.use_mlp_model('test')	
 
 # Output results to specified file
-sv.output_results(test_results, 'test_results.csv')	
+sv.output_results(results = test_results, filename = 'test_results.csv')	
 
 # Calculates errors for the test set
 test_errors = sv.calc_error('rmse','r2','mean_abs_error','med_abs_error', dset = 'test')
@@ -208,7 +208,7 @@ sv.open_project('my_project.project')
 sv.import_data('new_data.csv')
 
 # Save results to output file
-sv.output_results(results=sv.use_mlp_model(), filename='new_data_results.csv')
+sv.output_results(results = sv.use_mlp_model(), filename = 'new_data_results.csv')
 ```
 To view more examples of common ECNet tasks, view the [examples](https://github.com/TJKessler/ECNet/tree/master/examples) directory.
 
