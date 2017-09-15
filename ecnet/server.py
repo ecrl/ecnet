@@ -123,13 +123,9 @@ class Server:
 						self.model_load_filename = os.path.join(os.path.join(self.vars['project_name'], "build_%d"%(i+1)),os.path.join("node_%d"%(j+1), "model_output" + "_%d"%(k+1)))
 						self.model = ecnet.model.multilayer_perceptron()
 						self.model.load_net(self.model_load_filename)
-
-						#rmse = self.calc_error('rmse', dset = dset)
-
 						x_vals = determine_x_vals(self, dset)
 						y_vals = determine_y_vals(self, dset)
 						res = self.model.test_new(x_vals)
-
 						rmse = ecnet.error_utils.calc_rmse(res, y_vals)
 						rmse_list.append(rmse)
 					current_min = 0
