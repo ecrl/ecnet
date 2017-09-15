@@ -109,7 +109,7 @@ class Server:
 			self.model.save_net("./tmp/model_output")
 
 	### Selects the best performing networks from each node of each build. Folder structs must be created.			
-	def select_best(self):
+	def select_best(self, dset = None):
 		### SINGLE MODEL ###
 		if self.folder_structs_built == False:
 			print("Error: Project folder structure must be built in order to select best.")
@@ -123,8 +123,13 @@ class Server:
 						self.model_load_filename = os.path.join(os.path.join(self.vars['project_name'], "build_%d"%(i+1)),os.path.join("node_%d"%(j+1), "model_output" + "_%d"%(k+1)))
 						self.model = ecnet.model.multilayer_perceptron()
 						self.model.load_net(self.model_load_filename)
+
+						rmse = ecnet.calc_error('rmse', dset = dset)
+
+						"""
 						res = self.model.test_new(self.data.x)
 						rmse = ecnet.error_utils.calc_rmse(res, self.data.y)
+						"""
 						rmse_list.append(rmse)
 					current_min = 0
 					for error in range(0,len(rmse_list)):
