@@ -203,83 +203,6 @@ class Server:
 					else:
 						rmse_list.append(error_fn(arg, preds[i], y_vals))
 				error_dict[arg] = rmse_list
-			"""
-			### Tests the model's RMSE on the currently loaded data set	(in its entirety)
-			if arg is 'rmse':
-				### SINGLE MODEL ###
-				if self.folder_structs_built == False:
-					if self.vars['normals_use'] == True:
-						rmse = ecnet.error_utils.calc_rmse(preds, ecnet.data_utils.denormalize_result(y_vals, './tmp/normal_params'))
-					else:
-						rmse = ecnet.error_utils.calc_rmse(preds, y_vals)
-					error_dict['RMSE'] = rmse		
-				### PROJECT ###
-				else:
-					rmse_list = []
-					for i in range(0,len(preds)):
-						if self.vars['normals_use'] == True:
-							rmse_list.append(ecnet.error_utils.calc_rmse(preds[i], ecnet.data_utils.denormalize_result(y_vals, './tmp/normal_params')))
-						else:
-							rmse_list.append(ecnet.error_utils.calc_rmse(preds[i], y_vals))
-					error_dict['RMSE'] = rmse_list
-			### Tests the model's coefficient of determination, or r-squared value
-			elif arg is 'r2':
-				### SINGLE MODEL ###
-				if self.folder_structs_built == False:
-					if self.vars['normals_use'] == True:
-						r2 = ecnet.error_utils.calc_r2(preds, ecnet.data_utils.denormalize_result(y_vals, './tmp/normal_params'))
-					else:
-						r2 = ecnet.error_utils.calc_r2(preds, y_vals)
-					error_dict['R-Squared'] = r2
-				### PROJECT ###
-				else:
-					r2_list = []
-					for i in range(0,len(preds)):
-						if self.vars['normals_use'] == True:
-							r2_list.append(ecnet.error_utils.calc_r2(preds[i], ecnet.data_utils.denormalize_result(y_vals, './tmp/normal_params')))
-						else:
-							r2_list.append(ecnet.error_utils.calc_r2(preds[i], y_vals))
-					error_dict['R-Squared'] = r2_list
-			### Tests the model's mean absolute error on the currently loaded data set (in its entirety)
-			elif arg is 'mean_abs_error':
-				### SINGLE MODEL ###
-				if self.folder_structs_built == False:
-					if self.vars['normals_use'] == True:
-						mae = ecnet.error_utils.calc_mean_abs_error(preds, ecnet.data_utils.denormalize_result(y_vals, './tmp/normal_params'))
-					else:
-						mae = ecnet.error_utils.calc_mean_abs_error(preds, self.data.y)
-					error_dict['Mean Average Error'] = mae
-				### PROJECT ###
-				else:
-					mae_list = []
-					for i in range(0,len(preds)):
-						if self.vars['normals_use'] == True:
-							mae_list.append(ecnet.error_utils.calc_mean_abs_error(preds[i], ecnet.data_utils.denormalize_result(y_vals, './tmp/normal_params')))
-						else:
-							mae_list.append(ecnet.error_utils.calc_mean_abs_error(preds[i], y_vals))
-					error_dict['Mean Average Error'] = mae_list
-			### Tests the model's median absolute error on the currently loaded data set (in its entirety)
-			elif arg is 'med_abs_error':
-				### SINGLE MODEL ###
-				if self.folder_structs_built == False:
-					if self.vars['normals_use'] == True:
-						medae = ecnet.error_utils.calc_med_abs_error(preds, ecnet.data_utils.denormalize_result(y_vals, './tmp/normal_params'))
-					else:
-						medae = ecnet.error_utils.calc_med_abs_error(preds, y_vals)
-					error_dict['Median Absolute Error'] = medae
-				### PROJECT ###
-				else:
-					medae_list = []
-					for i in range(0,len(preds)):
-						if self.vars['normals_use'] == True:
-							medae_list.append(ecnet.error_utils.calc_med_abs_error(preds[i], ecnet.data_utils.denormalize_result(y_vals, './tmp/normal_params')))
-						else:
-							medae_list.append(ecnet.error_utils.calc_med_abs_error(preds[i], y_vals))
-					error_dict['Median Absolute Error'] = medae_list
-			else:
-				print("Error: unknown/unsupported error function - ",arg)
-				return
-			"""
 		return error_dict
 		
 	### Outputs results to desired .csv file	
@@ -401,6 +324,7 @@ def determine_y_vals(server, dset):
 		y_vals = server.data.y
 	return y_vals
 
+# Used by calc_errpr to determine which error is being calculated; returns user defined error calculation
 def error_fn(arg, y_hat, y):
 	if arg is 'rmse':
 		return ecnet.error_utils.calc_rmse(y_hat, y)
