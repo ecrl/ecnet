@@ -124,12 +124,13 @@ class Server:
 						self.model = ecnet.model.multilayer_perceptron()
 						self.model.load_net(self.model_load_filename)
 
-						rmse = ecnet.calc_error('rmse', dset = dset)
+						#rmse = self.calc_error('rmse', dset = dset)
 
-						"""
-						res = self.model.test_new(self.data.x)
-						rmse = ecnet.error_utils.calc_rmse(res, self.data.y)
-						"""
+						x_vals = determine_x_vals(self, dset)
+						y_vals = determine_y_vals(self, dset)
+						res = self.model.test_new(x_vals)
+
+						rmse = ecnet.error_utils.calc_rmse(res, y_vals)
 						rmse_list.append(rmse)
 					current_min = 0
 					for error in range(0,len(rmse_list)):
