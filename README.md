@@ -36,6 +36,8 @@ Note: if multiple Python releases are installed on your system (e.g. 2.7 and 3.5
 
 Additional package dependencies (TensorFlow, PyYaml) will be installed during the ECNet installation process.
 
+To update your version of ECNet to the latest release version, use **pip install --upgrade ecnet**.
+
 # Usage:
 
 ECNet operates using a **Server** object that interfaces with data utility classes, error calculation functions, and neural network creation classes. The Server object handles importing data and model creation for your project, and serves the data to the model. Configurable variables like your project's name, number of builds and nodes, ANN learning and architecture variables, data splitting controls, and more are found in a __config.yml__ file in your working directory.
