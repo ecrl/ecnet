@@ -36,7 +36,7 @@ Note: if multiple Python releases are installed on your system (e.g. 2.7 and 3.5
 
 Additional package dependencies (TensorFlow, PyYaml) will be installed during the ECNet installation process.
 
-To update your version of ECNet to the latest release version, use **pip install --upgrade ecnet**.
+To update your version of ECNet to the latest release version, use "**pip install --upgrade ecnet**".
 
 # Usage:
 
