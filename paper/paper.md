@@ -33,7 +33,10 @@ T. Sennott et al. have shown that neural networks can be applied to cetane numbe
 Using ECNet, T. Kessler et al. have increased the generalizability of neural networks to predict the cetane numbers for molecules from a variety of molecular classes, and have increased the accuracy of neural networks for predicting the cetane numbers for molecules from underrepresented molecular classes through targeted database expansion.
 
 Project(s) using ECNet:
-Kessler, Travis. 2017. “Artificial neural network based predictions of cetane number for furanic biofuel additives.” DOI: 10.1016/j.fuel.2017.06.015
+
+Kessler, Travis, Eric R. Sacia, Alexis T. Bell, and J. Hunter Mack. "Artificial neural network based predictions of cetane number for furanic biofuel additives." Fuel, Vol. 206, pp. 171-179, doi:10.1016/j.fuel.2017.06.015, 2017.
+
+Kessler, Travis, Eric R. Sacia, Alexis T. Bell, and J. Hunter Mack. "Predicting the cetane number of furanic biofuel candidates using an improved artificial neural network based on molecular structure." In ASME 2016 Internal Combustion Engine Fall Technical Conference. American Society of Mechanical Engineers, doi:10.1115/ICEF2016-9383, 2016.
 
 
 # References
