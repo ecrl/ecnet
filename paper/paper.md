@@ -22,8 +22,6 @@ bibliography: paper.bib
 
 # Summary
 
-[![UML Energy & Combustion Research Laboratory](http://faculty.uml.edu/Hunter_Mack/uploads/9/7/1/3/97138798/1481826668_2.png)](http://faculty.uml.edu/Hunter_Mack/)
-
 ECNet is an open source Python package for creating large scale machine learning projects with a focus on fuel property prediction. ECNet can predict a variety of fuel properties including cetane number, octane number and yield sooting index using quantitative structure-property relationship (QSPR) input parameters.
 
 A project is considered a collection of builds, and each build is a collection of nodes. Nodes are averaged to obtain a final predicted value for the build. For each node in a build, multiple neural networks are constructed and the best performing neural network is used as that node's predictor. Using multiple nodes allows a build to learn from multiple learning and validation sets, reducing the build’s error.
@@ -34,19 +32,9 @@ Using ECNet, T. Kessler et al. have increased the generalizability of neural net
 
 Project(s) using ECNet:
 
-Kessler, Travis, Eric R. Sacia, Alexis T. Bell, and J. Hunter Mack. "Artificial neural network based predictions of cetane number for furanic biofuel additives." Fuel, Vol. 206, pp. 171-179, doi:10.1016/j.fuel.2017.06.015, 2017.
+Artificial neural network based predictions of cetane number for furanic biofuel additives [@fuel_2017]
 
-Kessler, Travis, Eric R. Sacia, Alexis T. Bell, and J. Hunter Mack. "Predicting the cetane number of furanic biofuel candidates using an improved artificial neural network based on molecular structure." In ASME 2016 Internal Combustion Engine Fall Technical Conference. American Society of Mechanical Engineers, doi:10.1115/ICEF2016-9383, 2016.
+Predicting the cetane number of furanic biofuel candidates using an improved artificial neural network based on molecular structure [@asme_2016]
 
 
 # References
-
-[GitHub Repository](https://github.com/TJKessler/ECNet)
-
-[PyPI Package Repository](https://pypi.python.org/pypi/ecnet/)
-
-[UMass Lowell ECRL](http://faculty.uml.edu/Hunter_Mack/)
-
-[Artificial Neural Network for Predicting Cetane Number of Biofuel Candidates Based on Molecular Structure](https://doi.org/10.1115/ICEF2013-19185)
-
-[Artificial neural network based predictions of cetane number for furanic biofuel additives](https://doi.org/10.1016/j.fuel.2017.06.015)
