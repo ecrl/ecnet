@@ -18,6 +18,8 @@ affiliations:
    index: 1
 date: 4 September 2017
 bibliography: paper.bib
+nocite: |
+  @ecnet_github, @ecnet_pypi, @uml_ecrl
 ---
 
 # Summary
@@ -26,7 +28,7 @@ ECNet is an open source Python package for creating large scale machine learning
 
 A project is considered a collection of builds, and each build is a collection of nodes. Nodes are averaged to obtain a final predicted value for the build. For each node in a build, multiple neural networks are constructed and the best performing neural network is used as that node's predictor. Using multiple nodes allows a build to learn from multiple learning and validation sets, reducing the build’s error.
 
-T. Sennott et al. have shown that neural networks can be applied to cetane number prediction with relatively little error. ECNet provides scientists an open source tool for predicting key fuel properties of potential next-generation biofuels, reducing the need for costly fuel synthesis and experimentation.
+T. Sennott [@asme_2013] et al. have shown that neural networks can be applied to cetane number prediction with relatively little error. ECNet provides scientists an open source tool for predicting key fuel properties of potential next-generation biofuels, reducing the need for costly fuel synthesis and experimentation.
 
 Using ECNet, T. Kessler et al. have increased the generalizability of neural networks to predict the cetane numbers for molecules from a variety of molecular classes, and have increased the accuracy of neural networks for predicting the cetane numbers for molecules from underrepresented molecular classes through targeted database expansion.
 
