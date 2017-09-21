@@ -115,15 +115,21 @@ Here is an overview of the Server object's methods:
 		- **None** (no re-shuffling between trials)
 		- **'shuffle_lv'** (shuffles learning and validation sets between trials)
 		- **'shuffle_lvt'** (shuffles all sets between trials)
-- **select_best()**: selects the best performing model to represent each node of each build; requires a folder hierarchy to be created
-- **use_mlp_model(*args*)**: predicts values for the data's testing group; returns a list of results for each build
+- **select_best(*args*)**: selects the best performing model (lowest RMSE on specified data set) to represent each node of each build; requires a folder hierarchy to be created
+	- arguments:
+		- **None** (best performers are based on entire database)
+		- **'learn'** (best performers are based on learning set)
+		- **'valid'** (best performers are based on validation set)
+		- **'train'** (best performers are based on learning & validation sets)
+		- **'test'** (best performers are based on test set)
+- **use_mlp_model(*args*)**: predicts values for a specified data set; returns a list of results for each build
 	- arguments: 
 		- **None** (defaults to whole dataset)
 		- **'learn'** (obtains results for learning set)
 		- **'valid'** (obtains results for validation set)
 		- **'train'** (obtains results for learning & validation sets)
 		- **'test'** (obtains results for test set)
-- **calc_error(*args*, *dset = None*)**: calculates various metrics for error
+- **calc_error(*args*, *dset = None*)**: calculates various metrics for error for a specified data set
 	- arguments: 
 		- **None**, 
 		- **'rmse'** (root-mean-squared error)
