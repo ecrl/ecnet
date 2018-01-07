@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+#  ecnet/error_utils.py
+#  v.1.2.7.dev1
+#  Developed in 2018 by Travis Kessler <Travis_Kessler@student.uml.edu>
+#
+#  This program contains functions for error calculations
+#
+
 import numpy as np
 from math import sqrt
 
