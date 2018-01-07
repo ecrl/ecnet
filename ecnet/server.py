@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 #
 #  ecnet/server.py
-#  v.1.2.3.dev1
-#  Developed in 2017 by Travis Kessler <Travis_Kessler@student.uml.edu>
+#  v.1.2.7.dev1
+#  Developed in 2018 by Travis Kessler <Travis_Kessler@student.uml.edu>
 #
 #  This program contains all the necessary config parameters and network serving functions
 #
@@ -39,7 +39,12 @@ class Server:
 		self.data.build()
 		self.data.buildTVL(self.vars['data_sort_type'], self.vars['data_split'])
 		if self.vars['normals_use'] == True:
-			self.data.normalize('./tmp/normal_params')
+			if not os.path.isdir('./tmp'):
+				os.makedirs('./tmp')
+			if not os.path.exists('./tmp/normal_params.ecnet'):
+				self.data.normalize('./tmp/normal_params')
+			else:
+				self.data.applyNormal('./tmp/normal_params')
 		self.data.applyTVL()
 		self.data.package()
 
@@ -208,8 +213,22 @@ class Server:
 		return error_dict
 		
 	### Outputs results to desired .csv file	
-	def output_results(self, results, filename):
-		ecnet.data_utils.output_results(results, self.data, filename)
+	def output_results(self, results, filename, dset = None):
+		if self.vars['normals_use'] is True:
+			normalized_data = self.data.y[:]
+			normalized_learn = self.data.learn_y[:]
+			normalized_valid = self.data.valid_y[:]
+			normalized_test = self.data.test_y[:]
+			self.data.y = ecnet.data_utils.denormalize_result(self.data.y, './tmp/normal_params')
+			self.data.learn_y = ecnet.data_utils.denormalize_result(self.data.learn_y, './tmp/normal_params')
+			self.data.valid_y = ecnet.data_utils.denormalize_result(self.data.valid_y, './tmp/normal_params')
+			self.data.test_y = ecnet.data_utils.denormalize_result(self.data.test_y, './tmp/normal_params')
+		ecnet.data_utils.output_results(results, self.data, filename, dset)
+		if self.vars['normals_use'] is True:
+			self.data.y = normalized_data
+			self.data.learn_y = normalized_learn
+			self.data.valid_y = normalized_valid
+			self.data.test_y = normalized_test
 
 	### Resaves the file under 'self.model_load_filename' to specified output filepath
 	def resave_net(self, output):
@@ -233,7 +252,9 @@ class Server:
 			copyfile('./tmp/normal_params.ecnet', os.path.join(self.vars['project_name'], 'normal_params.ecnet'))
 		# Export the currently loaded dataset (if loaded)
 		try:
-			pickle.dump(self.data, open(os.path.join(self.vars['project_name'],'data.d'),'wb'))
+			data_file = open(os.path.join(self.vars['project_name'],'data.d'),'wb')
+			pickle.dump(self.data, data_file)
+			data_file.close()
 		except:
 			pass
 		# Zip up the project

@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  ecnet_data_utils.py
-#  
-#  Developed in 2017 by Travis Kessler <Travis_Kessler@student.uml.edu>
-#  
+#  ecnet/data_utils.py
+#  v.1.2.7.dev1
+#  Developed in 2018 by Travis Kessler <Travis_Kessler@student.uml.edu>
+#
 #  This program contains the data object class, and functions for manipulating/importing/outputting data
 #
 
@@ -13,8 +13,10 @@ import random
 import pickle
 import numpy as np
 from math import sqrt
+import math
 import sys
 import copy
+import warnings
 
 # Creates a static test set, as well as a static learning/validation set with remaining data
 def create_static_test_set(data):
@@ -92,7 +94,7 @@ def create_static_test_set(data):
 			wr.writerow(lv_rows[row])
 
 # Saves test results, data strings, groups to desired output .csv file			
-def output_results(results, data, filename, *args):
+def output_results(results, data, filename, dset):
 	# Makes sure filetype is csv
 	if ".csv" not in filename:
 		filename = filename + ".csv"
@@ -116,17 +118,7 @@ def output_results(results, data, filename, *args):
 	rows.append(title_row)
 
 	# Determines which data set the results are from
-	which_data = None
-	if len(results[0]) == len(data.learn_y):
-		which_data = 'learn'
-	elif len(results[0]) == len(data.valid_y):
-		which_data = 'valid'
-	elif len(results[0]) == len(data.test_y):
-		which_data = 'test'
-	elif len(results[0]) == (len(data.learn_y) + len(data.valid_y)):
-		which_data = 'train'
-	elif len(results[0]) == len(data.y):
-		which_data = 'all'
+	which_data = dset
 
 	# Format training data outputs
 	if which_data is 'train':
@@ -191,7 +183,7 @@ def output_results(results, data, filename, *args):
 			for i in range(len(train_y[result])):
 				local_row.append(train_y[result][i])
 		# Export all data results
-		elif which_data is 'all':
+		elif which_data is None:
 			local_row.append(data.dataid[result])
 			for string in range(0,len(data.strings[result])):
 				local_row.append(data.strings[result][string])
@@ -212,12 +204,17 @@ def output_results(results, data, filename, *args):
 
 # Denormalizes resultant data using parameter file
 def denormalize_result(results, param_filepath):
-	normalParams = pickle.load(open(param_filepath + ".ecnet","rb"))
+	norm_file = open(param_filepath + ".ecnet","rb")
+	normalParams = pickle.load(norm_file)
+	norm_file.close()
 	dn_res = copy.copy(results)
-	for i in range(0,len(dn_res[0])):
-		for j in range(0,len(dn_res)):
-			dn_res[j][i] = (dn_res[j][i]*normalParams[i][1])-normalParams[i][0]
-	return(dn_res)
+	try:
+		for i in range(0,len(dn_res[0])):
+			for j in range(0,len(dn_res)):
+				dn_res[j][i] = (dn_res[j][i]*normalParams[i][1])-normalParams[i][0]
+		return(dn_res)
+	except:
+		return []
 	
 ### Initial definition of data object
 class initialize_data:  
@@ -322,24 +319,31 @@ class initialize_data:
 				normalized_list = np.column_stack([normalized_list,beforeNormal])
 		normalized_list = normalized_list.tolist()
 		self.params = normalized_list
-		pickle.dump(minMaxList,open(param_filepath + ".ecnet","wb")) # Saves the parameter list for opening in data normalization and predicting
+		normal_file = open(param_filepath + ".ecnet", "wb")
+		pickle.dump(minMaxList,normal_file) # Saves the parameter list for opening in data normalization and predicting
+		normal_file.close()
 
 	# Applying normalizing parameters using parameter file to new (unseen) data. Based on previously build network.
 	def applyNormal(self, param_filepath = 'normalParams'):
-		self.normalParams = pickle.load(open(param_filepath + ".ecnet","rb"))
-		inputParams = []
-		outputParams = []
+		normal_file = open(param_filepath + ".ecnet", "rb")
+		self.normalParams = pickle.load(normal_file)
+		normal_file.close()
+		normalized_params = []
+		warnings.filterwarnings("ignore")
 		for i in range(0,len(self.params)):
 			paramBeforeNorm = []
 			for j in range(0,len(self.params[i])):
 				paramBeforeNorm.append(float(self.params[i][j]))
-			inputParamsAdd = []
+			normParamsAdd = []
 			for j in range(0,len(paramBeforeNorm)):
-				if j == 0:
-					outputParams.append((paramBeforeNorm[j] + self.normalParams[j][0])/self.normalParams[j][1])
+				if math.isnan((paramBeforeNorm[j] + self.normalParams[j][0]) / self.normalParams[j][1]):
+					normParamsAdd.append(0)
 				else:
-					inputParamsAdd.append((paramBeforeNorm[j] + self.normalParams[j][0])/self.normalParams[j][1])
-			inputParams.append(inputParamsAdd)
+					normParamsAdd.append((paramBeforeNorm[j] + self.normalParams[j][0]) / self.normalParams[j][1])
+			normalized_params.append(normParamsAdd)
+		warnings.filterwarnings("default")
+		for i in range(0,len(self.params)):
+			self.params[i] = normalized_params[i]
 
 	# Defining data for test, validation or learning based on either imported file or randomization
 	def buildTVL(self, sort_type = 'random', data_split = [0.65, 0.25, 0.1]):
