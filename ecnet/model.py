@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  ecnet_model.py
-#  
-#  Developed in 2017 by Travis Kessler <Travis_Kessler@student.uml.edu>
-#  
+#  ecnet/error_utils.py
+#  v.1.2.7.dev1
+#  Developed in 2018 by Travis Kessler <Travis_Kessler@student.uml.edu>
+#
 #  This program contains functions necessary creating, training, saving, and importing neural network models
 #
 
@@ -132,11 +132,15 @@ class multilayer_perceptron:
 			saver.restore(self.sess, "./tmp/_ckpt")
 			saver.save(self.sess, "./" + output_filepath + ".sess")
 		self.sess.close()
-		pickle.dump(self.layers, open("./" + output_filepath + ".struct", "wb"))
+		architecture_file = open("./" + output_filepath + ".struct", "wb")
+		pickle.dump(self.layers, architecture_file)
+		architecture_file.close()
 		
 	### Loads a pre-defined file into the model
 	def load_net(self, model_load_filename):
-		self.layers = pickle.load(open("./" + model_load_filename + ".struct", "rb"))
+		architecture_file = open("./" + model_load_filename + ".struct", "rb")
+		self.layers = pickle.load(architecture_file)
+		architecture_file.close()
 		self.connectLayers()
 		with tf.Session() as self.sess:
 			saver = tf.train.Saver()
