@@ -142,7 +142,13 @@ Here is an overview of the Server object's methods:
 		- **'valid'** (errors for validation set)
 		- **'train'** (errors for learning & validation sets)
 		- **'test'** (errors for test set)
-- **output_results(*results, filename*)**: saves your **results** to a specified output **filename**
+- **output_results(*results, filename, dset = None*)**: saves your **results** to a specified output **filename**
+	- dset values:
+		- **None** (defaults to outputting entire dataset)
+		- **'learn'** (outputs data for learning set)
+		- **'valid'** (outputs data for validation set)
+		- **'train'** (outputs data for learning & validation sets)
+		- **'test'** (outputs data for test set)
 - **limit_parameters(*param_num, filename*)**: reduces the input dimensionality of an input database to **param_num** through a "retain the best" process; saves to new database **filename**
 - **publish_project()**: cleans the project directory, copies config, normal_params, and currently loaded dataset into the directory, and creates a '.project' file
 - **open_project(*project_name*)**: opens a '**project_name**.project' file, importing the project's config, normal_params, and dataset to the Server object
@@ -177,7 +183,7 @@ sv.select_best()
 test_results = sv.use_mlp_model('test')	
 
 # Output results to specified file
-sv.output_results(results = test_results, filename = 'test_results.csv')	
+sv.output_results(results = test_results, filename = 'test_results.csv', dset = 'test')	
 
 # Calculates errors for the test set
 test_errors = sv.calc_error('rmse','r2','mean_abs_error','med_abs_error', dset = 'test')
@@ -216,6 +222,7 @@ sv.open_project('my_project.project')
 sv.import_data('new_data.csv')
 
 # Save results to output file
+#  - NOTE: no 'dset' arguments for 'use_mlp_model' and 'output_results' defaults to using all data
 sv.output_results(results = sv.use_mlp_model(), filename = 'new_data_results.csv')
 ```
 To view more examples of common ECNet tasks, view the [examples](https://github.com/TJKessler/ECNet/tree/master/examples) directory.
