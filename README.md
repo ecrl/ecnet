@@ -131,7 +131,6 @@ Here is an overview of the Server object's methods:
 		- **'test'** (obtains results for test set)
 - **calc_error(*args*, *dset = None*)**: calculates various metrics for error for a specified data set
 	- arguments: 
-		- **None**, 
 		- **'rmse'** (root-mean-squared error)
 		- **'r2'** (r-squared value)
 		- **'mean_abs_error'** (mean absolute error)
