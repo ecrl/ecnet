@@ -51,7 +51,7 @@ class Server:
 	### Determines which 'param_num' parameters contribute to an accurate output; supply the number of parameters to limit to, and the output filename
 	def limit_parameters(self, param_num, limited_database_output_filename):
 		params = ecnet.limit_parameters.limit(self, param_num)
-		ecnet.limit_parameters.output(self, params, limited_database_output_filename)
+		ecnet.limit_parameters.output(self.data, params, limited_database_output_filename)
 
 	### Creates the save environment
 	def create_save_env(self):

@@ -90,11 +90,10 @@ def limit(server, param_num):
 			server.data.valid_y = data.valid_y[:]
 			
 			# Trains the model
-			server.create_mlp_model()
 			server.fit_mlp_model_validation()
 			
 			# Determines the RMSE of the model with the current inputs, adds it to total list
-			local_rmse = server.calc_error('rmse')
+			local_rmse = server.calc_error('rmse')['rmse']
 			param_RMSE_list.append(local_rmse)
 			
 		# Determines lowest RMSE of the current iteration, which corresponds to the best performing parameter
@@ -125,7 +124,7 @@ def limit(server, param_num):
 		param_list.append(param_names[idx])
 				
 		# Prints the parameter list after each iteration, as well as the RMSE
-		if server.project_print_feedback == True:
+		if server.vars['project_print_feedback'] == True:
 			print(param_list)
 			print(val)
 		
