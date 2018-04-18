@@ -71,5 +71,6 @@ Attributes:
 - **endValue**: target fitness score which will terminate the program when reached
 - **iterationAmount**: amount of iterations before terminating program
 - **amountOfEmployers**: amount of sets of values stored per iteration
-Functions:
+
+Methods:
 - **runABC()**: run the artificial bee colony based on the arguments passed to the constructor. Must pass a fitness function and either a target fitness score or target iteration number in order to specify when the program will terminate. Must also specify value types/ranges.
