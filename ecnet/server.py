@@ -22,7 +22,7 @@ import ecnet.data_utils
 import ecnet.model
 import ecnet.limit_parameters
 import ecnet.error_utils
-import ecenet.abc
+import ecnet.abc
 
 ### Config/server object; to be referenced by most other files ###
 class Server:
