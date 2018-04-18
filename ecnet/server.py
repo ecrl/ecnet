@@ -451,5 +451,5 @@ def runNeuralNet(values):
     return test_errors['rmse'][0]
 
 ecnetValues = [('float', (0.001, 0.1)), ('float', (0.000001,0.01)), ('int', (1250, 2500)), ('int', (500, 2500)), ('int', (12,32)), ('int', (12,32))]
-+	
+	
 	
