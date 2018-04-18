@@ -303,12 +303,12 @@ class Server:
 		# Run the artificial bee colony and return the resulting hyperparameter values
 		hyperparams = abc.runABC()
 		# Assign the hyperparameters generated from the artificial bee colony to ecnet
-		sv.vars['learning_rate'] = hyperparams[0]
-		sv.vars['valid_mdrmse_stop'] = hyperparams[1]
-		sv.vars['valid_max_epochs'] = hyperparams[2]
-		sv.vars['valid_mdrmse_memory'] = hyperparams[3]
-		sv.vars['mlp_hidden_layers[0][0]'] = hyperparams[4]
-		sv.vars['mlp_hidden_layers[1][0]'] = hyperparams[5]
+		self.vars['learning_rate'] = hyperparams[0]
+		self.vars['valid_mdrmse_stop'] = hyperparams[1]
+		self.vars['valid_max_epochs'] = hyperparams[2]
+		self.vars['valid_mdrmse_memory'] = hyperparams[3]
+		self.vars['mlp_hidden_layers[0][0]'] = hyperparams[4]
+		self.vars['mlp_hidden_layers[1][0]'] = hyperparams[5]
 		return hyperparams
 
 # Creates the default folder structure, outlined in the file config by number of builds and nodes.
