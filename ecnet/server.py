@@ -293,7 +293,7 @@ class Server:
 		create_folder_structure(self)
 		self.model = create_model(self)
 
-	### Optimizes and tunes the the hyperparameters using ecnet
+	### Optimizes and tunes the the hyperparameters for ecnet
 	def tune_hyperparameters(self, target_score = None, iteration_amount = 50):
     	# Check which arguments to use to terminate artifical bee colony, then create the ABC object
 		if target_score == None:
