@@ -1,39 +1,26 @@
-'''
-Copyright 2018 Hernan Gelaf-Romer <hernan_gelafromer@student.uml.edu>
-University of Massachusetts Lowell - CS
-ECNET Research Team
-'''
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+#  ecnet/abc.py
+#  v.1.2.7.dev1
+#  Developed in 2018 by Hernan Gelaf-Romer <hernan_gelafromer@student.uml.edu>
+#
+#  This program implements an artificial bee colony to tune ecnet hyperparameters
+#
+
+# 3rd party packages (open src.)
 from random import randint
 import numpy as np
 import sys as sys
 
-'''
-Artificial bee colony used to optimize parameters given any range of parameter values, their types, and a fitness function. The fitness
-function will be passed to the constructor and called when each individual bee must generate a fitness score for its current set of 
-values that it contains.
-Was meant to be a wrapper class for the ecnet neural network.
-More information on artificial bee colonies can be found here : https://abc.erciyes.edu.tr/
-'''
-
+### Artificial bee colony object, which contains multiple bee objects ###
 class ABC:
 
     def __init__(self, valueRanges, fitnessFunction=None, endValue = None, iterationAmount = None, amountOfEmployers = 50):
-
-        
-        '''
-        Initialize the program by assigning 50 worker bees, one scout, and one onlooker bee which will then be called upon by the program.
-        
-        Pass an end value, which is the target fitness score you would like to achieve before the program terminates. 
-        
-        
-        '''
-        
         if endValue == None and iterationAmount == None:
             raise ValueError("must select either an iterationAmount or and endValue")
-
         if fitnessFunction == None:
             raise ValueError("must pass a fitness function")
-
         print("***INITIALIZING***")
         self.valueRanges = valueRanges
         self.fitnessFunction = fitnessFunction
@@ -44,62 +31,42 @@ class ABC:
         self.fitnessAverage = 0
         self.endValue = endValue
         self.iterationAmount = iterationAmount
-        
+        # Initialize employer bees, assign them values/fitness scores
         for i in range(amountOfEmployers):
             sys.stdout.flush()
             sys.stdout.write("Creating bee number: %d \r" % (i + 1))
             self.employers.append(Bee('employer', generateRandomValues(self.valueRanges)))
             self.employers[i].currFitnessScore = self.fitnessFunction(self.employers[i].values)
         print("***DONE INITIALIZING***")
-            
-    '''
-     Assign a new position to the given bee, firstBee and secondBee are represented in the form of index values for the list of all bees 
-     inside the employers list. 
      
-     Careful not to assign the same bees upon running the function, as it will result in one invalid bee until the bee is updated by the 
-     program once again, precautions were taken (while loop).
-     
-    '''
+    ### Assign a new position to the given bee
     def assignNewPositions(self, firstBee):
         valueTypes = [t[0] for t in self.valueRanges]
         secondBee = randint(0, len(self.employers) -1)
+        # Avoid both bees being the same
         while (secondBee == firstBee):
             secondBee = randint(0, len(self.employers) -1)
         self.onlooker.getPosition(self.employers, firstBee, secondBee, self.fitnessFunction, valueTypes)
-
-    '''
-    This function will collect the average of all the fitness scores across all employer bees. The average will be used as a model of comparison
-    '''
+    
+    ### Collect the average fitness score across all employers
     def getFitnessAverage(self):
         self.fitnessAverage = 0
         for employer in self.employers:
             self.fitnessAverage += employer.currFitnessScore
-
+            # While iterating through employers, look for the best fitness score/value pairing
             if self.bestFitnessScore == None or employer.currFitnessScore < self.bestFitnessScore:
                 self.bestFitnessScore = employer.currFitnessScore
-                self.bestValues = employer.values
-                
+                self.bestValues = employer.values      
         self.fitnessAverage /= len(self.employers)
-
-    '''
-    Check if the new positions are better than the average fitness scores, if not assig a new random position to the employer bee 
-    and calculate it's fitness score. 
     
-    Fitness scores are calculated by running the function that was passed to the constructor upon initialization.
-       
-    '''
+    ### Check if new position is better than current position held by a bee
     def checkNewPositions(self, bee):
+        # Update the bee's fitness/value pair if the new location is better
         if bee.currFitnessScore  > self.fitnessAverage:
             bee.values = generateRandomValues(self.valueRanges)
             bee.currFitnessScore = self.fitnessFunction(bee.values)
 
-    '''
-    Check if any current fitness scores are below the end value. If so exit the program, and log all the bee positions which are below
-    the end value.
-    
-    If there is more than one bee with a fitness score of a current location below the end value, then log them all.
-    
-    ''' 
+    ### If termination depends on a target value, check to see if it has been reached
     def checkIfDone(self):
         keepGoing = True
         for employer in self.employers:
@@ -108,16 +75,8 @@ class ABC:
                 print("Values =", employer.values)
                 keepGoing = False
         return keepGoing
-
-    '''
-    Run the artificial bee colony, generally this is the only method that you will need to use, as the other methods are called here.
     
-    A good example of how to run this program properly are as follows :
-    
-    abc = ABC(valueRanges=values,amountOfEmployers=10,iterationAmount=10, fitnessFunction=runNeuralNet)
-    abc.runABC()        # Run the artificial bee colony
-    
-    '''
+    ### Run the artificial bee colony
     def runABC(self):
         running = True
 
@@ -168,106 +127,63 @@ class ABC:
         return self.bestValues
 
 
-
-
-
-'''
-Class which contains the individual bees that will be used to run the artifical bee colony programmed in ABC.py. More information on how
-that program works can be found within that file.
-More information on how an artificial bee colony works can be found here : https://abc.erciyes.edu.tr/.
-'''
-
+### Bee object, employers contain value/fitness
 class Bee:
     
-    '''
-    Each be must be given a type, which can be Worker/Onlooker/Scout, documentation on the responsibility of each bee can be found below, 
-    and also at https://abc.erciyes.edu.tr/.
-    
-    Each employer bee will store its position, or set of values that can be run through the ECNet neural network in order to obtain the fitness score, 
-    or RMSE values of the outputs produced the by the value sets.
-    
-    Each employer bee also stores its current fitness score.
-    
-    '''
     def __init__(self, beeType, values=[]):
-
         self.beeType = beeType
-        
-        if beeType == "employer":               # Only the employer bees should store values/fitness scores
+        # Only the employer bees should store values/fitness scores
+        if beeType == "employer":               
             self.values = values            
             self.currFitnessScore = None
 
-    '''
-    Onlooker Bee Functions
-    
-    The onlooker bee is responsible for comparing the positions of random bees and passing it to the first worker bee, which will then 
-    test the new position compared to its old, if the new position is better, it will store the new values, and replace its current fitness
-    score.
-    
-    The valueFunction implementation can be found in functions.py, and is the mathematical standard when it comes to comparing positions
-    in regards to artificial bee colonies. 
-    
-    
-    '''
-
+    ### Onlooker bee function, create a new set of positions
     def getPosition(self, beeList, firstBee, secondBee, fitnessFunction, valueTypes):
         newValues = []
         currValue = 0
-
         for i in range(len(valueTypes)):
             currValue = valueFunction(beeList[firstBee].values[i], beeList[secondBee].values[i])
-
             if valueTypes[i] == 'int':
                 currValue = int(currValue)
             newValues.append(currValue)
-
         beeList[firstBee].getFitnessScore(newValues, fitnessFunction)
 
-    '''
-    Employer Bee Functions
-    
-    The employer bee's sole function is to calculate the fitness score of the new position it is passed, and compare it to its current 
-    fitness score. If the new fitness score is better, then the old position will be replaced with the new position, as well as the fitness
-    scores.
-    
-    '''
-
+    #### Employer bee function, get fitness score for a given set of values
     def getFitnessScore(self, values, fitnessFunction):
         if self.beeType != "employer":
             raise RuntimeError("Cannot get fitness score on a non-employer bee")
         else:
-            fitnessScore = fitnessFunction(values)  # Your fitness function must take a certain set of values that you would like to optimize
+            # Your fitness function must take a certain set of values that you would like to optimize
+            fitnessScore = fitnessFunction(values)  
             if self.currFitnessScore == None or fitnessScore < self.currFitnessScore:
                 self.value = values
                 self.currFitnessScore = fitnessScore
 
+### Private functions to be called by ABC
 
-
-
-
-'''
-Private functions that are used to assist the ABC
-'''
-
+### Generate a random set of values given a value range
 def generateRandomValues(value_ranges):
     values = []
     if value_ranges == None:
         raise RuntimeError("must set the type/range of possible values")
     else:
-        for t in value_ranges:  # t[0] contains the type of the value, t[1] contains a tuple (min_value, max_value)
-            if t[0] == 'int':   # If they type they would like this random value to be is an int
+        # t[0] contains the type of the value, t[1] contains a tuple (min_value, max_value)
+        for t in value_ranges:  
+            if t[0] == 'int':
                 values.append(randint(t[1][0], t[1][1]))
-            elif t[0] == 'float':   # If the type they would this random value to be is a float
+            elif t[0] == 'float':
                 values.append(np.random.uniform(t[1][0], t[1][1]))
             else:
                 raise RuntimeError("value type must be either an 'int' or a 'float'")
     return values
 
-def valueFunction(a, b):  # Method of generating a value in between the values given
+### Method of generating a value in between the values given
+def valueFunction(a, b):  
     activationNum = np.random.uniform(-1, 1)
     return a + abs(activationNum * (a - b))
 
-def saveScore(score, values, filename = 'scores.txt'):   # Function for saving the scores of each iteration onto a file
+### Function for saving the scores of each iteration onto a file
+def saveScore(score, values, filename = 'scores.txt'):
     f = open(filename, 'a')
     string = "Score: {} Values: {}".format(score, values)
     f.write(string)
