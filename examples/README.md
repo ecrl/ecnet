@@ -8,4 +8,4 @@
   - **limit_db_parameters.py**: imports a database, reduces the input dimensionality using a "retain the best" algorithm, and saves the reduced database to a specified file
   - **create_static_test_set.py**: Imports a dataset, and creates two files; one containing the test data, one containing the training (learning + validation) data; set sizes are determined by 'data_split' server variable
   - **select_from_test_set_performance.py**: Select best trial from each node using static test set performance
-  - **abc_scrip.py**: Select an optimal set of values given a fitness function and a set of value ranges
+  - **abc_script.py**: Select an optimal set of values given a fitness function and a set of value ranges
