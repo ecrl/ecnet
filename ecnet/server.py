@@ -299,7 +299,7 @@ class Server:
 		if target_score == None:
 			abc = ABC(iterationAmount = iteration_amount, fitnessFunction=runNeuralNet, valueRanges=ecnetValues)
 		else:
-    	    		abc = ABC(endValue = target_score, fitnessFunction=runNeuralNet, valueRanges=ecnetValues)
+    	    abc = ABC(endValue = target_score, fitnessFunction=runNeuralNet, valueRanges=ecnetValues)
 		# Run the artificial bee colony and return the resulting hyperparameter values
 		hyperparams = abc.runABC()
 		# Assign the hyperparameters generated from the artificial bee colony to ecnet
@@ -429,25 +429,5 @@ def create_default_config():
 		'valid_mdrmse_memory' : 1000
 	}
 	yaml.dump(config_dict,stream)
-
-def runNeuralNet(values):
-    # Run the ecnet server
-    sv = Server()
-    sv.vars['learning_rate'] = values[0]
-    sv.vars['valid_mdrmse_stop'] = values[1]
-    sv.vars['valid_max_epochs'] = values[2]
-    sv.vars['valid_mdrmse_memory'] = values[3]
-    sv.vars['mlp_hidden_layers[0][0]'] = values[4]
-    sv.vars['mlp_hidden_layers[1][0]'] = values[5]
-
-    sv.create_save_env()
-    sv.import_data('cn_model_v1.0.csv')
-    sv.fit_mlp_model_validation('shuffle_lv')
-    sv.select_best()
-    test_results = sv.use_mlp_model('test')
-    sv.output_results(test_results, 'test_results.csv')
-    test_errors = sv.calc_error('rmse', 'r2', 'mean_abs_error', 'med_abs_error', dset='test')
-    sv.publish_project()
-    return test_errors['rmse'][0]
-
-ecnetValues = [('float', (0.001, 0.1)), ('float', (0.000001,0.01)), ('int', (1250, 2500)), ('int', (500, 2500)), ('int', (12,32)), ('int', (12,32))]
+	
+	
