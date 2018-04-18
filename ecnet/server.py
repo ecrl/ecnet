@@ -293,7 +293,7 @@ class Server:
 
 	### Optimizes and tunes the the hyperparameters for ecnet
 	def tune_hyperparameters(self, target_score = None, iteration_amount = 50, amount_of_employers = 50):
-    	# Check which arguments to use to terminate artifical bee colony, then create the ABC object
+    		# Check which arguments to use to terminate artifical bee colony, then create the ABC object
 		if target_score == None:
     			abc = ecnet.abc.ABC(iterationAmount = iteration_amount, fitnessFunction=runNeuralNet, valueRanges=ecnetValues, amountOfEmployers=amount_of_employers)
 		else:
