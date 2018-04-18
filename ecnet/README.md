@@ -1,4 +1,4 @@
-# Low-level usage of model, data_utils, error_utils, and limit_parameters
+# Low-level usage of model, data_utils, error_utils, limit_parameters, and abc
 
 ## model.py
 #### Class: multilayer_perceptron
@@ -62,3 +62,19 @@ Functions:
 - **limit(num_params, server)**: limits the number of input parameters to an integer value specified by num_params, using a "retain the best" process, where the best performing input parameter (based on RMSE) is retained, paired with every other input parameter until a best pair is found, repeated until the limit number has been reached
   - returns a list of parameters
 - **output(data, param_list, filename)**: saves a new .csv formatted database, using a generated parameter list and an output filename
+
+## abc.py
+#### Class: ABC
+Attributes:
+- **valueRanges**: a list of tuples of value types to value range (value_type, (value_min, value_max))
+- **fitnessFunction**: fitness function to evaluate a set of values; must take one parameter, a list of values
+- **endValue**: target fitness score which will terminate the program when reached
+- **iterationAmount**: amount of iterations before terminating program
+- **amountOfEmployers**: amount of sets of values stored per iteration
+
+Methods:
+- **assignNewPositions(firstBee)**: assign a new position to a given bee 
+- **getFitnessAverage()**: collect the average of all the fitness scores across all employer bees
+- **checkNewPosition(bee)**: Check if the new position is better than the fitness average, if it is, assign it to the bee
+- **checkIfDone()**: Check if the best fitness score is lower than the target score to terminate the program; only valid if the argument endValue was assigned a value
+- **runABC()**: run the artificial bee colony based on the arguments passed to the constructor. Must pass a fitness function and either a target fitness score or target iteration number in order to specify when the program will terminate. Must also specify value types/ranges.
