@@ -299,7 +299,7 @@ class Server:
 		if target_score == None:
 		    abc = ABC(iterationAmount = iteration_amount, fitnessFunction=runNeuralNet, valueRanges=ecnetValues)
 		else:
-    	    abc = ABC(endValue = target_score, fitnessFunction=runNeuralNet, valueRanges=ecnetValues)
+    	    	    abc = ABC(endValue = target_score, fitnessFunction=runNeuralNet, valueRanges=ecnetValues)
 		# Run the artificial bee colony and return the resulting hyperparameter values
 		hyperparams = abc.runABC()
 		# Assign the hyperparameters generated from the artificial bee colony to ecnet
