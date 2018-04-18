@@ -129,7 +129,7 @@ Here is an overview of the Server object's methods:
 		- **'valid'** (obtains results for validation set)
 		- **'train'** (obtains results for learning & validation sets)
 		- **'test'** (obtains results for test set)
-- **tune_hyperparameters(target_score = None, iteration_amount = 50, amount_of_employers = 50)**: optimize the hyperparameters
+- **tune_hyperparameters(*target_score = None, iteration_amount = 50, amount_of_employers = 50*)**: optimize the hyperparameters
 	- argumnets:
 		- **None** (defaults to 50 iterations, 50 employers)
 		- **iteration_amount** (specify how many iterations to run the colony)
