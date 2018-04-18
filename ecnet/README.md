@@ -73,4 +73,8 @@ Attributes:
 - **amountOfEmployers**: amount of sets of values stored per iteration
 
 Methods:
+- **assignNewPositions(*firstBee*)**: assign a new position to a given bee 
+- **getFitnessAverage()**: collect the average of all the fitness scores across all employer bees
+- **checkNewPosition(*bee*)**: Check if the new position is better than the fitness average, if it is, assign it to the bee
+- **checkIfDone()**: Check if the best fitness score is lower than the target score to terminate the program; only valid if the argument endValue was assigned a value
 - **runABC()**: run the artificial bee colony based on the arguments passed to the constructor. Must pass a fitness function and either a target fitness score or target iteration number in order to specify when the program will terminate. Must also specify value types/ranges.
