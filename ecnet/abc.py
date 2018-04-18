@@ -67,63 +67,50 @@ class ABC:
             bee.currFitnessScore = self.fitnessFunction(bee.values)
 
     ### If termination depends on a target value, check to see if it has been reached
-    def checkIfDone(self):
+    def checkIfDone(self, count):
         keepGoing = True
-        for employer in self.employers:
-            if employer.currFitnessScore <= self.endValue:
-                print("Fitness score =", employer.currFitnessScore)
-                print("Values =", employer.values)
-                keepGoing = False
+        if self.endValue != None:
+            for employer in self.employers:
+                if employer.currFitnessScore <= self.endValue:
+                    print("Fitness score =", employer.currFitnessScore)
+                    print("Values =", employer.values)
+                    keepGoing = False
+        elif count >= self.iterationAmount:
+            keepGoing = False
         return keepGoing
     
     ### Run the artificial bee colony
     def runABC(self):
         running = True
+        count = 0
 
-        if self.endValue != None:
-            while True:
-                print("Assigning new positions")
-                for i in range(len(self.employers)):
-                    sys.stdout.flush()
-                    sys.stdout.write('At bee number: %d \r' % (i+1))
-                    self.assignNewPositions(i)
-                print("Getting fitness average")
-                self.getFitnessAverage()
-                print("Checking if done")
-                running = self.checkIfDone()
+        while True:
+            print("Assigning new positions")
+            for i in range(len(self.employers)):
+                sys.stdout.flush()
+                sys.stdout.write('At bee number: %d \r' % (i+1))
+                self.assignNewPositions(i)
+            print("Getting fitness average")
+            self.getFitnessAverage()
+            print("Checking if done")
+            count+=1
+            running = self.checkIfDone(count)
+            if running == False and self.endValue != None:
                 saveScore(self.bestFitnessScore, self.bestValues)
-                if running == False:
-                    break
-                print("Current fitness average:", self.fitnessAverage)
-                print("Checking new positions, assigning random positions to bad ones")
-                for employer in self.employers:
-                    self.checkNewPositions(employer)
-
-                print("Best score:", self.bestFitnessScore)
-                print("Best value:", self.bestValues)
-        
-        elif self.iterationAmount != None:
-            count = 0
-
-            while count < self.iterationAmount:
-                print("Assigning new positions")
-                for i in range(len(self.employers)):
-                    sys.stdout.flush()
-                    sys.stdout.write('At bee number: %d \r' % (i+1))
-                    self.assignNewPositions(i)
-                print("Getting fitness average")
-                self.getFitnessAverage()
+                break
+            print("Current fitness average:", self.fitnessAverage)
+            print("Checking new positions, assigning random positions to bad ones")
+            for employer in self.employers:
+                self.checkNewPositions(employer)
+            print("Best score:", self.bestFitnessScore)
+            print("Best value:", self.bestValues)
+            if self.iterationAmount != None:
+                print("Iteration {} / {}".format(count, self.iterationAmount))
+            if running == False:
                 saveScore(self.bestFitnessScore, self.bestValues)
-                print("Current fitness average:", self.fitnessAverage)
-                print("Checking new positions, assigning random positions to bad ones")
-                for employer in self.employers:
-                    self.checkNewPositions(employer)
+                break
+            saveScore(self.bestFitnessScore, self.bestValues)
 
-                print("Best score:", self.bestFitnessScore)
-                print("Best value:", self.bestValues)
-                print("Iteration {} / {}".format(count+1, self.iterationAmount))
-                count+= 1
-        
         return self.bestValues
 
 
