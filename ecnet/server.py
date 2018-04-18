@@ -22,7 +22,7 @@ import ecnet.data_utils
 import ecnet.model
 import ecnet.limit_parameters
 import ecnet.error_utils
-import ecnet.abc
+import ecenet.abc
 
 ### Config/server object; to be referenced by most other files ###
 class Server:
@@ -295,9 +295,9 @@ class Server:
 	def tune_hyperparameters(self, target_score = None, iteration_amount = 50):
     	# Check which arguments to use to terminate artifical bee colony, then create the ABC object
 		if target_score == None:
-			abc = ABC(iterationAmount = iteration_amount, fitnessFunction=runNeuralNet, valueRanges=ecnetValues)
+		    abc = ecnet.abc.ABC(iterationAmount = iteration_amount, fitnessFunction=runNeuralNet, valueRanges=ecnetValues)
 		else:
-    	    abc = ABC(endValue = target_score, fitnessFunction=runNeuralNet, valueRanges=ecnetValues)
+    		abc = ecnet.abc.ABC(endValue = target_score, fitnessFunction=runNeuralNet, valueRanges=ecnetValues)
 		# Run the artificial bee colony and return the resulting hyperparameter values
 		hyperparams = abc.runABC()
 		# Assign the hyperparameters generated from the artificial bee colony to ecnet
@@ -449,5 +449,3 @@ def runNeuralNet(values):
     return test_errors['rmse'][0]
 
 ecnetValues = [('float', (0.001, 0.1)), ('float', (0.000001,0.01)), ('int', (1250, 2500)), ('int', (500, 2500)), ('int', (12,32)), ('int', (12,32))]
-	
-	
