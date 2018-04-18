@@ -1,5 +1,6 @@
 '''
 Copyright 2018 Hernan Gelaf-Romer
+hernan_gelafromer@student.uml.edu
 University of Massachusetts Lowell - CS
 ECNET Research Team
 '''
