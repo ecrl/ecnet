@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 #  ecnet/server.py
-#  v.1.2.7.dev1
+#  v.1.3.0.dev1
 #  Developed in 2018 by Travis Kessler <Travis_Kessler@student.uml.edu>
 #
 #  This program contains all the necessary config parameters and network serving functions
@@ -438,13 +438,11 @@ def runNeuralNet(values):
     sv.vars['mlp_hidden_layers[0][0]'] = values[4]
     sv.vars['mlp_hidden_layers[1][0]'] = values[5]
 
-    sv.create_save_env()
     sv.import_data('cn_model_v1.0.csv')
     sv.fit_mlp_model_validation('shuffle_lv')
     sv.select_best()
     test_results = sv.use_mlp_model('test')
-    sv.output_results(test_results, 'test_results.csv')
-    test_errors = sv.calc_error('rmse', 'r2', 'mean_abs_error', 'med_abs_error', dset='test')
+    test_errors = sv.calc_error('rmse')
     sv.publish_project()
     return test_errors['rmse'][0]
 
