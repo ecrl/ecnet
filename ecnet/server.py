@@ -430,6 +430,7 @@ def create_default_config():
 
 def runNeuralNet(values):
     # Run the ecnet server
+    config_file = import_config()
     sv = Server()
     sv.vars['learning_rate'] = values[0]
     sv.vars['valid_mdrmse_stop'] = values[1]
@@ -437,8 +438,8 @@ def runNeuralNet(values):
     sv.vars['valid_mdrmse_memory'] = values[3]
     sv.vars['mlp_hidden_layers[0][0]'] = values[4]
     sv.vars['mlp_hidden_layers[1][0]'] = values[5]
-
-    sv.import_data('cn_model_v1.0.csv')
+    sv.vars['data_filename'] = config_file['data_filename']
+	
     sv.fit_mlp_model_validation('shuffle_lv')
     sv.select_best()
     test_results = sv.use_mlp_model('test')
