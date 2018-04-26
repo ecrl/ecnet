@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 #  ecnet/server.py
-#  v.1.3.0.dev1
+#  v.1.3.0.dev2
 #  Developed in 2018 by Travis Kessler <Travis_Kessler@student.uml.edu>
 #
 #  This program contains all the necessary config parameters and network serving functions
