@@ -440,6 +440,7 @@ def runNeuralNet(values):
     sv.vars['mlp_hidden_layers[1][0]'] = values[5]
     sv.vars['data_filename'] = config_file['data_filename']
 	
+    sv.import_data(sv.vars['data_filename'])
     sv.fit_mlp_model_validation('shuffle_lv')
     sv.select_best()
     test_results = sv.use_mlp_model('test')
