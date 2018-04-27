@@ -442,10 +442,9 @@ def runNeuralNet(values):
 	
     sv.import_data(sv.vars['data_filename'])
     sv.fit_mlp_model_validation('shuffle_lv')
-    sv.select_best()
     test_results = sv.use_mlp_model('test')
     test_errors = sv.calc_error('rmse')
     sv.publish_project()
-    return test_errors['rmse'][0]
+    return test_errors['rmse']
 
 ecnetValues = [('float', (0.001, 0.1)), ('float', (0.000001,0.01)), ('int', (1250, 2500)), ('int', (500, 2500)), ('int', (12,32)), ('int', (12,32))]
