@@ -442,7 +442,6 @@ def runNeuralNet(values):
 	
     sv.import_data(sv.vars['data_filename'])
     sv.fit_mlp_model_validation('shuffle_lv')
-    test_results = sv.use_mlp_model('test')
     test_errors = sv.calc_error('rmse')
     sv.publish_project()
     return test_errors['rmse']
