@@ -129,6 +129,12 @@ Here is an overview of the Server object's methods:
 		- **'valid'** (obtains results for validation set)
 		- **'train'** (obtains results for learning & validation sets)
 		- **'test'** (obtains results for test set)
+- **tune_hyperparameters(*target_score = None, iteration_amount = 50, amount_of_employers = 50*)**: optimize the hyperparameters
+	- argumnets:
+		- **None** (defaults to 50 iterations, 50 employers)
+		- **iteration_amount** (specify how many iterations to run the colony)
+		- **target_score** (specify target score for program to terminate)
+		- **amount_of_employers** (specify the amount of employer bees in the colony)
 - **calc_error(*args*, *dset = None*)**: calculates various metrics for error for a specified data set
 	- arguments: 
 		- **'rmse'** (root-mean-squared error)
@@ -174,6 +180,9 @@ sv.import_data()
 
 # Fits model(s), shuffling learn and validate sets between trials
 sv.fit_mlp_model_validation('shuffle_lv')
+
+# Tunes hyperparameters to their optimal values
+sv.tune_hyperparameters(iteration_amount = 150)
 
 # Select best trial from each build node to predict for the node
 sv.select_best()
@@ -238,4 +247,4 @@ To contribute to ECNet, make a pull request. Contributions should include tests 
 
 To report problems with the software or feature requests, file an issue. When reporting problems, include information such as error messages, your OS/environment and Python version.
 
-For additional support/questions, contact Travis Kessler (Travis_Kessler@student.uml.edu) or John Hunter Mack (Hunter_Mack@uml.edu).
+For additional support/questions, contact Travis Kessler (Travis_Kessler@student.uml.edu), Hernan Gelaf-Romer (hernan_gelafromer@student.uml.edu) or John Hunter Mack (Hunter_Mack@uml.edu).

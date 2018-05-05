@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 #  ecnet/server.py
-#  v.1.2.7.dev1
+#  v.1.3.0.dev1
 #  Developed in 2018 by Travis Kessler <Travis_Kessler@student.uml.edu>
 #
 #  This program contains all the necessary config parameters and network serving functions
@@ -22,6 +22,7 @@ import ecnet.data_utils
 import ecnet.model
 import ecnet.limit_parameters
 import ecnet.error_utils
+import ecnet.abc
 
 ### Config/server object; to be referenced by most other files ###
 class Server:
@@ -290,6 +291,24 @@ class Server:
 		create_folder_structure(self)
 		self.model = create_model(self)
 
+	### Optimizes and tunes the the hyperparameters for ecnet
+	def tune_hyperparameters(self, target_score = None, iteration_amount = 50, amount_of_employers = 50):
+    		# Check which arguments to use to terminate artifical bee colony, then create the ABC object
+		if target_score == None:
+    			abc = ecnet.abc.ABC(iterationAmount = iteration_amount, fitnessFunction=runNeuralNet, valueRanges=ecnetValues, amountOfEmployers=amount_of_employers)
+		else:
+    			abc = ecnet.abc.ABC(endValue = target_score, fitnessFunction=runNeuralNet, valueRanges=ecnetValues, amountOfEmployers=amount_of_employers)
+		# Run the artificial bee colony and return the resulting hyperparameter values
+		hyperparams = abc.runABC()
+		# Assign the hyperparameters generated from the artificial bee colony to ecnet
+		self.vars['learning_rate'] = hyperparams[0]
+		self.vars['valid_mdrmse_stop'] = hyperparams[1]
+		self.vars['valid_max_epochs'] = hyperparams[2]
+		self.vars['valid_mdrmse_memory'] = hyperparams[3]
+		self.vars['mlp_hidden_layers[0][0]'] = hyperparams[4]
+		self.vars['mlp_hidden_layers[1][0]'] = hyperparams[5]
+		return hyperparams
+
 # Creates the default folder structure, outlined in the file config by number of builds and nodes.
 def create_folder_structure(server_obj):
 	server_obj.build_dirs = []
@@ -408,5 +427,23 @@ def create_default_config():
 		'valid_mdrmse_memory' : 1000
 	}
 	yaml.dump(config_dict,stream)
+
+def runNeuralNet(values):
+    # Run the ecnet server
+    config_file = import_config()
+    sv = Server()
+    sv.vars['learning_rate'] = values[0]
+    sv.vars['valid_mdrmse_stop'] = values[1]
+    sv.vars['valid_max_epochs'] = values[2]
+    sv.vars['valid_mdrmse_memory'] = values[3]
+    sv.vars['mlp_hidden_layers[0][0]'] = values[4]
+    sv.vars['mlp_hidden_layers[1][0]'] = values[5]
+    sv.vars['data_filename'] = config_file['data_filename']
 	
-	
+    sv.import_data(sv.vars['data_filename'])
+    sv.fit_mlp_model_validation('shuffle_lv')
+    test_errors = sv.calc_error('rmse')
+    sv.publish_project()
+    return test_errors['rmse']
+
+ecnetValues = [('float', (0.001, 0.1)), ('float', (0.000001,0.01)), ('int', (1250, 2500)), ('int', (500, 2500)), ('int', (12,32)), ('int', (12,32))]
