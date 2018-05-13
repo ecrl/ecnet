@@ -113,7 +113,7 @@ class Server:
 		if data_filename is None:
 			data_filename = self.vars['data_filename']
 		# Import the data using *data_utils* *DataFrame* object
-		self.data = data_utils.DataFrame(data_filename)
+		self.data = ecnet.data_utils.DataFrame(data_filename)
 		# Create learning, validation and testing sets
 		self.data.create_sets(random = self.vars['data_sort_type'], split = self.vars['data_split'])
 		# Package sets for model hand-off (dicts/lists -> Numpy arrays)
@@ -223,7 +223,7 @@ class Server:
 					# For each trial:
 					for trial in range(self.vars['project_num_trials']):
 						# Create model, load trial, calculate RMSE, append to list
-						mlp_model = model.MultilayerPerceptron()
+						mlp_model = ecnet.model.MultilayerPerceptron()
 						mlp_model.load(os.path.join(path_n, 'trial_%d' % trial))
 						rmse_list.append(self.__error_fn(error_fn, mlp_model.use(x_vals), y_vals))
 					# Determines the lowest RMSE in RMSE list
@@ -232,7 +232,7 @@ class Server:
 						if rmse_list[new_min] < rmse_list[current_min]:
 							current_min = new_min
 					# Load the model with the lowest RMSE, resave as 'final_net' in the node folder
-					mlp_model = model.MultilayerPerceptron()
+					mlp_model = ecnet.model.MultilayerPerceptron()
 					mlp_model.load(os.path.join(path_n, 'trial_%d' % current_min))
 					mlp_model.save(os.path.join(path_n, 'final_net'))
 
@@ -246,7 +246,7 @@ class Server:
 		# Not using project, use single model
 		if not self.using_project:
 			# Create model object
-			mlp_model = model.MultilayerPerceptron()
+			mlp_model = ecnet.model.MultilayerPerceptron()
 			# Load the trained model
 			mlp_model.load('./tmp/model_output')
 			# Return results obtained from model
@@ -268,7 +268,7 @@ class Server:
 					# Determine final build (from select_best) path
 					path_f = os.path.join(path_n, 'final_net')
 					# Create model, load net, append results
-					mlp_model = model.MultilayerPerceptron()
+					mlp_model = ecnet.model.MultilayerPerceptron()
 					mlp_model.load(path_f)
 					build_preds.append(mlp_model.use(x_vals))
 				# Average build prediction = average of node predictions
@@ -326,7 +326,7 @@ class Server:
 	def output_results(self, results, filename = 'my_results.csv'):
 
 		# Output results using data_utils function
-		data_utils.output_results(results, self.data, filename)
+		ecnet.data_utils.output_results(results, self.data, filename)
 
 	'''
 	PRIVATE METHOD: Helper function for determining data set *dset* to be passed to the model (inputs)
@@ -400,7 +400,7 @@ class Server:
 	def __create_mlp_model(self):
 
 		# Create the model object
-		mlp_model = model.MultilayerPerceptron()
+		mlp_model = ecnet.model.MultilayerPerceptron()
 		# Add input layer, size = number of data inputs, activation function specified in configuration file
 		mlp_model.add_layer(self.data.num_inputs, self.vars['mlp_in_layer_activ'])
 		# Add hidden layers, sizes and activation functions specified in configuration file
@@ -418,12 +418,12 @@ class Server:
 	'''
 	def __error_fn(self, arg, y_hat, y):
 		if arg == 'rmse':
-			return error_utils.calc_rmse(y_hat, y)
+			return ecnet.error_utils.calc_rmse(y_hat, y)
 		elif arg == 'r2':
-			return error_utils.calc_r2(y_hat, y)
+			return ecnet.error_utils.calc_r2(y_hat, y)
 		elif arg == 'mean_abs_error':
-			return error_utils.calc_mean_abs_error(y_hat, y)
+			return ecnet.error_utils.calc_mean_abs_error(y_hat, y)
 		elif arg == 'med_abs_error':
-			return error_utils.calc_med_abs_error(y_hat, y)
+			return ecnet.error_utils.calc_med_abs_error(y_hat, y)
 		else:
 			raise Exception('ERROR: Unknown/unsupported error function')
