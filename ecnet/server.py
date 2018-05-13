@@ -2,448 +2,428 @@
 # -*- coding: utf-8 -*-
 #
 #  ecnet/server.py
-#  v.1.3.0.dev1
-#  Developed in 2018 by Travis Kessler <Travis_Kessler@student.uml.edu>
+#  v.1.4.0
+#  Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
-#  This program contains all the necessary config parameters and network serving functions
+#  This file contains the "Server" class, which handles ECNet project creation,
+#	neural network model creation, data hand-off to models, and project error
+#	calculation. For example scripts, refer to https://github.com/tjkessler/ecnet
 #
 
 # 3rd party packages (open src.)
 import yaml
-import pickle
-import numpy as np
-import sys
+import warnings
 import os
-import zipfile
-from shutil import copyfile
+import numpy as np
 
-# ECNet program files
+# ECNet source files
 import ecnet.data_utils
-import ecnet.model
-import ecnet.limit_parameters
 import ecnet.error_utils
-import ecnet.abc
+import ecnet.model
 
-### Config/server object; to be referenced by most other files ###
+'''
+Server object: handles project creation/usage for ECNet projects, handles
+data hand-off to neural networks for model training
+'''
 class Server:
-    ### Initial declaration, handles config import
-	def __init__(self):
-		self.vars = {}
-		self.vars.update(import_config(filename = 'config.yml'))
-		self.folder_structs_built = False
 
-	### Imports the data and stores it in the server	
+	'''
+	Initialization: imports configuration variables from *filename*
+	'''
+	def __init__(self, filename = 'config.yml'):
+
+		# Dictionary containing configuration variables
+		self.vars = {}
+
+		# Open configuration file found at *filename*
+		try:
+			file = open(filename, 'r')
+			self.vars.update(yaml.load(file))
+
+		# Configuration file not found, create default 'config.yml'
+		except:
+			warnings.warn('WARNING: supplied configuration file not found: creating default config.yml')
+			config_dict = {
+				'data_filename' : 'data.csv',
+				'data_sort_type' : 'random',
+				'data_split' : [0.65,0.25,0.10],
+				'learning_rate' : 0.1,
+				'mlp_hidden_layers' : [[5, 'relu'], [5, 'relu']],
+				'mlp_in_layer_activ' : 'relu',
+				'mlp_out_layer_activ' : 'linear',
+				'normals_use' : False,
+				'project_name' : 'my_project',
+				'project_num_builds' : 1,
+				'project_num_nodes' : 1,
+				'project_num_trials' : 1,
+				'project_print_feedback': True,
+				'train_epochs' : 500,
+				'valid_max_epochs': 5000
+			}
+			file = open('config.yml', 'w')
+			yaml.dump(config_dict, file)
+			self.vars.update(config_dict)
+
+		# Initial state of Server is to create single models
+		self.using_project = False
+
+	
+	'''
+	Creates the folder structure for a project; if not called, Server will create
+	just one neural network model. A project consists of builds, each build
+	containing nodes (node predictions are averaged for final build prediction).
+	Number of builds and nodes are specified in the configuration file.
+	'''
+	def create_project(self, project_name = None):
+
+		# If alternate project name is not given, use configuration file's project name
+		if project_name is None:
+			project_name = self.vars['project_name']
+		# If alternate name is given, update Server config with new name
+		else:
+			self.vars['project_name'] = project_name
+		# Create base project folder in working directory (if not already there)
+		if not os.path.exists(project_name):
+			os.makedirs(project_name)
+		# For each build (number of builds specified in config):
+		for build in range(self.vars['project_num_builds']):
+			# Create build path (project + build number)
+			path_b = os.path.join(project_name, 'build_%d' % build)
+			# Create folder (if it doesn't exist)
+			if not os.path.exists(path_b):
+				os.makedirs(path_b)
+			# For each node (number of nodes specified in config):
+			for node in range(self.vars['project_num_nodes']):
+				# Create node path (project + build number + node number)
+				path_n = os.path.join(path_b, 'node_%d' % node)
+				# Create folder (if it doesn't exits)
+				if not os.path.exists(path_n):
+					os.makedirs(path_n)
+		# Update Server boolean, indicating we are now using a project (instead of single model)
+		self.using_project = True
+
+	'''
+	Imports data from *data_filename*; utilizes 'data_utils' for file I/O, data set splitting
+	and data set packaging for hand-off to neural network models
+	TODO: Add support for input and target data normalization (e.g. if using sigmoid at first layer)
+	'''
 	def import_data(self, data_filename = None):
+
+		# If no filename specified, use configuration filename
 		if data_filename is None:
 			data_filename = self.vars['data_filename']
-		self.data = ecnet.data_utils.initialize_data(data_filename)
-		self.data.build()
-		self.data.buildTVL(self.vars['data_sort_type'], self.vars['data_split'])
-		if self.vars['normals_use'] == True:
-			if not os.path.isdir('./tmp'):
-				os.makedirs('./tmp')
-			if not os.path.exists('./tmp/normal_params.ecnet'):
-				self.data.normalize('./tmp/normal_params')
+		# Import the data using *data_utils* *DataFrame* object
+		self.data = data_utils.DataFrame(data_filename)
+		# Create learning, validation and testing sets
+		self.data.create_sets(random = self.vars['data_sort_type'], split = self.vars['data_split'])
+		# Package sets for model hand-off (dicts/lists -> Numpy arrays)
+		self.packaged_data = self.data.package_sets()
+
+	'''
+	Trains a neural network (multilayer perceptron) using learning data and validation data (if *validate*
+	== True). *args is used to specify shuffling of data sets for each trial; use "shuffle_lv" (shuffles 
+	training data) or "shuffle_lvt" (shuffles all data)
+	'''
+	def train_model(self, *args, validate = False):
+
+		# Not using project, train single model
+		if not self.using_project:
+			# Create the model, train the model, save the model to temp folder
+			mlp_model = self.__create_mlp_model()
+			# Use validation sets to periodically test model's performance and determine when to stop;
+			#	prevents overfitting
+			if validate:
+				mlp_model.fit_validation(
+					self.packaged_data.learn_x,
+					self.packaged_data.learn_y,
+					self.packaged_data.valid_x,
+					self.packaged_data.valid_y,
+					self.vars['learning_rate'],
+					self.vars['valid_max_epochs'])
+			# No validation is used, just train for 'training_epochs' iterations
 			else:
-				self.data.applyNormal('./tmp/normal_params')
-		self.data.applyTVL()
-		self.data.package()
+				mlp_model.fit(
+					self.packaged_data.learn_x,
+					self.packaged_data.learn_y,
+					self.vars['learning_rate'],
+					self.vars['train_epochs'])
+			mlp_model.save('./tmp/model_output')
 
-	### Determines which 'param_num' parameters contribute to an accurate output; supply the number of parameters to limit to, and the output filename
-	def limit_parameters(self, param_num, limited_database_output_filename):
-		params = ecnet.limit_parameters.limit(self, param_num)
-		ecnet.limit_parameters.output(self.data, params, limited_database_output_filename)
-
-	### Creates the save environment
-	def create_save_env(self):
-		create_folder_structure(self)
-
-	### Fits the model(s) using predetermined number of learning epochs	
-	def fit_mlp_model(self, *args):
-        ### PROJECT ###
-		if self.folder_structs_built == True:
-			for build in range(0,self.vars['project_num_builds']):
-				if self.vars['project_print_feedback'] == True:
-					print("Build %d of %d"%(build+1,self.vars['project_num_builds']))
-				for node in range(0,self.vars['project_num_nodes']):
-					if self.vars['project_print_feedback'] == True:
-						print("Node %d of %d"%(node+1,self.vars['project_num_nodes']))
-					for trial in range(0,self.vars['project_num_trials']):
-						if self.vars['project_print_feedback'] == True:
-							print("Trial %d of %d"%(trial+1,self.vars['project_num_trials']))
-						self.output_filepath = os.path.join(os.path.join(os.path.join(self.vars['project_name'], self.build_dirs[build]), self.node_dirs[build][node]), "model_output" + "_%d"%(trial + 1))
-						self.model = create_model(self)
-						self.model.fit(self.data.learn_x, self.data.learn_y, self.vars['learning_rate'], self.vars['train_epochs'])
-						res = self.model.test_new(self.data.x)
-						self.model.save_net(self.output_filepath)
+		# Project is constructed, create models according to configuration specifications
+		else:
+			# For each build:
+			for build in range(self.vars['project_num_builds']):
+				# For each node:
+				for node in range(self.vars['project_num_nodes']):
+					# For each trial:
+					for trial in range(self.vars['project_num_trials']):
+						# Print status update (if config variable is True)
+						if self.vars['project_print_feedback']:
+							print('Build %d, Node %d, Trial %d...' % (build + 1, node + 1, trial + 1))
+						# Determine filepath where trial will be saved
+						path_b = os.path.join(self.vars['project_name'], 'build_%d' % build)
+						path_n = os.path.join(path_b, 'node_%d' % node)
+						path_t = os.path.join(path_n, 'trial_%d' % trial)
+						# Create the model, train the model, save the model to trial filepath
+						mlp_model = self.__create_mlp_model()
+						# Use validation sets to periodically test model's performance and determine when done training
+						if validate:
+							mlp_model.fit_validation(
+								self.packaged_data.learn_x,
+								self.packaged_data.learn_y,
+								self.packaged_data.valid_x,
+								self.packaged_data.valid_y,
+								self.vars['learning_rate'],
+								self.vars['valid_max_epochs'])
+						# No validation is used, just train for 'training_epochs' iterations
+						else:
+							mlp_model.fit(
+								self.packaged_data.learn_x,
+								self.packaged_data.learn_y,
+								self.vars['learning_rate'],
+								self.vars['train_epochs'])
+						mlp_model.save(path_t)
+						# Shuffle the training data sets
 						if 'shuffle_lv' in args:
-							self.data.shuffle('l', 'v', data_split = self.vars['data_split'])
+							self.data.shuffle('l', 'v', split = self.vars['data_split'])
+							self.packaged_data = self.data.package_sets()
+						# Shuffle all data sets
 						elif 'shuffle_lvt' in args:
-							self.data.shuffle('l', 'v', 't', data_split = self.vars['data_split'])
-		### SINGLE NET ###
-		else:
-			self.model = create_model(self)
-			self.model.fit(self.data.learn_x, self.data.learn_y, self.vars['learning_rate'], self.vars['train_epochs'])
-			self.model.save_net("./tmp/model_output")
+							self.data.create_sets(split = self.vars['data_split'])
+							self.packaged_data = self.data.package_sets()
 
-	### Fits the model(s) using validation RMSE cutoff method, or max epochs
-	def fit_mlp_model_validation(self, *args):
-		### PROJECT ###
-		if self.folder_structs_built == True:
-			for build in range(0,self.vars['project_num_builds']):
-				if self.vars['project_print_feedback'] == True:
-					print("Build %d of %d"%(build+1,self.vars['project_num_builds']))
-				for node in range(0,self.vars['project_num_nodes']):
-					if self.vars['project_print_feedback'] == True:
-						print("Node %d of %d"%(node+1,self.vars['project_num_nodes']))
-					for trial in range(0,self.vars['project_num_trials']):
-						if self.vars['project_print_feedback'] == True:
-							print("Trial %d of %d"%(trial+1,self.vars['project_num_trials']))
-						self.output_filepath = os.path.join(os.path.join(os.path.join(self.vars['project_name'], self.build_dirs[build]), self.node_dirs[build][node]), "model_output" + "_%d"%(trial + 1))
-						self.model = create_model(self)
-						self.model.fit_validation(self.data.learn_x, self.data.valid_x, self.data.learn_y, self.data.valid_y, self.vars['learning_rate'], self.vars['valid_mdrmse_stop'], self.vars['valid_mdrmse_memory'], self.vars['valid_max_epochs'])
-						res = self.model.test_new(self.data.x)
-						self.model.save_net(self.output_filepath)
-						if 'shuffle_lv' in args:
-							self.data.shuffle('l', 'v', data_split = self.vars['data_split'])
-						elif 'shuffle_lvt' in args:
-							self.data.shuffle('l', 'v', 't', data_split = self.vars['data_split'])
-		### SINGLE NET ###
-		else:
-			self.model = create_model(self)
-			self.model.fit_validation(self.data.learn_x, self.data.valid_x, self.data.learn_y, self.data.valid_y, self.vars['learning_rate'], self.vars['valid_mdrmse_stop'], self.vars['valid_mdrmse_memory'], self.vars['valid_max_epochs'])
-			self.model.save_net("./tmp/model_output")
+	'''
+	Selects the best performing models from each node for each build to represent
+	the node (build prediction = average of node predictions). Selection of best
+	models is based on data set *dset* performance. This method may take a while,
+	depending on project size.
+	'''
+	def select_best(self, dset = None, error_fn = 'rmse'):
 
-	### Selects the best performing networks from each node of each build. Folder structs must be created.			
-	def select_best(self, dset = None):
-		### SINGLE MODEL ###
-		if self.folder_structs_built == False:
-			print("Error: Project folder structure must be built in order to select best.")
-			sys.exit()
-		### PROJECT ###
+		# If not using a project, no need to call this function!
+		if not self.using_project:
+			raise Exception('ERROR: Project is not created; project structure is required to select best models!')
+		# Using a project
 		else:
-			for i in range(0,self.vars['project_num_builds']):
-				for j in range(0,self.vars['project_num_nodes']):
+			# Print status update (if config variable is True)
+			print('Selecting best models from each node for each build...')
+			# Determine input values and target values to use for selection (based on dset arg)
+			x_vals = self.__determine_x_vals(dset)
+			y_vals = self.__determine_y_vals(dset)
+			# For each build:
+			for build in range(self.vars['project_num_builds']):
+				# Determine build path
+				path_b = os.path.join(self.vars['project_name'], 'build_%d' % build)
+				# For each node:
+				for node in range(self.vars['project_num_nodes']):
+					# Determine node path
+					path_n = os.path.join(path_b, 'node_%d' % node)
+					# List of trial RMSE's within the node
 					rmse_list = []
-					for k in range(0,self.vars['project_num_trials']):
-						self.model_load_filename = os.path.join(os.path.join(self.vars['project_name'], "build_%d"%(i+1)),os.path.join("node_%d"%(j+1), "model_output" + "_%d"%(k+1)))
-						self.model = ecnet.model.multilayer_perceptron()
-						self.model.load_net(self.model_load_filename)
-						x_vals = determine_x_vals(self, dset)
-						y_vals = determine_y_vals(self, dset)
-						res = self.model.test_new(x_vals)
-						rmse = ecnet.error_utils.calc_rmse(res, y_vals)
-						rmse_list.append(rmse)
+					# For each trial:
+					for trial in range(self.vars['project_num_trials']):
+						# Create model, load trial, calculate RMSE, append to list
+						mlp_model = model.MultilayerPerceptron()
+						mlp_model.load(os.path.join(path_n, 'trial_%d' % trial))
+						rmse_list.append(self.__error_fn(error_fn, mlp_model.use(x_vals), y_vals))
+					# Determines the lowest RMSE in RMSE list
 					current_min = 0
-					for error in range(0,len(rmse_list)):
-						if rmse_list[error] < rmse_list[current_min]:
-							current_min = error
-					self.model_load_filename = os.path.join(os.path.join(self.vars['project_name'], "build_%d"%(i+1)),os.path.join("node_%d"%(j+1), "model_output" + "_%d"%(current_min+1)))
-					self.output_filepath = os.path.join(os.path.join(self.vars['project_name'], "build_%d"%(i+1)),os.path.join("node_%d"%(j+1),"final_net_%d"%(j+1)))
-					self.resave_net(self.output_filepath)
-	
-	### Predicts values for the current test set data
-	def use_mlp_model(self, dset = None):
-		x_vals = determine_x_vals(self, dset)
-		### SINGLE MODEL ###
-		if self.folder_structs_built == False:
-			self.model = ecnet.model.multilayer_perceptron()
-			self.model.load_net("tmp/model_output")
-			if self.vars['normals_use'] == True:
-				res = ecnet.data_utils.denormalize_result(self.model.test_new(x_vals), './tmp/normal_params')
-			else:
-				res = self.model.test_new(x_vals)
-			return [res]
-				
-		### PROJECT ###
+					for new_min in range(len(rmse_list)):
+						if rmse_list[new_min] < rmse_list[current_min]:
+							current_min = new_min
+					# Load the model with the lowest RMSE, resave as 'final_net' in the node folder
+					mlp_model = model.MultilayerPerceptron()
+					mlp_model.load(os.path.join(path_n, 'trial_%d' % current_min))
+					mlp_model.save(os.path.join(path_n, 'final_net'))
+
+	'''
+	Use a trained neural network (multilayer perceptron) to predict values for specified *dset*
+	'''
+	def use_model(self, dset = None):
+
+		# Determine data set to be passed to model, specified by *dset*
+		x_vals = self.__determine_x_vals(dset)
+		# Not using project, use single model
+		if not self.using_project:
+			# Create model object
+			mlp_model = model.MultilayerPerceptron()
+			# Load the trained model
+			mlp_model.load('./tmp/model_output')
+			# Return results obtained from model
+			return [mlp_model.use(x_vals)]
+		# Project is constructed, use project builds to predict values
 		else:
-			final_preds = []
-			# For each build
-			for i in range(0,self.vars['project_num_builds']):
-				predlist = []
-				# For each node
-				for j in range(0,self.vars['project_num_nodes']):
-					self.model_load_filename = os.path.join(os.path.join(self.vars['project_name'], "build_%d"%(i+1)),os.path.join("node_%d"%(j+1),"final_net_%d"%(j+1)))
-					self.model = ecnet.model.multilayer_perceptron()
-					self.model.load_net(self.model_load_filename)
-					if self.vars['normals_use'] == True:
-						res = ecnet.data_utils.denormalize_result(self.model.test_new(x_vals), './tmp/normal_params')
-					else:
-						res = self.model.test_new(x_vals)
-					predlist.append(res)
-				finalpred = []
-				# Check for one, or multiple outputs
-				if self.data.controls_num_outputs is 1:
-					for j in range(0,len(predlist[0])):
-						local_raw = []
-						for k in range(len(predlist)):
-							local_raw.append(predlist[k][j])
-						finalpred.append([np.mean(local_raw)])
-					final_preds.append(finalpred)
-				else:
-					for j in range(len(predlist[0])):
-						build_ave = []
-						for k in range(len(predlist)):
-							build_ave.append(predlist[k][j])
-						finalpred.append(sum(build_ave)/len(build_ave))
-					final_preds.append(list(finalpred))
-			return final_preds
-	
-	### Calculates errors for each given argument		
+			# List of final predictions
+			preds = []
+			# For each project build:
+			for build in range(self.vars['project_num_builds']):
+				# Determine build path
+				path_b = os.path.join(self.vars['project_name'], 'build_%d' % build)
+				# Build predictions (one from each node)
+				build_preds = []
+				# For each node:
+				for node in range(self.vars['project_num_nodes']):
+					# Determine node path
+					path_n = os.path.join(path_b, 'node_%d' % node)
+					# Determine final build (from select_best) path
+					path_f = os.path.join(path_n, 'final_net')
+					# Create model, load net, append results
+					mlp_model = model.MultilayerPerceptron()
+					mlp_model.load(path_f)
+					build_preds.append(mlp_model.use(x_vals))
+				# Average build prediction = average of node predictions
+				ave_build_preds = []
+				# For each data point
+				for point in range(len(build_preds[0])):
+					# List of node predictions for individual data point
+					local_pred = []
+					# For each node prediction
+					for pred in range(len(build_preds)):
+						# Append node prediction for data point
+						local_pred.append(build_preds[pred][point])
+					# Compute average of node predictions for point, append to ave list
+					ave_build_preds.append(sum(local_pred) / len(local_pred))
+				# Append average build prediction to list of final predictions
+				preds.append(list(ave_build_preds))
+			# Return final predictions
+			return preds
+
+	'''
+	Calculates and returns errors based on input *args; possible arguments are *rmse*,
+	*r2* (r-squared correlation coefficient), *mean_abs_error*, *med_abs_error*. Multiple
+	error arguments can be supplied. *dset* argument specifies which data set the error 
+	is being calculated for (e.g. 'test', 'train').
+	'''
 	def calc_error(self, *args, dset = None):
+		# Dictionary keys = error arguments, values = error values
 		error_dict = {}
-		preds = self.use_mlp_model(dset)
-		y_vals = determine_y_vals(self, dset)
+		# Obtain predictions for specified data set
+		y_hat = self.use_model(dset)
+		# Determine target values for specified data set
+		y = self.__determine_y_vals(dset)
+		# For each supplied error argument:
 		for arg in args:
-			### Single Model ###
-			if self.folder_structs_built == False:
-				if self.vars['normals_use'] == True:
-					rmse = error_fn(arg, preds, ecnet.data_utils.denormalize_result(y_vals, './tmp/normal_params'))
-				else:
-					rmse = error_fn(arg, preds, y_vals)
-				error_dict[arg] = rmse	
-			### PROJECT ###
+			# Using project
+			if self.using_project:
+				# List of error for each build
+				error_list = []
+				# For each build's prediction:
+				for pred in y_hat:
+					# Append build error to error list
+					error_list.append(self.__error_fn(arg, pred, y))
+				# Key error = error list
+				error_dict[arg] = error_list
+			# Using single model
 			else:
-				rmse_list = []
-				for i in range(0,len(preds)):
-					if self.vars['normals_use'] == True:
-						rmse_list.append(error_fn(arg, preds[i], ecnet.data_utils.denormalize_result(y_vals, './tmp/normal_params')))
-					else:
-						rmse_list.append(error_fn(arg, preds[i], y_vals))
-				error_dict[arg] = rmse_list
+				# Key error = calculated error
+				error_dict[arg] = self.__error_fn(arg, y_hat, y)
+		# Return error dictionary
 		return error_dict
-		
-	### Outputs results to desired .csv file	
-	def output_results(self, results, filename, dset = None):
-		if self.vars['normals_use'] is True:
-			normalized_data = self.data.y[:]
-			normalized_learn = self.data.learn_y[:]
-			normalized_valid = self.data.valid_y[:]
-			normalized_test = self.data.test_y[:]
-			self.data.y = ecnet.data_utils.denormalize_result(self.data.y, './tmp/normal_params')
-			self.data.learn_y = ecnet.data_utils.denormalize_result(self.data.learn_y, './tmp/normal_params')
-			self.data.valid_y = ecnet.data_utils.denormalize_result(self.data.valid_y, './tmp/normal_params')
-			self.data.test_y = ecnet.data_utils.denormalize_result(self.data.test_y, './tmp/normal_params')
-		ecnet.data_utils.output_results(results, self.data, filename, dset)
-		if self.vars['normals_use'] is True:
-			self.data.y = normalized_data
-			self.data.learn_y = normalized_learn
-			self.data.valid_y = normalized_valid
-			self.data.test_y = normalized_test
 
-	### Resaves the file under 'self.model_load_filename' to specified output filepath
-	def resave_net(self, output):
-		self.model = ecnet.model.multilayer_perceptron()
-		self.model.load_net(self.model_load_filename)
-		self.model.save_net(output)
-			
-	### Cleans up the project directory (only keep final node NN's), copies the config, data and normal params (if present) files to the directory, and zips the directory for publication
-	def publish_project(self):
-		# Clean up project directory
-		for build in range(self.vars['project_num_builds']):
-			for node in range(self.vars['project_num_nodes']):
-				directory = os.path.join(self.vars['project_name'], os.path.join('build_%d'%(build+1), 'node_%d'%(node+1)))
-				filelist = [f for f in os.listdir(directory) if 'model_output' in f]
-				for f in filelist:
-					os.remove(os.path.join(directory, f))
-		# Copy config.yml and normal parameters file to the project directory
-		save_config(self.vars)
-		copyfile('config.yml', os.path.join(self.vars['project_name'], 'config.yml'))
-		if self.vars['normals_use'] is True:
-			copyfile('./tmp/normal_params.ecnet', os.path.join(self.vars['project_name'], 'normal_params.ecnet'))
-		# Export the currently loaded dataset (if loaded)
-		try:
-			data_file = open(os.path.join(self.vars['project_name'],'data.d'),'wb')
-			pickle.dump(self.data, data_file)
-			data_file.close()
-		except:
-			pass
-		# Zip up the project
-		zipf = zipfile.ZipFile(self.vars['project_name'] + '.project', 'w', zipfile.ZIP_DEFLATED)
-		for root, dirs, files in os.walk(self.vars['project_name']):
-			for file in files:
-				zipf.write(os.path.join(root,file))
-		zipf.close()
-	
-	### Opens a published project, importing model, data, config, normal params
-	def open_project(self, project_name):
-		# Check naming scheme
-		if '.project' not in project_name:
-			zip_loc = project_name + '.project'
+	'''
+	Outputs the *results* to a specified *filename*
+	'''
+	def output_results(self, results, filename = 'my_results.csv'):
+
+		# Output results using data_utils function
+		data_utils.output_results(results, self.data, filename)
+
+	'''
+	PRIVATE METHOD: Helper function for determining data set *dset* to be passed to the model (inputs)
+	'''
+	def __determine_x_vals(self, dset):
+
+		# Use the test set
+		if dset == 'test':
+			return self.packaged_data.test_x
+		# Use the validation set
+		elif dset == 'valid':
+			return self.packaged_data.valid_x
+		# Use the learning set
+		elif dset == 'learn':
+			return self.packaged_data.learn_x
+		# Use training set (learning and validation)
+		elif dset == 'train':
+			x_vals = []
+			for val in self.packaged_data.learn_x:
+				x_vals.append(val)
+			for val in self.packaged_data.valid_x:
+				x_vals.append(val)
+			return np.asarray(x_vals)
+		# Use all data sets (learning, validation and testing)
 		else:
-			project_name = project_name.replace('.project', '')
-			zip_loc = project_name + '.project'
-		# Unzip project to directory
-		zip_ref = zipfile.ZipFile(zip_loc, 'r')
-		zip_ref.extractall('./')
-		zip_ref.close()
-		# Update config to project config
-		self.vars.update(import_config(filename = os.path.join(project_name,'config.yml')))
-		save_config(self.vars)
-		# Unpack data
-		try:
-			self.data = pickle.load(open(os.path.join(project_name, 'data.d'),'rb'))
-		except:
-			print('Error: unable to load data.')
-			pass
-		# Set up model environment
-		self.folder_structs_built = True
-		create_folder_structure(self)
-		self.model = create_model(self)
+			x_vals = []
+			for val in self.packaged_data.learn_x:
+				x_vals.append(val)
+			for val in self.packaged_data.valid_x:
+				x_vals.append(val)
+			for val in self.packaged_data.test_x:
+				x_vals.append(val)
+			return np.asarray(x_vals)
 
-	### Optimizes and tunes the the hyperparameters for ecnet
-	def tune_hyperparameters(self, target_score = None, iteration_amount = 50, amount_of_employers = 50):
-    		# Check which arguments to use to terminate artifical bee colony, then create the ABC object
-		if target_score == None:
-    			abc = ecnet.abc.ABC(iterationAmount = iteration_amount, fitnessFunction=runNeuralNet, valueRanges=ecnetValues, amountOfEmployers=amount_of_employers)
+	'''
+	PRIVATE METHOD: Helper function for determining data set *dset* to be passed to the model (targets)
+	'''
+	def __determine_y_vals(self, dset):
+
+		# Use the test set
+		if dset == 'test':
+			return self.packaged_data.test_y
+		# Use the validation set
+		elif dset == 'valid':
+			return self.packaged_data.valid_y
+		# Use the learning set
+		elif dset == 'learn':
+			return self.packaged_data.learn_y
+		# Use training set (learning and validation)
+		elif dset == 'train':
+			y_vals = []
+			for val in self.packaged_data.learn_y:
+				y_vals.append(val)
+			for val in self.packaged_data.valid_y:
+				y_vals.append(val)
+			return np.asarray(y_vals)
+		# Use all data sets (learning, validation and testing)
 		else:
-    			abc = ecnet.abc.ABC(endValue = target_score, fitnessFunction=runNeuralNet, valueRanges=ecnetValues, amountOfEmployers=amount_of_employers)
-		# Run the artificial bee colony and return the resulting hyperparameter values
-		hyperparams = abc.runABC()
-		# Assign the hyperparameters generated from the artificial bee colony to ecnet
-		self.vars['learning_rate'] = hyperparams[0]
-		self.vars['valid_mdrmse_stop'] = hyperparams[1]
-		self.vars['valid_max_epochs'] = hyperparams[2]
-		self.vars['valid_mdrmse_memory'] = hyperparams[3]
-		self.vars['mlp_hidden_layers[0][0]'] = hyperparams[4]
-		self.vars['mlp_hidden_layers[1][0]'] = hyperparams[5]
-		return hyperparams
+			y_vals = []
+			for val in self.packaged_data.learn_y:
+				y_vals.append(val)
+			for val in self.packaged_data.valid_y:
+				y_vals.append(val)
+			for val in self.packaged_data.test_y:
+				y_vals.append(val)
+			return np.asarray(y_vals)
 
-# Creates the default folder structure, outlined in the file config by number of builds and nodes.
-def create_folder_structure(server_obj):
-	server_obj.build_dirs = []
-	for build_dirs in range(0,server_obj.vars['project_num_builds']):
-		server_obj.build_dirs.append('build_%d'%(build_dirs + 1))
-	server_obj.node_dirs = []
-	for build_dirs in range(0,server_obj.vars['project_num_builds']):
-		local_nodes = []
-		for node_dirs in range(0,server_obj.vars['project_num_nodes']):
-			local_nodes.append('node_%d'%(node_dirs + 1))
-		server_obj.node_dirs.append(local_nodes)
-	for build in range(0,len(server_obj.build_dirs)):
-		path = os.path.join(server_obj.vars['project_name'], server_obj.build_dirs[build])
-		if not os.path.exists(path):
-			os.makedirs(path)
-		for node in range(0,len(server_obj.node_dirs[build])):
-			node_path = os.path.join(path, server_obj.node_dirs[build][node])
-			if not os.path.exists(node_path):
-				os.makedirs(node_path)
-	server_obj.folder_structs_built = True
+	'''
+	PRIVATE METHOD: Helper function for creating a neural network (multilayer perceptron)
+	'''
+	def __create_mlp_model(self):
 
-# Used by use_mlp_model to determine which x-values to use for calculations
-def determine_x_vals(server, dset):
-	if dset is 'test':
-		x_vals = server.data.test_x
-	elif dset is 'learn':
-		x_vals = server.data.learn_x
-	elif dset is 'valid':
-		x_vals = server.data.valid_x
-	elif dset is 'train':
-		x_vals = []
-		for i in range(len(server.data.learn_x)):
-			x_vals.append(list(server.data.learn_x[i]))
-		for i in range(len(server.data.valid_x)):
-			x_vals.append(list(server.data.valid_x[i]))
-	else:
-		x_vals = server.data.x
-	return x_vals
+		# Create the model object
+		mlp_model = model.MultilayerPerceptron()
+		# Add input layer, size = number of data inputs, activation function specified in configuration file
+		mlp_model.add_layer(self.data.num_inputs, self.vars['mlp_in_layer_activ'])
+		# Add hidden layers, sizes and activation functions specified in configuration file
+		for hidden in range(len(self.vars['mlp_hidden_layers'])):
+			mlp_model.add_layer(self.vars['mlp_hidden_layers'][hidden][0], self.vars['mlp_hidden_layers'][hidden][1])
+		# Add output layer, size = number of data targets, activation function specified in configuration file
+		mlp_model.add_layer(self.data.num_targets, self.vars['mlp_out_layer_activ'])
+		# Connect layers (compute initial weights and biases)
+		mlp_model.connect_layers()
+		# Return the model object
+		return mlp_model
 
-# Used by calc_error to determine which y-values to use for error calculations
-def determine_y_vals(server, dset):
-	if dset is 'test':
-		y_vals = server.data.test_y
-	elif dset is 'learn':
-		y_vals = server.data.learn_y
-	elif dset is 'valid':
-		y_vals = server.data.valid_y
-	elif dset is 'train':
-		y_vals = []
-		for i in range(len(server.data.learn_y)):
-			y_vals.append(list(server.data.learn_y[i]))
-		for i in range(len(server.data.valid_y)):
-			y_vals.append(list(server.data.valid_y[i]))
-	else:
-		y_vals = server.data.y
-	return y_vals
-
-# Used by calc_errpr to determine which error is being calculated; returns user defined error calculation
-def error_fn(arg, y_hat, y):
-	if arg is 'rmse':
-		return ecnet.error_utils.calc_rmse(y_hat, y)
-	elif arg is 'r2':
-		return ecnet.error_utils.calc_r2(y_hat, y)
-	elif arg is 'mean_abs_error':
-		return ecnet.error_utils.calc_mean_abs_error(y_hat, y)
-	elif arg is 'med_abs_error':
-		return ecnet.error_utils.calc_med_abs_error(y_hat, y)
-	else:
-		print("Error: unknown/unsupported error function: " + arg)
-
-# Creates a model using config.yaml		
-def create_model(server_obj):
-	net = ecnet.model.multilayer_perceptron()
-	net.addLayer(len(server_obj.data.x[0]), server_obj.vars['mlp_in_layer_activ'])
-	for hidden in range(0,len(server_obj.vars['mlp_hidden_layers'])):
-		net.addLayer(server_obj.vars['mlp_hidden_layers'][hidden][0], server_obj.vars['mlp_hidden_layers'][hidden][1])
-	net.addLayer(len(server_obj.data.y[0]), server_obj.vars['mlp_out_layer_activ'])
-	net.connectLayers()
-	return net
-
-# Imports 'config.yaml'; creates a default file if none is found	
-def import_config(filename = 'config.yml'):
-	try:
-		stream = open(filename, 'r')
-		return(yaml.load(stream))
-	except:
-		create_default_config()
-		stream = open(filename, 'r')
-		return(yaml.load(stream))
-
-# Saves all server variables to config.yml
-def save_config(config_dict):
-	with open('config.yml', 'w') as outfile:
-		yaml.dump(config_dict, outfile, default_flow_style = False, explicit_start = True)
-
-# Creates a default 'config.yaml' file	 			
-def create_default_config():
-	stream = open('config.yml', 'w')
-	config_dict = {
-		'data_filename' : 'data.csv',
-		'data_sort_type' : 'random',
-		'data_split' : [0.65,0.25,0.10],
-		'learning_rate' : 0.1,
-		'mlp_hidden_layers' : [[5, 'relu'], [5, 'relu']],
-		'mlp_in_layer_activ' : 'relu',
-		'mlp_out_layer_activ' : 'linear',
-		'normals_use' : False,
-		'project_name' : 'my_project',
-		'project_num_builds' : 1,
-		'project_num_nodes' : 1,
-		'project_num_trials' : 1,
-		'project_print_feedback': True,
-		'train_epochs' : 100,
-		'valid_max_epochs': 1000,
-		'valid_mdrmse_stop' : 0.1,
-		'valid_mdrmse_memory' : 1000
-	}
-	yaml.dump(config_dict,stream)
-
-def runNeuralNet(values):
-    # Run the ecnet server
-    config_file = import_config()
-    sv = Server()
-    sv.vars['learning_rate'] = values[0]
-    sv.vars['valid_mdrmse_stop'] = values[1]
-    sv.vars['valid_max_epochs'] = values[2]
-    sv.vars['valid_mdrmse_memory'] = values[3]
-    sv.vars['mlp_hidden_layers[0][0]'] = values[4]
-    sv.vars['mlp_hidden_layers[1][0]'] = values[5]
-    sv.vars['data_filename'] = config_file['data_filename']
-	
-    sv.import_data(sv.vars['data_filename'])
-    sv.fit_mlp_model_validation('shuffle_lv')
-    test_errors = sv.calc_error('rmse')
-    sv.publish_project()
-    return test_errors['rmse']
-
-ecnetValues = [('float', (0.001, 0.1)), ('float', (0.000001,0.01)), ('int', (1250, 2500)), ('int', (500, 2500)), ('int', (12,32)), ('int', (12,32))]
+	'''
+	PRIVATE METHOD: used to parse error argument, calculate specified error and return it
+	'''
+	def __error_fn(self, arg, y_hat, y):
+		if arg == 'rmse':
+			return error_utils.calc_rmse(y_hat, y)
+		elif arg == 'r2':
+			return error_utils.calc_r2(y_hat, y)
+		elif arg == 'mean_abs_error':
+			return error_utils.calc_mean_abs_error(y_hat, y)
+		elif arg == 'med_abs_error':
+			return error_utils.calc_med_abs_error(y_hat, y)
+		else:
+			raise Exception('ERROR: Unknown/unsupported error function')

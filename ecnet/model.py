@@ -2,186 +2,236 @@
 # -*- coding: utf-8 -*-
 #
 #  ecnet/error_utils.py
-#  v.1.3.0.dev1
-#  Developed in 2018 by Travis Kessler <Travis_Kessler@student.uml.edu>
+#  v.1.4.0
+#  Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
-#  This program contains functions necessary creating, training, saving, and importing neural network models
+#  This program contains functions necessary creating, training, saving, and reusing neural network models
 #
 
+# 3rd party packages (open src.)
 import tensorflow as tf
 import numpy as np
 import pickle
-import os
 from functools import reduce
 
-class multilayer_perceptron:
-	# initialization of model structure
+'''
+Basic neural network (multilayer perceptron); contains methods for adding layers
+with specified neuron counts and activation functions, training the model, using
+the model on new data, saving the model for later use, and reusing a previously
+trained model
+'''
+class MultilayerPerceptron:
+
+	'''
+	Initialization of object
+	'''
 	def __init__(self):
+
 		self.layers = []
 		self.weights = []
 		self.biases = []
 		tf.reset_default_graph()
-	
-	# adds a skeleton for the layer: [number of neurons, activation function]
-	def addLayer(self, num_neurons, function = "relu"):
-		self.layers.append([num_neurons, function])
-		
-	# connects skeleton layers: results in random weights and biases
-	def connectLayers(self):
-		# weights
-		for layer in range(0, len(self.layers)-1):
-			self.weights.append(tf.Variable(tf.random_normal([self.layers[layer][0], self.layers[layer+1][0]]), name = "W_fc%d"%(layer + 1)))
-		# biases
-		for layer in range(1, len(self.layers)):
-			self.biases.append(tf.Variable(tf.random_normal([self.layers[layer][0]]), name = "B_fc%d"%(layer)))
 
-	# function for feeding data through the model, and returns the output
-	def feed_forward(self, x):
-		layerOutput = [x]
+	'''
+	Layer definition object, containing layer size and activation function to be used
+	'''
+	class Layer:
+
+		def __init__(self, size, act_fn):
+
+			self.size = size
+			self.act_fn = act_fn
+
+	'''
+	Adds a layer definition to the model; default activation function is ReLU
+	'''
+	def add_layer(self, size, act_fn = 'relu'):
+
+		self.layers.append(self.Layer(size, act_fn))
+
+	'''
+	Connects the layers in *self.layers* by creating weight matrices, bias vectors
+	'''
+	def connect_layers(self):
+
+		# Create weight matrices (size = layer_n by layer_n+1)
+		for layer in range(len(self.layers) - 1):
+			self.weights.append(tf.Variable(tf.random_normal([self.layers[layer].size, self.layers[layer + 1].size]), name = 'W_fc%d' % (layer + 1)))
+		# Create bias vectors (size = layer_n)
 		for layer in range(1, len(self.layers)):
-			# relu
-			if "relu" in self.layers[layer][1]:
-				layerOutput.append(tf.nn.relu(tf.add(tf.matmul(layerOutput[-1], self.weights[layer - 1]), self.biases[layer - 1])))
-			# sigmoid
-			elif "sigmoid" in self.layers[layer][1]:
-				layerOutput.append(tf.nn.sigmoid(tf.add(tf.matmul(layerOutput[-1], self.weights[layer - 1]), self.biases[layer - 1])))
-			# linear
-			elif "linear" in self.layers[layer][1]:
-				layerOutput.append(tf.add(tf.matmul(layerOutput[-1], self.weights[layer - 1]), self.biases[layer - 1]))
-			elif "softmax" in self.layers[layer][1]:
-				layerOutput.append(tf.nn.softmax(tf.add(tf.matmul(layerOutput[-1], self.weights[layer - 1]), self.biases[layer - 1])))
-		return(layerOutput[-1])
-	
-	### Data is served to the model, and fits the model to the data
-	def fit(self, x_l, y_l, learning_rate = 0.1, train_epochs = 500):
-		# placeholder variables for input and output matrices
-		x = tf.placeholder("float", [None, self.layers[0][0]])
-		y = tf.placeholder("float", [None, self.layers[-1][0]])
-		pred = self.feed_forward(x)
-		
-		# cost function and optimizer - TODO: look into other optimizers besides Adam
+			self.biases.append(tf.Variable(tf.random_normal([self.layers[layer].size]), name = 'B_fc%d' % (layer)))
+
+	'''
+	PRIVATE METHOD: Feeds data through the neural network, returns output of final layer
+	'''
+	def __feed_forward(self, x):
+
+		# First values to matrix multiply are the inputs
+		output = x
+		# For each layer (after the first layer, input)
+		for index, layer in enumerate(self.layers[1:]):
+			# ReLU activation function
+			if layer.act_fn == 'relu':
+				output = tf.nn.relu(tf.add(tf.matmul(output, self.weights[index]), self.biases[index]))
+			# Sigmoid activation function
+			elif layer.act_fn == 'sigmoid':
+				output = tf.nn.relu(tf.add(tf.matmul(output, self.weights[index]), self.biases[index]))
+			# Linear activation function
+			elif layer.act_fn == 'linear':
+				output = tf.add(tf.matmul(output, self.weights[index]), self.biases[index])
+			# Softmax activation function
+			elif layer.act_fn == 'softmax':
+				output = tf.nn.softmax(tf.add(tf.matmul(output, self.weights[index]), self.biases[index]))
+
+		# Return the final layer's output
+		return output
+
+	'''
+	Fits the neural network model using input data *x_l* and target data *y_l*. Optional arguments:
+	*learning_rate* (training speed of the model) and *train_epochs* (number of traning iterations).
+	'''
+	def fit(self, x_l, y_l, learning_rate = 0.1, train_epochs = 2000):
+
+		# TensorFlow placeholder variables for inputs and targets
+		x = tf.placeholder('float', [None, self.layers[0].size])
+		y = tf.placeholder('float', [None, self.layers[-1].size])
+
+		# Predictions = *__feed_forward* final output
+		pred = self.__feed_forward(x)
+
+		# Cost function = squared error between targets and predictions
 		cost = tf.square(y - pred)
+
+		# Optimizer = AdamOptimizer (TODO: Look into other optimizers)
 		optimizer = tf.train.AdamOptimizer(learning_rate = learning_rate).minimize(cost)
-		
-		# opens the tensorflow session for training
-		with tf.Session() as self.sess:
-			# initialize the pre-defined variables
-			self.sess.run(tf.global_variables_initializer())
-			# runs training loop for explicit number of epochs -> find in config.yaml
+
+		# Run the TensorFlow session
+		with tf.Session() as sess:
+			# Initialize TensorFlow variables (weights, biases, placeholders)
+			sess.run(tf.global_variables_initializer())
+			# Train for *train_epochs* iterations
 			for epoch in range(train_epochs):
-				self.sess.run(optimizer, feed_dict = {x: x_l, y: y_l})
-			# saves a temporary output file, variables (weights, biases) included
+				sess.run(optimizer, feed_dict = {x: x_l, y: y_l})
+			# Saves model (weights and biases) to temporary output file
 			saver = tf.train.Saver()
-			saver.save(self.sess,"./tmp/_ckpt")
-		self.sess.close()
-	
-	### Data is served to the model, and fits the model to the data using periodic validation
-	def fit_validation(self, x_l, x_v, y_l, y_v, learning_rate = 0.1, mdrmse_stop = 0.1, mdrmse_memory = 50, max_epochs = 500):
-		# placeholder variables for input and output matrices
-		x = tf.placeholder("float", [None, self.layers[0][0]])
-		y = tf.placeholder("float", [None, self.layers[-1][0]])
-		pred = self.feed_forward(x)
-		
-		# variables and arrays for validation process
-		mdRMSE = 1
-		current_epoch = 0
-		rmse_list = []
-		delta_list = []
-	
-		# cost function and optimizer - TODO: look into other optimizers besides Adam
+			saver.save(sess, './tmp/_ckpt')
+		# Finish the TensorFlow session
+		sess.close()
+
+	'''
+	Fits the neural network model using input data *x_l* and target data *y_l*, validating
+	the learning process periodically based on validation data (*x_v* and *y_v*) performance).
+	Optional arguments: *learning_rate* (training speed of the model), *max_epochs* (cutoff 
+	point if training takes too long)
+	'''
+	def fit_validation(self, x_l, y_l, x_v, y_v, learning_rate = 0.1, max_epochs = 5000):
+
+		# TensorFlow placeholder variables for inputs and targets
+		x = tf.placeholder('float', [None, self.layers[0].size])
+		y = tf.placeholder('float', [None, self.layers[-1].size])
+
+		# Predictions = *__feed_forward* final output
+		pred = self.__feed_forward(x)
+
+		# Cost function = squared error between targets and predictions
 		cost = tf.square(y - pred)
+
+		# Optimizer = AdamOptimizer (TODO: Look into other optimizers)
 		optimizer = tf.train.AdamOptimizer(learning_rate = learning_rate).minimize(cost)
+
+		# Run the TensorFlow session
+		with tf.Session() as sess:
+			# Initialize TensorFlow variables (weights, biases, placeholders)
+			sess.run(tf.global_variables_initializer())
 			
-		# opens the tensorflow session for training
-		with tf.Session() as self.sess:
-			# initialize the pre-defined variables
-			self.sess.run(tf.global_variables_initializer())
-			# while current mdRMSE is more than the cutoff point, and the max num of epochs hasn't been reached:
-			while mdRMSE > mdrmse_stop and current_epoch < max_epochs:
-				self.sess.run(optimizer, feed_dict = {x: x_l, y: y_l})
+			# Lowest validation RMSE value (used as cutoff if validation RMSE rises above by 5%)
+			valid_rmse_lowest = 50
+			current_epoch = 0
+
+			while current_epoch < max_epochs:
+				# Run training iteration
+				sess.run(optimizer, feed_dict = {x: x_l, y: y_l})
+				# Current epoch ++
 				current_epoch += 1
-				# determine new mdRMSE after every 100 epochs
-				if current_epoch % 100 == 0:
-					valid_pred = self.sess.run(pred, feed_dict = {x: x_v})
-					rmse_list.append(calc_valid_rmse(valid_pred, y_v))
-					if len(rmse_list) > 1:
-						delta_list.append(abs(rmse_list[-2] - rmse_list[-1]))
-						# mdRMSE memory: how far back the function looks to determine mdRMSE
-						if len(delta_list) > mdrmse_memory:
-							del(delta_list[0])
-						mdRMSE = reduce(lambda x, y: x + y, delta_list) / len(delta_list)
-			
+				# Every 250 epochs (TODO: make this a variable?):
+				if current_epoch % 250 == 0:
+					# Calculate validation set RMSE
+					valid_rmse = self.__calc_rmse(sess.run(pred, feed_dict = {x: x_v}), y_v)
+					# If RMSE is less than the current lowest RMSE, make new lowest RMSE
+					if valid_rmse < valid_rmse_lowest:
+						valid_rmse_lowest = valid_rmse
+					# If RMSE is greater than the current lowest + 5%, done with training
+					elif valid_rmse > valid_rmse_lowest + (0.05 * valid_rmse_lowest):
+						break
+
+			# Done training, save the model to temporary file
 			saver = tf.train.Saver()
-			saver.save(self.sess, "./tmp/_ckpt")
-		self.sess.close()
-		
-	### Tests the test data from the server
-	def test_new(self, x):
-		with tf.Session() as self.sess:
+			saver.save(sess, './tmp/_ckpt')
+		# Finish the TensorFlow session
+		sess.close()
+
+	'''
+	Use the neural network model on input data *x*, returns *result*
+	'''
+	def use(self, x):
+
+		# Run the TensorFlow session
+		with tf.Session() as sess:
+			# Import temporary output file containing weights and biases
 			saver = tf.train.Saver()
-			saver.restore(self.sess, "./tmp/_ckpt")
-			result = self.feed_forward(x)
-			result = result.eval()
-		self.sess.close()
+			saver.restore(sess, './tmp/_ckpt')
+			# Evaluate result
+			result = self.__feed_forward(x).eval()
+		# Finish the TensorFlow session
+		sess.close()
+		# Return the result
 		return result
-		
-	### Saves the _ckpt.ecnet file to a pre-defined output file	
-	def save_net(self, output_filepath):
-		with tf.Session() as self.sess:
+
+	'''
+	Saves the neural network model (outside of temp file) to *filepath* for later use
+	'''
+	def save(self, filepath):
+
+		# Run the TensorFlow session
+		with tf.Session() as sess:
+			# Import temporary output file containing weights and biases
 			saver = tf.train.Saver()
-			saver.restore(self.sess, "./tmp/_ckpt")
-			saver.save(self.sess, "./" + output_filepath + ".sess")
-		self.sess.close()
-		architecture_file = open("./" + output_filepath + ".struct", "wb")
+			saver.restore(sess, './tmp/_ckpt')
+			# Resave temporary file to file specified by *filepath*
+			saver.save(sess, './' + filepath)
+		# Finish the TensorFlow session
+		sess.close()
+		# Save the neural network model's architecture (layer sizes, activation functions)
+		architecture_file = open('./' + filepath + '.struct', 'wb')
 		pickle.dump(self.layers, architecture_file)
 		architecture_file.close()
-		
-	### Loads a pre-defined file into the model
-	def load_net(self, model_load_filename):
-		architecture_file = open("./" + model_load_filename + ".struct", "rb")
+
+	'''
+	Loads the neural network model found at *filepath*
+	'''
+	def load(self, filepath):
+
+		# Import the architecture 'struct' file (layer sizes, activation functions)
+		architecture_file = open('./' + filepath + '.struct', 'rb')
 		self.layers = pickle.load(architecture_file)
 		architecture_file.close()
-		self.connectLayers()
-		with tf.Session() as self.sess:
+		# Redefine weights and biases
+		self.connect_layers()
+		# Run the TensorFlow session
+		with tf.Session() as sess:
+			# Import file containing weights and biases
 			saver = tf.train.Saver()
-			saver.restore(self.sess, "./" + model_load_filename + ".sess")
-			saver.save(self.sess, "./tmp/_ckpt")
-		self.sess.close()
-		
-	### Return numerical values for weights
-	def export_weights(self):
-		weights = []
-		with tf.Session() as self.sess:
-			saver = tf.train.Saver()
-			saver.restore(self.sess, "./tmp/_ckpt")
-			for i in range(0,len(self.weights)):
-				weights.append(self.weights[i].eval())
-		return weights
-		
-	### Return numerical values for biases
-	def export_biases(self):
-		biases = []
-		with tf.Session() as self.sess:
-			saver = tf.train.Saver()
-			saver.restore(self.sess, "./tmp/_ckpt")
-			for i in range(0,len(self.biases)):
-				biases.append(self.biases[i].eval())
-		return biases
-		
-def calc_valid_rmse(x, y):
-	try:
-		return(np.sqrt(((x-y)**2).mean()))
-	except:
+			saver.restore(sess, './' + filepath)
+			# Save weights and biases to temporary file for use by 'fit', 'use', etc.
+			saver.save(sess, './tmp/_ckpt')
+		# Finish the TensorFlow session
+		sess.close()
+
+	def __calc_rmse(self, y_hat, y):
 		try:
-			return(np.sqrt(((np.asarray(x)-np.asarray(y))**2).mean()))
+			return(np.sqrt(((y_hat-y)**2).mean()))
 		except:
-			print("Error in calculating RMSE. Check input data format.")
-			sys.exit()
-		
-		
-		
-		
-		
-		
-		
-		
+			try:
+				return(np.sqrt(((np.asarray(y_hat)-np.asarray(y))**2).mean()))
+			except:
+				raise Exception('ERROR: Unable to calculate RMSE. Check input data format.')
