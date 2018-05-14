@@ -20,6 +20,7 @@ import numpy as np
 import ecnet.data_utils
 import ecnet.error_utils
 import ecnet.model
+import ecnet.limit_parameters
 
 '''
 Server object: handles project creation/usage for ECNet projects, handles
@@ -112,12 +113,20 @@ class Server:
 		# If no filename specified, use configuration filename
 		if data_filename is None:
 			data_filename = self.vars['data_filename']
+		# Else, set config variable to supplied filename
+		else:
+			self.vars['data_filename'] = data_filename
 		# Import the data using *data_utils* *DataFrame* object
-		self.data = ecnet.data_utils.DataFrame(data_filename)
+		self.DataFrame = ecnet.data_utils.DataFrame(data_filename)
 		# Create learning, validation and testing sets
-		self.data.create_sets(random = self.vars['data_sort_type'], split = self.vars['data_split'])
+		self.DataFrame.create_sets(random = self.vars['data_sort_type'], split = self.vars['data_split'])
 		# Package sets for model hand-off (dicts/lists -> Numpy arrays)
-		self.packaged_data = self.data.package_sets()
+		self.packaged_data = self.DataFrame.package_sets()
+
+	def limit_parameters(self, limit_num, output_filename):
+
+		params = ecnet.limit_parameters.limit(self.DataFrame, limit_num)
+		ecnet.limit_parameters.output(self.DataFrame, params, output_filename)
 
 	'''
 	Trains a neural network (multilayer perceptron) using learning data and validation data (if *validate*
@@ -185,12 +194,12 @@ class Server:
 						mlp_model.save(path_t)
 						# Shuffle the training data sets
 						if 'shuffle_lv' in args:
-							self.data.shuffle('l', 'v', split = self.vars['data_split'])
-							self.packaged_data = self.data.package_sets()
+							self.DataFrame.shuffle('l', 'v', split = self.vars['data_split'])
+							self.packaged_data = self.DataFrame.package_sets()
 						# Shuffle all data sets
 						elif 'shuffle_lvt' in args:
-							self.data.create_sets(split = self.vars['data_split'])
-							self.packaged_data = self.data.package_sets()
+							self.DataFrame.create_sets(split = self.vars['data_split'])
+							self.packaged_data = self.DataFrame.package_sets()
 
 	'''
 	Selects the best performing models from each node for each build to represent
@@ -326,7 +335,7 @@ class Server:
 	def output_results(self, results, filename = 'my_results.csv'):
 
 		# Output results using data_utils function
-		ecnet.data_utils.output_results(results, self.data, filename)
+		ecnet.data_utils.output_results(results, self.DataFrame, filename)
 
 	'''
 	PRIVATE METHOD: Helper function for determining data set *dset* to be passed to the model (inputs)
@@ -402,12 +411,12 @@ class Server:
 		# Create the model object
 		mlp_model = ecnet.model.MultilayerPerceptron()
 		# Add input layer, size = number of data inputs, activation function specified in configuration file
-		mlp_model.add_layer(self.data.num_inputs, self.vars['mlp_in_layer_activ'])
+		mlp_model.add_layer(self.DataFrame.num_inputs, self.vars['mlp_in_layer_activ'])
 		# Add hidden layers, sizes and activation functions specified in configuration file
 		for hidden in range(len(self.vars['mlp_hidden_layers'])):
 			mlp_model.add_layer(self.vars['mlp_hidden_layers'][hidden][0], self.vars['mlp_hidden_layers'][hidden][1])
 		# Add output layer, size = number of data targets, activation function specified in configuration file
-		mlp_model.add_layer(self.data.num_targets, self.vars['mlp_out_layer_activ'])
+		mlp_model.add_layer(self.DataFrame.num_targets, self.vars['mlp_out_layer_activ'])
 		# Connect layers (compute initial weights and biases)
 		mlp_model.connect_layers()
 		# Return the model object
