@@ -50,10 +50,10 @@ class DataFrame:
 			for header in range(len(data_raw[0])):
 				# Append data point strings
 				if 'STRING' in data_raw[0][header]:
-					new_point.strings[data_raw[1][header]] = data_raw[point][header]
+					new_point.strings.append(data_raw[point][header])
 				# Append data point groups
 				elif 'GROUP' in data_raw[0][header]:
-					new_point.groups[data_raw[1][header]] = data_raw[point][header]
+					new_point.groups.append(data_raw[point][header])
 				# Append data point target values
 				elif 'TARGET' in data_raw[0][header]:
 					new_point.targets.append(data_raw[point][header])
@@ -64,9 +64,26 @@ class DataFrame:
 			# Append to data_point list
 			self.data_points.append(new_point)
 
-		# Helper variables for determining number of inputs, number of targets
-		self.num_inputs = len(self.data_points[0].inputs)
-		self.num_targets = len(self.data_points[0].targets)
+		# Obtain string, group, target, input header names
+		self.string_names = []
+		self.group_names = []
+		self.target_names = []
+		self.input_names = []
+		for header in range(len(data_raw[0])):
+			if 'STRING' in data_raw[0][header]:
+				self.string_names.append(data_raw[1][header])
+			if 'GROUP' in data_raw[0][header]:
+				self.group_names.append(data_raw[1][header])
+			if 'TARGET' in data_raw[0][header]:
+				self.target_names.append(data_raw[1][header])
+			if 'INPUT' in data_raw[0][header]:
+				self.input_names.append(data_raw[1][header])
+
+		# Helper variables for determining number of strings, groups, targets, inputs
+		self.num_strings = len(self.string_names)
+		self.num_groups = len(self.group_names)
+		self.num_targets = len(self.target_names)
+		self.num_inputs = len(self.input_names)
 
 	'''
 	DataFrame class length = number of data_points
@@ -209,8 +226,8 @@ class DataPoint:
 
 		self.id = None
 		self.assignment = None
-		self.strings = {}
-		self.groups = {}
+		self.strings = []
+		self.groups = []
 		self.targets = []
 		self.inputs = []
 
@@ -232,30 +249,26 @@ def output_results(results, DataFrame, filename):
 	type_row = []
 	type_row.append('DATAID')
 	type_row.append('ASSIGNMENT')
-	for string in DataFrame.data_points[0].strings:
+	for string in range(DataFrame.num_strings):
 		type_row.append('STRING')
-	for group in DataFrame.data_points[0].groups:
+	for group in range(DataFrame.num_groups):
 		type_row.append('GROUP')
-	for target in DataFrame.data_points[0].targets:
+	for target in range(DataFrame.num_targets):
 		type_row.append('TARGET')
 	for result in results:
 		type_row.append('RESULT')
 	rows.append(type_row)
 
-	# Get string and group names
-	strings = list(DataFrame.data_points[0].strings.keys())
-	groups = list(DataFrame.data_points[0].groups.keys())
-
-	# SECOND ROW: titles (including string and group names)
+	# SECOND ROW: titles (including string, group, target names)
 	title_row = []
 	title_row.append('DATAID')
 	title_row.append('ASSIGNMENT')
-	for string in strings:
+	for string in DataFrame.string_names:
 		title_row.append(string)
-	for group in groups:
-		title_row.append(groups)
-	for target in DataFrame.data_points[0].targets:
-		title_row.append('DB Value')
+	for group in DataFrame.group_names:
+		title_row.append(group)
+	for target in DataFrame.target_names:
+		title_row.append(target)
 	for result in range(len(results)):
 		title_row.append(result)
 	rows.append(title_row)
@@ -303,10 +316,10 @@ def output_results(results, DataFrame, filename):
 		data_row = []
 		data_row.append(point.id)
 		data_row.append(point.assignment)
-		for string in strings:
-			data_row.append(point.strings[string])
-		for group in groups:
-			data_row.append(point.groups[group])
+		for string in point.strings:
+			data_row.append(string)
+		for group in point.groups:
+			data_row.append(group)
 		for target in point.targets:
 			data_row.append(target)
 		for result in results:
