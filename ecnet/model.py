@@ -62,31 +62,6 @@ class MultilayerPerceptron:
 			self.biases.append(tf.Variable(tf.random_normal([self.layers[layer].size]), name = 'B_fc%d' % (layer)))
 
 	'''
-	PRIVATE METHOD: Feeds data through the neural network, returns output of final layer
-	'''
-	def __feed_forward(self, x):
-
-		# First values to matrix multiply are the inputs
-		output = x
-		# For each layer (after the first layer, input)
-		for index, layer in enumerate(self.layers[1:]):
-			# ReLU activation function
-			if layer.act_fn == 'relu':
-				output = tf.nn.relu(tf.add(tf.matmul(output, self.weights[index]), self.biases[index]))
-			# Sigmoid activation function
-			elif layer.act_fn == 'sigmoid':
-				output = tf.nn.relu(tf.add(tf.matmul(output, self.weights[index]), self.biases[index]))
-			# Linear activation function
-			elif layer.act_fn == 'linear':
-				output = tf.add(tf.matmul(output, self.weights[index]), self.biases[index])
-			# Softmax activation function
-			elif layer.act_fn == 'softmax':
-				output = tf.nn.softmax(tf.add(tf.matmul(output, self.weights[index]), self.biases[index]))
-
-		# Return the final layer's output
-		return output
-
-	'''
 	Fits the neural network model using input data *x_l* and target data *y_l*. Optional arguments:
 	*learning_rate* (training speed of the model) and *train_epochs* (number of traning iterations).
 	'''
@@ -227,6 +202,34 @@ class MultilayerPerceptron:
 		# Finish the TensorFlow session
 		sess.close()
 
+	'''
+	PRIVATE METHOD: Feeds data through the neural network, returns output of final layer
+	'''
+	def __feed_forward(self, x):
+
+		# First values to matrix multiply are the inputs
+		output = x
+		# For each layer (after the first layer, input)
+		for index, layer in enumerate(self.layers[1:]):
+			# ReLU activation function
+			if layer.act_fn == 'relu':
+				output = tf.nn.relu(tf.add(tf.matmul(output, self.weights[index]), self.biases[index]))
+			# Sigmoid activation function
+			elif layer.act_fn == 'sigmoid':
+				output = tf.nn.relu(tf.add(tf.matmul(output, self.weights[index]), self.biases[index]))
+			# Linear activation function
+			elif layer.act_fn == 'linear':
+				output = tf.add(tf.matmul(output, self.weights[index]), self.biases[index])
+			# Softmax activation function
+			elif layer.act_fn == 'softmax':
+				output = tf.nn.softmax(tf.add(tf.matmul(output, self.weights[index]), self.biases[index]))
+
+		# Return the final layer's output
+		return output
+
+	'''
+	PRIVATE METHOD: Calculates the RMSE of the validation set during training
+	'''
 	def __calc_rmse(self, y_hat, y):
 		try:
 			return(np.sqrt(((y_hat-y)**2).mean()))
