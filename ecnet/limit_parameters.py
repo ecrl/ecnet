@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 #  ecnet/limit_parameters.py
-#  
+#  v.1.4.0
 #  Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #  
 #  This program contains the functions necessary for reducing the input dimensionality of a database to the most influential input parameters
