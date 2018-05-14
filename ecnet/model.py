@@ -90,7 +90,7 @@ class MultilayerPerceptron:
 	Fits the neural network model using input data *x_l* and target data *y_l*. Optional arguments:
 	*learning_rate* (training speed of the model) and *train_epochs* (number of traning iterations).
 	'''
-	def fit(self, x_l, y_l, learning_rate = 0.1, train_epochs = 2000):
+	def fit(self, x_l, y_l, learning_rate = 0.1, train_epochs = 500):
 
 		# TensorFlow placeholder variables for inputs and targets
 		x = tf.placeholder('float', [None, self.layers[0].size])
@@ -124,7 +124,7 @@ class MultilayerPerceptron:
 	Optional arguments: *learning_rate* (training speed of the model), *max_epochs* (cutoff 
 	point if training takes too long)
 	'''
-	def fit_validation(self, x_l, y_l, x_v, y_v, learning_rate = 0.1, max_epochs = 5000):
+	def fit_validation(self, x_l, y_l, x_v, y_v, learning_rate = 0.1, max_epochs = 2500):
 
 		# TensorFlow placeholder variables for inputs and targets
 		x = tf.placeholder('float', [None, self.layers[0].size])
