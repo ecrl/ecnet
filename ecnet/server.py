@@ -15,6 +15,8 @@ import yaml
 import warnings
 import os
 import numpy as np
+import zipfile
+import pickle
 
 # ECNet source files
 import ecnet.data_utils
@@ -61,10 +63,13 @@ class Server:
 				'train_epochs' : 500,
 				'valid_max_epochs': 5000
 			}
-			file = open('config.yml', 'w')
+			filename = 'config.yml'
+			file = open(filename, 'w')
 			yaml.dump(config_dict, file)
 			self.vars.update(config_dict)
 
+		# Set configuration filename
+		self.config_filename = filename
 		# Initial state of Server is to create single models
 		self.using_project = False
 
@@ -336,6 +341,74 @@ class Server:
 
 		# Output results using data_utils function
 		ecnet.data_utils.output_results(results, self.DataFrame, filename)
+
+	'''
+	Saves the current state of Server (including currently imported DataFrame and configuration), 
+	cleans up the project directory if specified in *clean_up* (only keeps final node models),
+	and zips up the current state and project directory into a .project file
+	'''
+	def save_project(self, clean_up = True):
+
+		# If removing trials from project directory (keeping final models):
+		if clean_up:
+			# For each build
+			for build in range(self.vars['project_num_builds']):
+				path_b = os.path.join(self.vars['project_name'], 'build_%d' % build)
+				# For each node
+				for node in range(self.vars['project_num_nodes']):
+					path_n = os.path.join(path_b, 'node_%d' % node)
+					# Remove trials
+					trial_files = [file for file in os.listdir(path_n) if 'trial' in file]
+					for file in trial_files:
+						os.remove(os.path.join(path_n, file))
+
+		# Save Server configuration to configuration YAML file
+		with open(self.config_filename, 'w') as config_file:
+			yaml.dump(self.vars, config_file, default_flow_style = False, explicit_start = True)
+		config_file.close()
+
+		# Save currently loaded DataFrame
+		with open(os.path.join(self.vars['project_name'], 'data.d'), 'wb') as data_file:
+			pickle.dump(self.DataFrame, data_file)
+		data_file.close()
+
+		# Zip up all files in project directory, save to .project file
+		zip_file = zipfile.ZipFile(self.vars['project_name'] + '.project', 'w', zipfile.ZIP_DEFLATED)
+		for root, dirs, files in os.walk(self.vars['project_name']):
+			for file in files:
+				zip_file.write(os.path.join(root, file))
+		zip_file.close()
+
+	'''
+	Opens a .project file, imports configuration and last used data set, unzips model files
+	to project directory
+	'''
+	def open_project(self, filename):
+
+		# Check for .project file format
+		if '.project' not in filename:
+			filename += '.project'
+
+		# Extract project directory from .project file
+		zip_file = zipfile.ZipFile(filename, 'r')
+		zip_file.extractall('./')
+		zip_file.close()
+
+		# Import project configuration
+		with open(self.config_filename, 'r') as config_file:
+			self.vars.update(yaml.load(config_file))
+		config_file.close()
+
+		# Import last used DataFrame
+		with open(os.path.join(self.vars['project_name'], 'data.d'), 'rb') as data_file:
+			self.DataFrame = pickle.load(data_file)
+		data_file.close()
+
+		# Package data for model usage
+		self.packaged_data = self.DataFrame.package_sets()
+
+		# Set project use boolean to True
+		self.using_project = True
 
 	'''
 	PRIVATE METHOD: Helper function for determining data set *dset* to be passed to the model (inputs)
