@@ -124,7 +124,10 @@ class Server:
 		# Import the data using *data_utils* *DataFrame* object
 		self.DataFrame = ecnet.data_utils.DataFrame(data_filename)
 		# Create learning, validation and testing sets
-		self.DataFrame.create_sets(random = self.vars['data_sort_type'], split = self.vars['data_split'])
+		if self.vars['data_sort_type'] is 'random':
+			self.DataFrame.create_sets(random = True, split = self.vars['data_split'])
+		else:
+			self.DataFrame.create_sets(random = False)
 		# Package sets for model hand-off (dicts/lists -> Numpy arrays)
 		self.packaged_data = self.DataFrame.package_sets()
 
