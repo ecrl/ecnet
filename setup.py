@@ -8,5 +8,5 @@ author = 'Travis Kessler, Hernan Gelaf-Romer, Sanskriti Sharma',
 author_email = 'Travis_Kessler@student.uml.edu, Hernan_Gelafromer@student.uml.edu, Sanskriti_Sharma@student.uml.edu',
 license = 'MIT',
 packages = ['ecnet'],
-install_requires = ["tensorflow", "pyyaml", "numpy"],
+install_requires = ["tensorflow", "pyyaml", "numpy", "ecabc"],
 zip_safe = False)

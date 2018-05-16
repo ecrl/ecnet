@@ -77,4 +77,6 @@ Methods:
 - **getFitnessAverage()**: collect the average of all the fitness scores across all employer bees
 - **checkNewPosition(bee)**: Check if the new position is better than the fitness average, if it is, assign it to the bee
 - **checkIfDone()**: Check if the best fitness score is lower than the target score to terminate the program; only valid if the argument endValue was assigned a value
+- **specifyMinOrMax()**: Specify whether the fitness function will be minimized or maximized.
+- **printInfo()**: Choose whether the program will print out to the screen. If the cost of your fitness function is low, this will decrease run time greatly.
 - **runABC()**: run the artificial bee colony based on the arguments passed to the constructor. Must pass a fitness function and either a target fitness score or target iteration number in order to specify when the program will terminate. Must also specify value types/ranges.
