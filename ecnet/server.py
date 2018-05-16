@@ -124,7 +124,7 @@ class Server:
 		# Import the data using *data_utils* *DataFrame* object
 		self.DataFrame = ecnet.data_utils.DataFrame(data_filename)
 		# Create learning, validation and testing sets
-		if self.vars['data_sort_type'] is 'random':
+		if self.vars['data_sort_type'] == 'random':
 			self.DataFrame.create_sets(random = True, split = self.vars['data_split'])
 		else:
 			self.DataFrame.create_sets(random = False)
