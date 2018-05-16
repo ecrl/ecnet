@@ -23,9 +23,6 @@ dimensionality of *limit_num*
 '''
 def limit(DataFrame, limit_num):
 
-	# Obtain Numpy arrays for learning, validation, testing sets
-	packaged_data = DataFrame.package_sets()
-
 	# List of retained input parameters
 	retained_input_list = []
 
@@ -42,6 +39,11 @@ def limit(DataFrame, limit_num):
 
 		# For all input paramters to test
 		for idx, param in enumerate(DataFrame.input_names):
+
+			# Shuffle all sets
+			DataFrame.shuffle('l', 'v', 't')
+			# Obtain Numpy arrays for learning, validation, testing sets
+			packaged_data = DataFrame.package_sets()
 
 			# Obtain input parameter column for learning, validation and test sets
 			learn_input_add = [[sublist[idx]] for sublist in packaged_data.learn_x]
@@ -115,6 +117,8 @@ def limit(DataFrame, limit_num):
 		retained_input_list.append(DataFrame.input_names[rmse_idx])
 		# List currently retained input parameters
 		print(retained_input_list)
+		print(rmse_val)
+		print()
 
 	# Compiled *limit_num* input parameters, return list of retained parameters
 	return retained_input_list
