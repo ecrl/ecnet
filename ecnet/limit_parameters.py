@@ -5,7 +5,9 @@
 #  v.1.4.0
 #  Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #  
-#  This program contains the functions necessary for reducing the input dimensionality of a database to the most influential input parameters
+#  This program contains the functions necessary for reducing the input dimensionality of a 
+#	database to the most influential input parameters, using either an iterative inclusion
+#	algorithm (limit_iterative_include) or a genetic algorithm (limit_genetic).
 #
 
 # 3rd party packages (open src.)
@@ -21,7 +23,7 @@ import ecnet.error_utils
 Limits the dimensionality of input data found in supplied *DataFrame* object to a
 dimensionality of *limit_num*
 '''
-def limit(DataFrame, limit_num):
+def limit_iterative_include(DataFrame, limit_num):
 
 	# List of retained input parameters
 	retained_input_list = []
@@ -83,7 +85,7 @@ def limit(DataFrame, limit_num):
 				packaged_data.learn_y,
 				valid_input,
 				packaged_data.valid_y,
-				max_epochs = 1500)
+				max_epochs = 5000)
 
 			# Calculate error for test set results, append to rmse list
 			retained_rmse_list.append(ecnet.error_utils.calc_rmse(
@@ -122,6 +124,121 @@ def limit(DataFrame, limit_num):
 
 	# Compiled *limit_num* input parameters, return list of retained parameters
 	return retained_input_list
+
+'''
+Limits the dimensionality of input data found in supplied *DataFrame* object to a
+dimensionality of *limit_num* using a genetic algorithm. Optional arguments for
+*population_size* of genetic algorithm's population, *num_survivors* for selecting
+the best performers from each population generation to reproduce, *num_generations*
+for the number of times the population will reproduce, and *print_feedback* for 
+printing the average fitness score of the population after each generation.
+'''
+def limit_genetic(DataFrame, limit_num, population_size, num_survivors, num_generations, print_feedback = True):
+
+	# Imports the genetic algorithm framework
+	import ga.ga_core as ga
+
+	'''
+	Genetic algorithm cost function, supplied to the genetic algorithm; returns the RMSE
+	of the test set results from a model constructed using the current permutation of
+	input parameters *feed_dict* supplied by the genetic algorithm
+	'''
+	def ecnet_limit_inputs(feed_dict):
+
+		# Set up learning, validation and testing sets
+		learn_input = []
+		valid_input = []
+		test_input = []
+
+		# For the input parameters chosen by the genetic algorithm:
+		for idx, param in enumerate(feed_dict):
+
+			# Grab the input parameter
+			learn_input_add = [[sublist[feed_dict[param]]] for sublist in packaged_data.learn_x]
+			valid_input_add = [[sublist[feed_dict[param]]] for sublist in packaged_data.valid_x]
+			test_input_add = [[sublist[feed_dict[param]]] for sublist in packaged_data.test_x]
+
+			# Currently empty sets, sets = add lists
+			if len(learn_input) == 0:
+				learn_input = learn_input_add
+				valid_input = valid_input_add
+				test_input = test_input_add
+			# Append add lists to sets
+			else:
+				for idx_add, param_add in enumerate(learn_input_add):
+					learn_input[idx_add].append(param_add[0])
+				for idx_add, param_add in enumerate(valid_input_add):
+					valid_input[idx_add].append(param_add[0])
+				for idx_add, param_add in enumerate(test_input_add):
+					test_input[idx_add].append(param_add[0])
+		
+		# Construct a neural network (multilayer perceptron) model
+		mlp_model = ecnet.model.MultilayerPerceptron()
+		mlp_model.add_layer(len(learn_input[0]), 'relu')
+		mlp_model.add_layer(8, 'relu')
+		mlp_model.add_layer(8, 'relu')
+		mlp_model.add_layer(len(packaged_data.learn_y[0]), 'linear')
+		mlp_model.connect_layers()
+
+		# Train the model using validation
+		mlp_model.fit_validation(
+			learn_input,
+			packaged_data.learn_y,
+			valid_input,
+			packaged_data.valid_y,
+			max_epochs = 5000)
+
+		# Returned fitness value = test set performance
+		return ecnet.error_utils.calc_rmse(mlp_model.use(test_input), packaged_data.test_y)
+
+	'''
+	Genetic algorithm selection function, supplied to the genetic algorithm; returns
+	the *n* best performing *members* from the genetic algorithm's population
+	'''
+	def minimize_best_n(members, n):
+		return(sorted(members, key = lambda member: member.fitness_score)[0:n])
+
+	# Package data for training/testing
+	packaged_data = DataFrame.package_sets()
+
+	# Initialize genetic algorithm population
+	population = ga.Population(size = population_size, cost_fn = ecnet_limit_inputs, select_fn = minimize_best_n)
+
+	# Create genetic algorithm parameters for each input parameter *n*
+	for i in range(limit_num):
+		population.add_parameter(i, 0, DataFrame.num_inputs - 1)
+
+	# Generate the genetic algorithm's initial population
+	population.generate_population()
+
+	# Print average population fitness (if printing feedback)
+	if print_feedback:
+		print('Generation: 0 - Population fitness: ' + str(sum(p.fitness_score for p in population.members) / len(population)))
+
+	# Run the genetic algorithm for *num_generations* generations
+	for gen in range(num_generations):
+		population.next_generation(num_survivors = num_survivors, mut_rate = 0)
+		if print_feedback:
+			print('Generation: ' + str(gen + 1) + ' - Population fitness: ' + str(sum(p.fitness_score for p in population.members) / len(population)))
+
+	# Find the best performing member from the final generation
+	min_idx = 0
+	for new_idx, member in enumerate(population.members):
+		if member.fitness_score < population.members[min_idx].fitness_score:
+			min_idx = new_idx
+
+	# Obtain parameter names from best performer
+	input_list = []
+	for val in population.members[min_idx].feed_dict.values():
+		input_list.append(DataFrame.input_names[val])
+
+	# Print best performer (if printing feedback)
+	if print_feedback:
+		print('Best member fitness score: ' + str(population.members[min_idx].fitness_score))
+		print(input_list)
+
+	# Return the limited list
+	return input_list
 
 '''
 Saves the parameters *param_list* (obtained from limit) to new database specified

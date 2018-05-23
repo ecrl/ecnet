@@ -131,9 +131,12 @@ class Server:
 		# Package sets for model hand-off (dicts/lists -> Numpy arrays)
 		self.packaged_data = self.DataFrame.package_sets()
 
-	def limit_parameters(self, limit_num, output_filename):
+	def limit_parameters(self, limit_num, output_filename, use_genetic = False, population_size = 100, num_survivors = 33, num_generations = 10):
 
-		params = ecnet.limit_parameters.limit(self.DataFrame, limit_num)
+		if use_genetic:
+			params = ecnet.limit_parameters.limit_genetic(self.DataFrame, limit_num, population_size, num_survivors, num_generations, print_feedback = self.vars['project_print_feedback'])
+		else:
+			params = ecnet.limit_parameters.limit_iterative_include(self.DataFrame, limit_num)
 		ecnet.limit_parameters.output(self.DataFrame, params, output_filename)
 
 	'''
