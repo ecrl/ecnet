@@ -22,6 +22,20 @@ validation and testing sets, and packages sets as Numpy arrays for hand-off to m
 class DataFrame:
 
 	'''
+	Private DataPoint class: Contains all information for each data entry found in CSV database
+	'''
+	class __DataPoint:
+
+		def __init__(self):
+
+			self.id = None
+			self.assignment = None
+			self.strings = []
+			self.groups = []
+			self.targets = []
+			self.inputs = []
+
+	'''
 	Initializes object, creates *DataPoint*s for each data entry
 	'''
 	def __init__(self, filename):
@@ -42,7 +56,7 @@ class DataFrame:
 		self.data_points = []
 		for point in range(2, len([sublist[0] for sublist in data_raw])):
 			# Define data point
-			new_point = DataPoint()
+			new_point = self.__DataPoint()
 			# Set data point's id
 			new_point.id = [sublist[0] for sublist in data_raw][point]
 			# Set data point's assignment
@@ -137,6 +151,53 @@ class DataFrame:
 					self.test_set.append(point)
 
 	'''
+	Creates learning, validation and test sets containing specified proportions
+	(*split*) of each *sort_string* element (*sort_string* can be any STRING value
+	found in your database file)
+	'''
+	def create_sorted_sets(self, sort_string, split = [0.7, 0.2, 0.1]):
+	
+		# Obtain index of *sort_string* from DataFrame's string names
+		string_idx = self.string_names.index(sort_string)
+		# Sort DataPoints by specified string
+		self.data_points.sort(key = lambda x: x.strings[string_idx])
+
+		# List containing all possible values from *sort_string* string
+		string_vals = []
+		# Groups for each distinct string value, containing DataPoints
+		string_groups = []
+
+		# Find all string values in *sort_string*, add/create string_val and string_group entries
+		for point in self.data_points:
+			if point.strings[string_idx] not in string_vals:
+				string_vals.append(point.strings[string_idx])
+				string_groups.append([point])
+			else:
+				string_groups[-1].append(point)
+
+		# Reset lists for new set splits
+		self.learn_set = []
+		self.valid_set = []
+		self.test_set = []
+
+		# For each distinct string value from *sort_string*:
+		for group in string_groups:
+			# Assign learning data
+			learn_stop = int(split[0] * len(group))
+			for point in group[0 : learn_stop]:
+				point.assignment = 'L'
+				self.learn_set.append(point)
+			# Assign validation data
+			valid_stop = learn_stop + int(split[1] * len(group))
+			for point in group[learn_stop : valid_stop]:
+				point.assignment = 'V'
+				self.valid_set.append(point)
+			# Assign testing data
+			for point in group[valid_stop :]:
+				point.assignment = 'T'
+				self.test_set.append(point)
+
+	'''
 	Shuffles (new random assignments) the specified sets in *args*; (learning, validation, testing)
 	or (learning, validation)
 	'''
@@ -216,20 +277,6 @@ class DataFrame:
 		pd.test_y = np.asarray(pd.test_y)
 		# Return packaged data
 		return pd
-
-'''
-Private DataPoint class: Contains all information for each data entry found in CSV database
-'''
-class DataPoint:
-
-	def __init__(self):
-
-		self.id = None
-		self.assignment = None
-		self.strings = []
-		self.groups = []
-		self.targets = []
-		self.inputs = []
 
 '''
 Outputs *results* to *filename*; *DataFrame*, a 'DataFrame' object, is required for
