@@ -16,7 +16,6 @@ import copy
 
 # ECNet source files
 import ecnet.model
-import ecnet.data_utils
 import ecnet.error_utils
 
 '''
