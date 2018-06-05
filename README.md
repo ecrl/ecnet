@@ -219,7 +219,7 @@ sv.open_project('my_project.project')
 sv.import_data('new_data.csv')
 
 # Save results to output file
-#  - NOTE: no 'dset' arguments for 'use_mlp_model' and 'output_results' defaults to using all data
+#  - NOTE: no 'dset' argument for 'use_model' defaults to using all currently loaded data
 sv.output_results(results = sv.use_model(), filename = 'new_data_results.csv')
 ```
 To view more examples of common ECNet tasks, view the [examples](https://github.com/TJKessler/ECNet/tree/master/examples) directory.
