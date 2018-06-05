@@ -55,7 +55,6 @@ class Server:
 				'mlp_hidden_layers' : [[5, 'relu'], [5, 'relu']],
 				'mlp_in_layer_activ' : 'relu',
 				'mlp_out_layer_activ' : 'linear',
-				'normals_use' : False,
 				'project_name' : 'my_project',
 				'project_num_builds' : 1,
 				'project_num_nodes' : 1,
