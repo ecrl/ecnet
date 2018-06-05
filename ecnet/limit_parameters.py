@@ -13,6 +13,7 @@
 # 3rd party packages (open src.)
 import csv
 import copy
+from pygenetics.ga_core import Population
 
 # ECNet source files
 import ecnet.model
@@ -134,9 +135,6 @@ printing the average fitness score of the population after each generation.
 '''
 def limit_genetic(DataFrame, limit_num, population_size, num_survivors, num_generations, print_feedback = True):
 
-	# Imports the genetic algorithm framework
-	import ga.ga_core as ga
-
 	'''
 	Genetic algorithm cost function, supplied to the genetic algorithm; returns the RMSE
 	of the test set results from a model constructed using the current permutation of
@@ -201,7 +199,7 @@ def limit_genetic(DataFrame, limit_num, population_size, num_survivors, num_gene
 	packaged_data = DataFrame.package_sets()
 
 	# Initialize genetic algorithm population
-	population = ga.Population(size = population_size, cost_fn = ecnet_limit_inputs, select_fn = minimize_best_n)
+	population = Population(size = population_size, cost_fn = ecnet_limit_inputs, select_fn = minimize_best_n)
 
 	# Create genetic algorithm parameters for each input parameter *n*
 	for i in range(limit_num):
