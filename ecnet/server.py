@@ -290,20 +290,20 @@ class Server:
 				for node in range(self.vars['project_num_nodes']):
 					# Determine node path
 					path_n = os.path.join(path_b, 'node_%d' % node)
-					# List of trial RMSE's within the node
+					# List of trial errors within the node
 					rmse_list = []
 					# For each trial:
 					for trial in range(self.vars['project_num_trials']):
-						# Create model, load trial, calculate RMSE, append to list
+						# Create model, load trial, calculate error, append to list
 						mlp_model = ecnet.model.MultilayerPerceptron()
 						mlp_model.load(os.path.join(path_n, 'trial_%d' % trial))
 						rmse_list.append(self.__error_fn(error_fn, mlp_model.use(x_vals), y_vals))
-					# Determines the lowest RMSE in RMSE list
+					# Determines the lowest error in error list
 					current_min = 0
 					for new_min in range(len(rmse_list)):
 						if rmse_list[new_min] < rmse_list[current_min]:
 							current_min = new_min
-					# Load the model with the lowest RMSE, resave as 'final_net' in the node folder
+					# Load the model with the lowest error, resave as 'final_net' in the node folder
 					mlp_model = ecnet.model.MultilayerPerceptron()
 					mlp_model.load(os.path.join(path_n, 'trial_%d' % current_min))
 					mlp_model.save(os.path.join(path_n, 'final_net'))
