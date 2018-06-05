@@ -17,6 +17,7 @@ import os
 import numpy as np
 import zipfile
 import pickle
+from ecabc.abc import ABC
 
 # ECNet source files
 import ecnet.data_utils
@@ -111,7 +112,6 @@ class Server:
 	'''
 	Imports data from *data_filename*; utilizes 'data_utils' for file I/O, data set splitting
 	and data set packaging for hand-off to neural network models
-	TODO: Add support for input and target data normalization (e.g. if using sigmoid at first layer)
 	'''
 	def import_data(self, data_filename = None):
 
@@ -128,7 +128,7 @@ class Server:
 			self.DataFrame.create_sets(random = True, split = self.vars['data_split'])
 		else:
 			self.DataFrame.create_sets(random = False)
-		# Package sets for model hand-off (dicts/lists -> Numpy arrays)
+		# Package sets for model hand-off
 		self.packaged_data = self.DataFrame.package_sets()
 
 	def limit_parameters(self, limit_num, output_filename, use_genetic = False, population_size = 100, num_survivors = 33, num_generations = 10):
@@ -140,7 +140,60 @@ class Server:
 		ecnet.limit_parameters.output(self.DataFrame, params, output_filename)
 
 	'''
-	Trains a neural network (multilayer perceptron) using learning data and validation data (if *validate*
+	Tunes the neural network learning hyperparameters (learning_rate, valid_max_epochs, neuron
+	counts in each hidden layer) using an artificial bee colony algorithm (ecabc package)
+	'''
+	def tune_hyperparameters(self, target_score = None, iteration_amt = 50, amt_employers = 50):
+
+		# Make sure project is not constructed
+		if self.using_project:
+			warnings.warn('WARNING: tune_hyperparameters() uses individual neural networks, not projects. Setting using_project boolean to false.')
+			self.using_project = False
+
+		'''
+		Fitness function to be used by the artificial bee colony
+		'''
+		def test_neural_network(values):
+
+			self.vars['learning_rate'] = values[0]
+			self.vars['valid_max_epochs'] = values[1]
+			self.vars['mlp_hidden_layers'][0][0] = values[2]
+			self.vars['mlp_hidden_layers'][1][0] = values[3]
+
+			self.train_model(validate = True)
+			return self.calc_error('rmse', dset = 'test')['rmse']
+
+		# Minimum and maximum values for hyperparameters (learning rate, valid_max_epochs, hidden layer neuron count)
+		hyperparameters = [('float', (0.01, 0.2)), ('int', (1000, 25000)), ('int', (8, 32)), ('int', (8, 32))]
+
+		# If *target_score* (RMSE) is not given, run ABC for *iteration_amt* iterations
+		if target_score is None:
+			abc = ABC(iterationAmount = iteration_amt, 
+				fitnessFunction = test_neural_network, 
+				valueRanges = hyperparameters, 
+				amountOfEmployers = amt_employers)
+
+		# Else, run ABC until *target_score* is reached
+		else:
+			abc = ABC(endValue = target_score,
+				fitnessFunction = test_neural_network,
+				valueRanges = hyperparameters,
+				amountOfEmployers = amt_employers)
+
+		# Run the artificial bee colony
+		new_hyperparameters = abc.runABC()
+
+		# Set Server hyperparameters to ABC-calculated hyperparameters
+		self.vars['learning_rate'] = new_hyperparameters[0]
+		self.vars['valid_max_epochs'] = new_hyperparameters[1]
+		self.vars['mlp_hidden_layers'][0][0] = new_hyperparameters[2]
+		self.vars['mlp_hidden_layers'][1][0] = new_hyperparameters[3]
+
+		# Return ABC-calculated hyperparameters
+		return new_hyperparameters
+
+	'''
+	Trains a neural network (multilayer perceptron) using learning data, and validation data (if *validate*
 	== True). *args is used to specify shuffling of data sets for each trial; use "shuffle_lv" (shuffles 
 	training data) or "shuffle_lvt" (shuffles all data)
 	'''
@@ -213,9 +266,9 @@ class Server:
 							self.packaged_data = self.DataFrame.package_sets()
 
 	'''
-	Selects the best performing models from each node for each build to represent
+	Selects the best performing model from each node for each build to represent
 	the node (build prediction = average of node predictions). Selection of best
-	models is based on data set *dset* performance. This method may take a while,
+	model is based on data set *dset* performance. This method may take a while,
 	depending on project size.
 	'''
 	def select_best(self, dset = None, error_fn = 'rmse'):
@@ -257,7 +310,8 @@ class Server:
 					mlp_model.save(os.path.join(path_n, 'final_net'))
 
 	'''
-	Use a trained neural network (multilayer perceptron) to predict values for specified *dset*
+	Use trained neural network (multilayer perceptron), either single or build,
+	to predict values for specified *dset*
 	'''
 	def use_model(self, dset = None):
 
@@ -312,7 +366,7 @@ class Server:
 	Calculates and returns errors based on input *args; possible arguments are *rmse*,
 	*r2* (r-squared correlation coefficient), *mean_abs_error*, *med_abs_error*. Multiple
 	error arguments can be supplied. *dset* argument specifies which data set the error 
-	is being calculated for (e.g. 'test', 'train').
+	is being calculated for (e.g. 'test', 'train'). Returns dictionary of error values.
 	'''
 	def calc_error(self, *args, dset = None):
 		# Dictionary keys = error arguments, values = error values
