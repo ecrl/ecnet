@@ -130,7 +130,7 @@ class Server:
 		# Package sets for model hand-off
 		self.packaged_data = self.DataFrame.package_sets()
 
-	def limit_parameters(self, limit_num, output_filename, use_genetic = False, population_size = 100, num_survivors = 33, num_generations = 10):
+	def limit_parameters(self, limit_num, output_filename, use_genetic = False, population_size = 500, num_survivors = 200, num_generations = 25):
 
 		if use_genetic:
 			params = ecnet.limit_parameters.limit_genetic(self.DataFrame, limit_num, population_size, num_survivors, num_generations, print_feedback = self.vars['project_print_feedback'])
