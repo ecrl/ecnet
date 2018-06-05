@@ -1,0 +1,23 @@
+---
+data_filename: my_data.csv
+data_sort_type: random
+data_split:
+- 0.7
+- 0.2
+- 0.1
+learning_rate: 0.1
+mlp_hidden_layers:
+- - 32
+  - relu
+- - 32
+  - relu
+mlp_in_layer_activ: relu
+mlp_out_layer_activ: linear
+normals_use: false
+project_name: my_project
+project_num_builds: 1
+project_num_nodes: 5
+project_num_trials: 75
+project_print_feedback: true
+train_epochs: 1000
+valid_max_epochs: 20000
