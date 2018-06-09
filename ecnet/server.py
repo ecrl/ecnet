@@ -180,6 +180,7 @@ class Server:
 				amountOfEmployers = amt_employers)
 
 		# Run the artificial bee colony
+		abc.printInfo(self.vars['project_print_feedback'])
 		new_hyperparameters = abc.runABC()
 
 		# Set Server hyperparameters to ABC-calculated hyperparameters
@@ -394,7 +395,7 @@ class Server:
 		return error_dict
 
 	'''
-	Outputs the *results* to a specified *filename*
+	Outputs the *results* obtained from "use_model()" to a specified *filename*
 	'''
 	def output_results(self, results, filename = 'my_results.csv'):
 
