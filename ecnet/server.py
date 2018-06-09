@@ -395,7 +395,7 @@ class Server:
 		return error_dict
 
 	'''
-	Outputs the *results* to a specified *filename*
+	Outputs the *results* obtained from "use_model()" to a specified *filename*
 	'''
 	def output_results(self, results, filename = 'my_results.csv'):
 
