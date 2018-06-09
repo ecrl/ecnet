@@ -180,6 +180,7 @@ class Server:
 				amountOfEmployers = amt_employers)
 
 		# Run the artificial bee colony
+		abc.printInfo(self.vars['project_print_feedback'])
 		new_hyperparameters = abc.runABC()
 
 		# Set Server hyperparameters to ABC-calculated hyperparameters
