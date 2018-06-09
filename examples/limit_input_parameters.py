@@ -12,4 +12,4 @@ sv.limit_parameters(15, 'my_data_limited.csv')
 
 
 # Use this line instead for limiting the input dimensionality using a genetic algorithm
-sv.limit_parameters(15, 'my_data_limited.csv', use_genetic = True)
+sv.limit_parameters(15, 'my_data_limited_genetic.csv', use_genetic = True)
