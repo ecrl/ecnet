@@ -1,11 +1,11 @@
 ---
-data_filename: cn_model_v1.0.csv
+data_filename: my_data.csv
 data_sort_type: random
 data_split:
-- 0.65
-- 0.25
+- 0.7
+- 0.2
 - 0.1
-learning_rate: 0.05
+learning_rate: 0.1
 mlp_hidden_layers:
 - - 32
   - relu
@@ -14,12 +14,10 @@ mlp_hidden_layers:
 mlp_in_layer_activ: relu
 mlp_out_layer_activ: linear
 normals_use: false
-project_name: cn_v1.0_project
+project_name: my_project
 project_num_builds: 1
-project_num_nodes: 1
-project_num_trials: 5
+project_num_nodes: 5
+project_num_trials: 75
 project_print_feedback: true
-train_epochs: 2500
-valid_max_epochs: 7500
-valid_mdrmse_memory: 250
-valid_mdrmse_stop: 0.00007
+train_epochs: 1000
+valid_max_epochs: 20000

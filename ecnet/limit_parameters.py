@@ -1,193 +1,306 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  ecnet_limit_parameters.py
+#  ecnet/limit_parameters.py
+#  v.1.4.0
+#  Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #  
-#  Developed in 2017 by Travis Kessler <Travis_Kessler@student.uml.edu>
-#  
-#  This program contains the functions necessary for reducing the input dimensionality of a database to the most influential input parameters
+#  This program contains the functions necessary for reducing the input dimensionality of a 
+#	database to the most influential input parameters, using either an iterative inclusion
+#	algorithm (limit_iterative_include) or a genetic algorithm (limit_genetic).
 #
 
+# 3rd party packages (open src.)
 import csv
 import copy
+from pygenetics.ga_core import Population
 
-def limit(server, param_num):
-	# 
-	data = copy.copy(server.data)
-	
-	# Grabs paramter names
-	param_names = data.param_cols[:]
-	param_list = []
-	
-	# Exclude output parameters from algorithm
-	for output in range(0,data.controls_num_outputs):
-		del param_names[output]
-		
-	# Initial definition of total lists used for limiting
-	learn_params = []
-	valid_params = []
-	total_params = []
-	
-	# Until the param_list is populated with specified number of params:	
-	while len(param_list) < param_num:
-		
-		# Used for determining which paramter at the current iteration performs the best
-		param_RMSE_list = []
-		
-		# Grabs each parameter one at a time
-		for parameter in range(0,len(data.x[0])):
-			
-			# Each parameter is a sublist of the total lists
-			learn_params_add = [sublist[parameter] for sublist in data.learn_x]
-			valid_params_add = [sublist[parameter] for sublist in data.valid_x]
-			total_params_add = [sublist[parameter] for sublist in data.x]
-			
-			# Formatting
-			for i in range(0,len(learn_params_add)):
-				learn_params_add[i] = [learn_params_add[i]]
-			for i in range(0,len(valid_params_add)):
-				valid_params_add[i] = [valid_params_add[i]]
-			for i in range(0,len(total_params_add)):
-				total_params_add[i] = [total_params_add[i]]
-				
-			# If looking for the first parameter, each parameter is tested individually
-			if len(learn_params) is 0:
-				learn_input = learn_params_add[:]
-				valid_input = valid_params_add[:]
-				total_input = total_params_add[:]
-			
-			# Else, new parameter in question is appended to the current parameter list
+# ECNet source files
+import ecnet.model
+import ecnet.error_utils
+
+'''
+Limits the dimensionality of input data found in supplied *DataFrame* object to a
+dimensionality of *limit_num*
+'''
+def limit_iterative_include(DataFrame, limit_num):
+
+	# List of retained input parameters
+	retained_input_list = []
+
+	# Initialization of retained input lists
+	learn_input_retained = []
+	valid_input_retained = []
+	test_input_retained = []
+
+	# Until specified number of paramters *limit_num* are retained
+	while len(retained_input_list) < limit_num:
+
+		# List of RMSE's for currently retained inputs + new inputs to test
+		retained_rmse_list = []
+
+		# For all input paramters to test
+		for idx, param in enumerate(DataFrame.input_names):
+
+			# Shuffle all sets
+			DataFrame.shuffle('l', 'v', 't')
+			# Obtain Numpy arrays for learning, validation, testing sets
+			packaged_data = DataFrame.package_sets()
+
+			# Obtain input parameter column for learning, validation and test sets
+			learn_input_add = [[sublist[idx]] for sublist in packaged_data.learn_x]
+			valid_input_add = [[sublist[idx]] for sublist in packaged_data.valid_x]
+			test_input_add = [[sublist[idx]] for sublist in packaged_data.test_x]
+
+			# No retained input parameters, inputs = individual parameters to be tested
+			if len(retained_input_list) is 0:
+				learn_input = learn_input_add
+				valid_input = valid_input_add
+				test_input = test_input_add
+			# Else:
 			else:
-				learn_input = []
-				valid_input = []
-				total_input = []
-				
-				# Adds the current paramter lists to the inputs
-				for i in range(0,len(learn_params)):
-					learn_input.append(learn_params[i][:])
-				for i in range(0,len(valid_params)):
-					valid_input.append(valid_params[i][:])
-				for i in range(0,len(total_params)):
-					total_input.append(total_params[i][:])
-				
-				# Adds the new paramter in question	
-				for i in range(0,len(learn_params_add)):
-					learn_input[i].append(learn_params_add[i][0])
-				for i in range(0,len(valid_params_add)):
-					valid_input[i].append(valid_params_add[i][0])
-				for i in range(0,len(total_params_add)):
-					total_input[i].append(total_params_add[i][0])
-			
-			# Re-imports data for training
-			#server.import_data()
-			
-			# Assigns the configured data to the server data object
-			server.data.x = total_input[:]
-			server.data.y = data.y[:]
-			server.data.learn_x = learn_input[:]
-			server.data.learn_y = data.learn_y[:]
-			server.data.valid_x = valid_input[:]
-			server.data.valid_y = data.valid_y[:]
-			
-			# Trains the model
-			server.fit_mlp_model_validation()
-			
-			# Determines the RMSE of the model with the current inputs, adds it to total list
-			local_rmse = server.calc_error('rmse')['rmse']
-			param_RMSE_list.append(local_rmse)
-			
-		# Determines lowest RMSE of the current iteration, which corresponds to the best performing parameter
-		val, idx = min((val, idx) for (idx, val) in enumerate(param_RMSE_list))
-		
-		# Packages the best performing parameter
-		add_to_learn = [sublist[idx] for sublist in data.learn_x]
-		add_to_valid = [sublist[idx] for sublist in data.valid_x]
-		add_to_total = [sublist[idx] for sublist in data.x]
-		
-		# Adds the best performing parameter to the total lists ***Conditional used for formatting discrepancies
-		if len(param_list) is 0:
-			for i in range(0,len(add_to_learn)):
-				learn_params.append([add_to_learn[i]])
-			for i in range(0,len(add_to_valid)):
-				valid_params.append([add_to_valid[i]])
-			for i in range(0,len(add_to_total)):
-				total_params.append([add_to_total[i]])
+				# Inputs = currently retained input parameters
+				learn_input = copy.deepcopy(learn_input_retained)
+				valid_input = copy.deepcopy(valid_input_retained)
+				test_input = copy.deepcopy(test_input_retained)
+				# Add new input parameter to inputs
+				for idx_add, param_add in enumerate(learn_input_add):
+					learn_input[idx_add].append(param_add[0])
+				for idx_add, param_add in enumerate(valid_input_add):
+					valid_input[idx_add].append(param_add[0])
+				for idx_add, param_add in enumerate(test_input_add):
+					test_input[idx_add].append(param_add[0])
+
+			# Create neural network model
+			mlp_model = ecnet.model.MultilayerPerceptron()
+			mlp_model.add_layer(len(learn_input[0]), 'relu')
+			mlp_model.add_layer(5, 'relu')
+			mlp_model.add_layer(5, 'relu')
+			mlp_model.add_layer(len(packaged_data.learn_y[0]), 'linear')
+			mlp_model.connect_layers()
+
+			# Fit the model using validation
+			mlp_model.fit_validation(
+				learn_input,
+				packaged_data.learn_y,
+				valid_input,
+				packaged_data.valid_y,
+				max_epochs = 5000)
+
+			# Calculate error for test set results, append to rmse list
+			retained_rmse_list.append(ecnet.error_utils.calc_rmse(
+				mlp_model.use(test_input),
+				packaged_data.test_y))
+
+		# Obtain index, value of best performing input paramter addition
+		rmse_val, rmse_idx = min((rmse_val, rmse_idx) for (rmse_idx, rmse_val) in enumerate(retained_rmse_list))
+
+		# Obtain input parameter addition with lowest error
+		learn_retain_add = [[sublist[rmse_idx]] for sublist in packaged_data.learn_x]
+		valid_retain_add = [[sublist[rmse_idx]] for sublist in packaged_data.valid_x]
+		test_retain_add = [[sublist[rmse_idx]] for sublist in packaged_data.test_x]
+
+		# No retained input parameters, retained = lowest error input parameter
+		if len(retained_input_list) is 0:
+			learn_input_retained = learn_retain_add
+			valid_input_retained = valid_retain_add
+			test_input_retained = test_retain_add
+		# Else:
 		else:
-			for i in range(0,len(add_to_learn)):
-				learn_params[i].append(add_to_learn[i])
-			for i in range(0,len(add_to_valid)):
-				valid_params[i].append(add_to_valid[i])
-			for i in range(0,len(add_to_total)):
-				total_params[i].append(add_to_total[i])
-				
-		# Adds the best performing parameter to the parameter list
-		param_list.append(param_names[idx])
-				
-		# Prints the parameter list after each iteration, as well as the RMSE
-		if server.vars['project_print_feedback'] == True:
-			print(param_list)
-			print(val)
+			# Append lowest error input parameter to retained parameters
+			for idx, param in enumerate(learn_retain_add):
+				learn_input_retained[idx].append(param[0])
+			for idx, param in enumerate(valid_retain_add):
+				valid_input_retained[idx].append(param[0])
+			for idx, param in enumerate(test_retain_add):
+				test_input_retained[idx].append(param[0])
+
+		# Append name of retained input parameter to retained list
+		retained_input_list.append(DataFrame.input_names[rmse_idx])
+		# List currently retained input parameters
+		print(retained_input_list)
+		print(rmse_val)
+		print()
+
+	# Compiled *limit_num* input parameters, return list of retained parameters
+	return retained_input_list
+
+'''
+Limits the dimensionality of input data found in supplied *DataFrame* object to a
+dimensionality of *limit_num* using a genetic algorithm. Optional arguments for
+*population_size* of genetic algorithm's population, *num_survivors* for selecting
+the best performers from each population generation to reproduce, *num_generations*
+for the number of times the population will reproduce, and *print_feedback* for 
+printing the average fitness score of the population after each generation.
+'''
+def limit_genetic(DataFrame, limit_num, population_size, num_survivors, num_generations, print_feedback = True):
+
+	'''
+	Genetic algorithm cost function, supplied to the genetic algorithm; returns the RMSE
+	of the test set results from a model constructed using the current permutation of
+	input parameters *feed_dict* supplied by the genetic algorithm
+	'''
+	def ecnet_limit_inputs(feed_dict):
+
+		# Set up learning, validation and testing sets
+		learn_input = []
+		valid_input = []
+		test_input = []
+
+		# For the input parameters chosen by the genetic algorithm:
+		for idx, param in enumerate(feed_dict):
+
+			# Grab the input parameter
+			learn_input_add = [[sublist[feed_dict[param]]] for sublist in packaged_data.learn_x]
+			valid_input_add = [[sublist[feed_dict[param]]] for sublist in packaged_data.valid_x]
+			test_input_add = [[sublist[feed_dict[param]]] for sublist in packaged_data.test_x]
+
+			# Currently empty sets, sets = add lists
+			if len(learn_input) == 0:
+				learn_input = learn_input_add
+				valid_input = valid_input_add
+				test_input = test_input_add
+			# Append add lists to sets
+			else:
+				for idx_add, param_add in enumerate(learn_input_add):
+					learn_input[idx_add].append(param_add[0])
+				for idx_add, param_add in enumerate(valid_input_add):
+					valid_input[idx_add].append(param_add[0])
+				for idx_add, param_add in enumerate(test_input_add):
+					test_input[idx_add].append(param_add[0])
 		
-	# Returns the parameter list
-	return param_list
-	
-def output(data, param_list, filename):
-	# Checks for .csv file format
-	if ".csv" not in filename:
-		filename = filename + ".csv"
-	# Creates list of spreadsheet rows
+		# Construct a neural network (multilayer perceptron) model
+		mlp_model = ecnet.model.MultilayerPerceptron()
+		mlp_model.add_layer(len(learn_input[0]), 'relu')
+		mlp_model.add_layer(8, 'relu')
+		mlp_model.add_layer(8, 'relu')
+		mlp_model.add_layer(len(packaged_data.learn_y[0]), 'linear')
+		mlp_model.connect_layers()
+
+		# Train the model using validation
+		mlp_model.fit_validation(
+			learn_input,
+			packaged_data.learn_y,
+			valid_input,
+			packaged_data.valid_y,
+			max_epochs = 5000)
+
+		# Returned fitness value = test set performance
+		return ecnet.error_utils.calc_rmse(mlp_model.use(test_input), packaged_data.test_y)
+
+	'''
+	Genetic algorithm selection function, supplied to the genetic algorithm; returns
+	the *n* best performing *members* from the genetic algorithm's population
+	'''
+	def minimize_best_n(members, n):
+		return(sorted(members, key = lambda member: member.fitness_score)[0:n])
+
+	# Package data for training/testing
+	packaged_data = DataFrame.package_sets()
+
+	# Initialize genetic algorithm population
+	population = Population(size = population_size, cost_fn = ecnet_limit_inputs, select_fn = minimize_best_n)
+
+	# Create genetic algorithm parameters for each input parameter *n*
+	for i in range(limit_num):
+		population.add_parameter(i, 0, DataFrame.num_inputs - 1)
+
+	# Generate the genetic algorithm's initial population
+	population.generate_population()
+
+	# Print average population fitness (if printing feedback)
+	if print_feedback:
+		print('Generation: 0 - Population fitness: ' + str(sum(p.fitness_score for p in population.members) / len(population)))
+
+	# Run the genetic algorithm for *num_generations* generations
+	for gen in range(num_generations):
+		population.next_generation(num_survivors = num_survivors, mut_rate = 0)
+		if print_feedback:
+			print('Generation: ' + str(gen + 1) + ' - Population fitness: ' + str(sum(p.fitness_score for p in population.members) / len(population)))
+
+	# Find the best performing member from the final generation
+	min_idx = 0
+	for new_idx, member in enumerate(population.members):
+		if member.fitness_score < population.members[min_idx].fitness_score:
+			min_idx = new_idx
+
+	# Obtain parameter names from best performer
+	input_list = []
+	for val in population.members[min_idx].feed_dict.values():
+		input_list.append(DataFrame.input_names[val])
+
+	# Print best performer (if printing feedback)
+	if print_feedback:
+		print('Best member fitness score: ' + str(population.members[min_idx].fitness_score))
+		print(input_list)
+
+	# Return the limited list
+	return input_list
+
+'''
+Saves the parameters *param_list* (obtained from limit) to new database specified
+by *filename*. A *DataFrame* object is required for new database formatting and
+populating.
+'''
+def output(DataFrame, param_list, filename):
+
+	# Check filename format
+	if '.csv' not in filename:
+		filename += '.csv'
+
+	# List of rows to be saved to CSV file
 	rows = []
-	# Row 1: Main controls
-	control_row_1 = ["NUM OF MASTER"]
-	for i in range(0,len(data.controls_param_cols)):
-		control_row_1.append(data.controls_param_cols[i])
-	rows.append(control_row_1)
-	# Row 2: Main control values
-	control_row_2 = [data.controls_m_param_count]
-	for i in range(0,len(data.control_params)):
-		control_row_2.append(data.control_params[i])
-	rows.append(control_row_2)
-	# Rows 3 and 4: Column groups and sub-groups
-	row_3 = ["DATAID", "T/V/L/U"]
-	row_4 = ["DATAid", "T/V/L"]
-	if data.controls_num_str != 0:
-		row_3.append("STRINGS")
-		for i in range(0,data.controls_num_str - 1):
-			row_3.append(" ")
-		for i in range(0,len(data.string_cols)):
-			row_4.append(data.string_cols[i])
-	if data.controls_num_grp != 0:
-		row_3.append("GROUPS")
-		for i in range(0,data.controls_num_grp - 1):
-			row_3.append(" ")
-		for i in range(0,len(data.group_cols)):
-			row_4.append(data.group_cols[i])
-	row_3.append("PARAMETERS")
-	rows.append(row_3)
-	for i in range(0,data.controls_num_outputs):
-		row_4.append(data.param_cols[i])
-	param_idx = []
-	for i in range(0,len(param_list)):
-		row_4.append(param_list[i])
-		for j in range(0,len(data.param_cols)):
-			if param_list[i] == data.param_cols[j]:
-				param_idx.append(j)
-				break
-	rows.append(row_4)
-	# Data value rows
-	for i in range(0,len(data.dataid)):
-		local_row = [data.dataid[i], data.tvl_strings[i]]
-		for j in range(0,len(data.strings[i])):
-			local_row.append(data.strings[i][j])
-		for j in range(0,len(data.groups[i])):
-			local_row.append(data.groups[i][j])
-		for j in range(0,data.controls_num_outputs):
-			local_row.append(data.params[i][j])
-		for j in range(0,len(param_idx)):
-			local_row.append(data.params[i][param_idx[j]])
-		rows.append(local_row)
-	# Output to file
-	with open(filename, 'w') as output_file:
-		wr = csv.writer(output_file, quoting = csv.QUOTE_ALL, lineterminator = '\n')
-		for row in range(0,len(rows)):
-			wr.writerow(rows[row])
+
+	# FIRST ROW: type headers
+	type_row = []
+	type_row.append('DATAID')
+	type_row.append('ASSIGNMENT')
+	for string in DataFrame.string_names:
+		type_row.append('STRING')
+	for group in DataFrame.group_names:
+		type_row.append('GROUP')
+	for target in DataFrame.target_names:
+		type_row.append('TARGET')
+	for input_param in param_list:
+		type_row.append('INPUT')
+	rows.append(type_row)
+
+	# SECOND ROW: titles (including string, group, target, input names)
+	title_row = []
+	title_row.append('DATAID')
+	title_row.append('ASSIGNMENT')
+	for string in DataFrame.string_names:
+		title_row.append(string)
+	for group in DataFrame.group_names:
+		title_row.append(group)
+	for target in DataFrame.target_names:
+		title_row.append(target)
+	for input_param in param_list:
+		title_row.append(input_param)
+	rows.append(title_row)
+
+	# Obtain new parameter name indices in un-limited database
+	input_param_indices = []
+	for param in param_list:
+		input_param_indices.append(DataFrame.input_names.index(param))
+
+	# Create rows for each data point found in the DataFrame
+	for point in DataFrame.data_points:
+		data_row = []
+		data_row.append(point.id)
+		data_row.append(point.assignment)
+		for string in point.strings:
+			data_row.append(string)
+		for group in point.groups:
+			data_row.append(group)
+		for target in point.targets:
+			data_row.append(target)
+		for param in input_param_indices:
+			data_row.append(point.inputs[param])
+		rows.append(data_row)
+
+	# Save all the rows to the new database file
+	with open(filename, 'w') as file:
+		wr = csv.writer(file, quoting = csv.QUOTE_ALL, lineterminator = '\n')
+		for row in rows:
+			wr.writerow(row)
