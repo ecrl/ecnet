@@ -67,6 +67,10 @@ class MultilayerPerceptron:
 	'''
 	def fit(self, x_l, y_l, learning_rate = 0.1, train_epochs = 500):
 
+		# Check to see if learning set exists (set is not empty)
+		if len(y_l) is 0 or len(x_l) is 0:
+			raise ValueError('ERROR: Learning set cannot be empty! Check your data_split!')
+
 		# TensorFlow placeholder variables for inputs and targets
 		x = tf.placeholder('float', [None, self.layers[0].size])
 		y = tf.placeholder('float', [None, self.layers[-1].size])
@@ -100,6 +104,12 @@ class MultilayerPerceptron:
 	point if training takes too long)
 	'''
 	def fit_validation(self, x_l, y_l, x_v, y_v, learning_rate = 0.1, max_epochs = 2500):
+
+		# Check to see if learning and validation sets exists (sets are not empty)
+		if len(y_l) is 0 or len(x_l) is 0:
+			raise ValueError('ERROR: Learning set cannot be empty! Check your data_split!')
+		if len(y_v) is 0 or len(x_v) is 0:
+			raise ValueError('ERROR: Validation set cannot be empty! Check your data_split!')
 
 		# TensorFlow placeholder variables for inputs and targets
 		x = tf.placeholder('float', [None, self.layers[0].size])
