@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 #  ecnet/error_utils.py
-#  v.1.3.0.dev1
+#  v.1.4.0
 #  Developed in 2018 by Travis Kessler <Travis_Kessler@student.uml.edu>
 #
 #  This program contains functions for error calculations
@@ -40,10 +40,6 @@ def calc_med_abs_error(y_hat, y):
 			return(np.median(np.absolute(np.asarray(y_hat)-np.asarray(y))))
 		except:
 			raise ValueError("Error in calculating median absolute error. Check input data format.")
-<<<<<<< HEAD
-	
-=======
->>>>>>> Update to exception handling
 
 # Calculates the correlation of determination, or r-squared value, between two arguments of equal length
 def calc_r2(y_hat, y):
@@ -57,10 +53,6 @@ def calc_r2(y_hat, y):
 			y_mean = sum(y_form)/len(y_form)
 		except:
 			raise ValueError("Error in calculating r-squared. Check input data format.")
-<<<<<<< HEAD
-
-=======
->>>>>>> Update to exception handling
 	try:
 		s_res = np.sum((y_hat-y)**2)
 		s_tot = np.sum((y-y_mean)**2)
