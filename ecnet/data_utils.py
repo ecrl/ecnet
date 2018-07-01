@@ -16,24 +16,24 @@ import numpy as np
 import random as rm
 
 '''
+Private DataPoint class: Contains all information for each data entry found in CSV database
+'''
+class DataPoint:
+
+	def __init__(self):
+
+		self.id = None
+		self.assignment = None
+		self.strings = []
+		self.groups = []
+		self.targets = []
+		self.inputs = []
+
+'''
 DataFrame class: Handles importing data from formatted CSV database, determining learning,
 validation and testing sets, and packages sets as Numpy arrays for hand-off to models
 '''
 class DataFrame:
-
-	'''
-	Private DataPoint class: Contains all information for each data entry found in CSV database
-	'''
-	class __DataPoint:
-
-		def __init__(self):
-
-			self.id = None
-			self.assignment = None
-			self.strings = []
-			self.groups = []
-			self.targets = []
-			self.inputs = []
 
 	'''
 	Initializes object, creates *DataPoint*s for each data entry
@@ -56,7 +56,7 @@ class DataFrame:
 		self.data_points = []
 		for point in range(2, len([sublist[0] for sublist in data_raw])):
 			# Define data point
-			new_point = self.__DataPoint()
+			new_point = DataPoint()
 			# Set data point's id
 			new_point.id = [sublist[0] for sublist in data_raw][point]
 			# Set data point's assignment
