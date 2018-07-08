@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 #  ecnet/error_utils.py
-#  v.1.4.3
+#  v.1.4.3.1
 #  Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 #  This program contains functions necessary creating, training, saving, and reusing neural network models
