@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 #  ecnet/server.py
-#  v.1.4.2
+#  v.1.4.3
 #  Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 #  This file contains the "Server" class, which handles ECNet project creation,
@@ -130,10 +130,18 @@ class Server:
 		# Package sets for model hand-off
 		self.packaged_data = self.DataFrame.package_sets()
 
-	def limit_parameters(self, limit_num, output_filename, use_genetic = False, population_size = 500, num_survivors = 200, num_generations = 25):
+	'''
+	Limits the input dimensionality of the currently loaded DataFrame to a dimension of *limit_num*.
+	Saves the resulting limited DataFrame to *output_filename*. Option to *shuffle* data sets between
+	inclusions/after each generation if using genetic algorithm. *use_genetic* allows for using a 
+	genetic algorithm to limit the dimensionality (default to iterative inclusion), with arguments 
+	for genetic algorithm *population_size*, *num_survivors* of each generation, and the number of 
+	generations *num_generations* (PyGenetics package).
+	'''
+	def limit_parameters(self, limit_num, output_filename, use_genetic = False, population_size = 500, num_survivors = 200, num_generations = 25, shuffle = False):
 
 		if use_genetic:
-			params = ecnet.limit_parameters.limit_genetic(self.DataFrame, limit_num, population_size, num_survivors, num_generations, print_feedback = self.vars['project_print_feedback'])
+			params = ecnet.limit_parameters.limit_genetic(self.DataFrame, limit_num, population_size, num_survivors, num_generations, shuffle = shuffle, print_feedback = self.vars['project_print_feedback'])
 		else:
 			params = ecnet.limit_parameters.limit_iterative_include(self.DataFrame, limit_num)
 		ecnet.limit_parameters.output(self.DataFrame, params, output_filename)
