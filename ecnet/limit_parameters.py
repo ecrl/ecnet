@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 #  ecnet/limit_parameters.py
-#  v.1.4.3
+#  v.1.4.3.1
 #  Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #  
 #  This program contains the functions necessary for reducing the input dimensionality of a 
@@ -14,6 +14,7 @@
 import csv
 import copy
 from pygenetics.ga_core import Population
+from pygenetics.selection_functions import minimize_best_n
 
 # ECNet source files
 import ecnet.model
@@ -21,10 +22,9 @@ import ecnet.error_utils
 
 '''
 Limits the dimensionality of input data found in supplied *DataFrame* object to a
-dimensionality of *limit_num* using iterative inclusion; optional argument of 
-*shuffle* for shuffling the data sets after each inclusion
+dimensionality of *limit_num* using iterative inclusion
 '''
-def limit_iterative_include(DataFrame, limit_num, shuffle = False):
+def limit_iterative_include(DataFrame, limit_num):
 
 	# List of retained input parameters
 	retained_input_list = []
@@ -42,13 +42,6 @@ def limit_iterative_include(DataFrame, limit_num, shuffle = False):
 
 		# List of RMSE's for currently retained inputs + new inputs to test
 		retained_rmse_list = []
-
-		# If shuffling the data sets after each inclusion
-		if shuffle:
-			# Shuffle all sets
-			DataFrame.shuffle('l', 'v', 't')
-			# Obtain Numpy arrays for learning, validation, testing sets
-			packaged_data = DataFrame.package_sets()
 
 		# For all input paramters to test
 		for idx, param in enumerate(DataFrame.input_names):
@@ -80,8 +73,8 @@ def limit_iterative_include(DataFrame, limit_num, shuffle = False):
 			# Create neural network model
 			mlp_model = ecnet.model.MultilayerPerceptron()
 			mlp_model.add_layer(len(learn_input[0]), 'relu')
-			mlp_model.add_layer(5, 'relu')
-			mlp_model.add_layer(5, 'relu')
+			mlp_model.add_layer(8, 'relu')
+			mlp_model.add_layer(8, 'relu')
 			mlp_model.add_layer(len(packaged_data.learn_y[0]), 'linear')
 			mlp_model.connect_layers()
 
@@ -137,7 +130,7 @@ dimensionality of *limit_num* using a genetic algorithm. Optional arguments for
 *population_size* of genetic algorithm's population, *num_survivors* for selecting
 the best performers from each population generation to reproduce, *num_generations*
 for the number of times the population will reproduce, *shuffle* for shuffling the
-data sets after each generation, and *print_feedback* for printing the average 
+data sets for each population member, and *print_feedback* for printing the average 
 fitness score of the population after each generation.
 '''
 def limit_genetic(DataFrame, limit_num, population_size, num_survivors, num_generations, shuffle = False, print_feedback = True):
@@ -154,13 +147,23 @@ def limit_genetic(DataFrame, limit_num, population_size, num_survivors, num_gene
 		valid_input = []
 		test_input = []
 
+		# If shuffling the data sets for each population member
+		if shuffle:
+			# Shuffle all sets
+			DataFrame.shuffle('l', 'v', 't')
+			# Obtain Numpy arrays for learning, validation, testing sets
+			packaged_data_cf = DataFrame.package_sets()
+		# Not shuffling, use sets defined on limit_genetic function call
+		else:
+			packaged_data_cf = packaged_data
+
 		# For the input parameters chosen by the genetic algorithm:
 		for param in feed_dict:
 
 			# Grab the input parameter
-			learn_input_add = [[sublist[feed_dict[param]]] for sublist in packaged_data.learn_x]
-			valid_input_add = [[sublist[feed_dict[param]]] for sublist in packaged_data.valid_x]
-			test_input_add = [[sublist[feed_dict[param]]] for sublist in packaged_data.test_x]
+			learn_input_add = [[sublist[feed_dict[param]]] for sublist in packaged_data_cf.learn_x]
+			valid_input_add = [[sublist[feed_dict[param]]] for sublist in packaged_data_cf.valid_x]
+			test_input_add = [[sublist[feed_dict[param]]] for sublist in packaged_data_cf.test_x]
 
 			# Currently empty sets, sets = add lists
 			if len(learn_input) == 0:
@@ -181,26 +184,19 @@ def limit_genetic(DataFrame, limit_num, population_size, num_survivors, num_gene
 		mlp_model.add_layer(len(learn_input[0]), 'relu')
 		mlp_model.add_layer(8, 'relu')
 		mlp_model.add_layer(8, 'relu')
-		mlp_model.add_layer(len(packaged_data.learn_y[0]), 'linear')
+		mlp_model.add_layer(len(packaged_data_cf.learn_y[0]), 'linear')
 		mlp_model.connect_layers()
 
 		# Train the model using validation
 		mlp_model.fit_validation(
 			learn_input,
-			packaged_data.learn_y,
+			packaged_data_cf.learn_y,
 			valid_input,
-			packaged_data.valid_y,
+			packaged_data_cf.valid_y,
 			max_epochs = 5000)
 
 		# Returned fitness value = test set performance
-		return ecnet.error_utils.calc_rmse(mlp_model.use(test_input), packaged_data.test_y)
-
-	'''
-	Genetic algorithm selection function, supplied to the genetic algorithm; returns
-	the *n* best performing *members* from the genetic algorithm's population
-	'''
-	def minimize_best_n(members, n):
-		return(sorted(members, key = lambda member: member.fitness_score)[0:n])
+		return ecnet.error_utils.calc_rmse(mlp_model.use(test_input), packaged_data_cf.test_y)
 
 	# Package data for training/testing
 	packaged_data = DataFrame.package_sets()
@@ -221,15 +217,6 @@ def limit_genetic(DataFrame, limit_num, population_size, num_survivors, num_gene
 
 	# Run the genetic algorithm for *num_generations* generations
 	for gen in range(num_generations):
-
-		# If shuffling data sets between generations
-		if shuffle:
-			# Shuffle all sets
-			DataFrame.shuffle('l', 'v', 't')
-			# Obtain Numpy arrays for learning, validation, testing sets
-			packaged_data = DataFrame.package_sets()
-
-		# Next generation
 		population.next_generation(num_survivors = num_survivors, mut_rate = 0)
 		if print_feedback:
 			print('Generation: ' + str(gen + 1) + ' - Population fitness: ' + str(sum(p.fitness_score for p in population.members) / len(population)))
