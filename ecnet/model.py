@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 #  ecnet/error_utils.py
-#  v.1.4.3.1
+#  v.1.4.4
 #  Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 #  This program contains functions necessary creating, training, saving, and reusing neural network models
@@ -14,58 +14,65 @@ import numpy as np
 import pickle
 from functools import reduce
 
-'''
-Basic neural network (multilayer perceptron); contains methods for adding layers
-with specified neuron counts and activation functions, training the model, using
-the model on new data, saving the model for later use, and reusing a previously
-trained model
-'''
 class MultilayerPerceptron:
+	'''
+	Neural network (multilayer perceptron); contains methods for adding layers
+	with specified neuron counts and activation functions, training the model, using
+	the model on new data, saving the model for later use, and reusing a previously
+	trained model
+	'''
 
-	'''
-	Initialization of object
-	'''
 	def __init__(self):
+		'''
+		Initialization of object
+		'''
 
 		self.layers = []
 		self.weights = []
 		self.biases = []
 		tf.reset_default_graph()
 
-	'''
-	Layer definition object, containing layer size and activation function to be used
-	'''
 	class Layer:
+		'''
+		Layer definition object, containing layer size and activation function to be used
+		'''
 
 		def __init__(self, size, act_fn):
 
 			self.size = size
 			self.act_fn = act_fn
 
-	'''
-	Adds a layer definition to the model; default activation function is ReLU
-	'''
 	def add_layer(self, size, act_fn = 'relu'):
+		'''
+		Adds a layer definition to the model; default activation function is ReLU
+		'''
 
 		self.layers.append(self.Layer(size, act_fn))
 
-	'''
-	Connects the layers in *self.layers* by creating weight matrices, bias vectors
-	'''
 	def connect_layers(self):
+		'''
+		Connects the layers in *self.layers* by creating weight matrices, bias vectors
+		'''
 
 		# Create weight matrices (size = layer_n by layer_n+1)
 		for layer in range(len(self.layers) - 1):
-			self.weights.append(tf.Variable(tf.random_normal([self.layers[layer].size, self.layers[layer + 1].size]), name = 'W_fc%d' % (layer + 1)))
+			self.weights.append(tf.Variable(tf.random_normal([self.layers[layer].size, 
+															self.layers[layer + 1].size]), 
+											name = 'W_fc%d' % (layer + 1)))
 		# Create bias vectors (size = layer_n)
 		for layer in range(1, len(self.layers)):
-			self.biases.append(tf.Variable(tf.random_normal([self.layers[layer].size]), name = 'B_fc%d' % (layer)))
+			self.biases.append(tf.Variable(tf.random_normal([self.layers[layer].size]), 
+											name = 'B_fc%d' % (layer)))
 
-	'''
-	Fits the neural network model using input data *x_l* and target data *y_l*. Optional arguments:
-	*learning_rate* (training speed of the model) and *train_epochs* (number of traning iterations).
-	'''
-	def fit(self, x_l, y_l, learning_rate = 0.1, train_epochs = 500):
+	def fit(self, 
+			x_l, 
+			y_l, 
+			learning_rate = 0.1,
+			train_epochs = 500):
+		'''
+		Fits the neural network model using input data *x_l* and target data *y_l*. Optional arguments:
+		*learning_rate* (training speed of the model) and *train_epochs* (number of traning iterations).
+		'''
 
 		# Check to see if learning set exists (set is not empty)
 		if len(y_l) is 0 or len(x_l) is 0:
@@ -97,13 +104,19 @@ class MultilayerPerceptron:
 		# Finish the TensorFlow session
 		sess.close()
 
-	'''
-	Fits the neural network model using input data *x_l* and target data *y_l*, validating
-	the learning process periodically based on validation data (*x_v* and *y_v*) performance).
-	Optional arguments: *learning_rate* (training speed of the model), *max_epochs* (cutoff 
-	point if training takes too long)
-	'''
-	def fit_validation(self, x_l, y_l, x_v, y_v, learning_rate = 0.1, max_epochs = 2500):
+	def fit_validation(self, 
+					x_l, 
+					y_l, 
+					x_v, 
+					y_v, 
+					learning_rate = 0.1, 
+					max_epochs = 2500):
+		'''
+		Fits the neural network model using input data *x_l* and target data *y_l*, validating
+		the learning process periodically based on validation data (*x_v* and *y_v*) performance).
+		Optional arguments: *learning_rate* (training speed of the model), *max_epochs* (cutoff 
+		point if training takes too long)
+		'''
 
 		# Check to see if learning and validation sets exists (sets are not empty)
 		if len(y_l) is 0 or len(x_l) is 0:
@@ -155,10 +168,10 @@ class MultilayerPerceptron:
 		# Finish the TensorFlow session
 		sess.close()
 
-	'''
-	Use the neural network model on input data *x*, returns *result*
-	'''
 	def use(self, x):
+		'''
+		Use the neural network model on input data *x*, returns *result*
+		'''
 
 		# Run the TensorFlow session
 		with tf.Session() as sess:
@@ -172,10 +185,10 @@ class MultilayerPerceptron:
 		# Return the result
 		return result
 
-	'''
-	Saves the neural network model (outside of temp file) to *filepath* for later use
-	'''
 	def save(self, filepath):
+		'''
+		Saves the neural network model (outside of temp file) to *filepath* for later use
+		'''
 
 		# Run the TensorFlow session
 		with tf.Session() as sess:
@@ -191,10 +204,10 @@ class MultilayerPerceptron:
 		pickle.dump(self.layers, architecture_file)
 		architecture_file.close()
 
-	'''
-	Loads the neural network model found at *filepath*
-	'''
 	def load(self, filepath):
+		'''
+		Loads the neural network model found at *filepath*
+		'''
 
 		# Import the architecture 'struct' file (layer sizes, activation functions)
 		architecture_file = open('./' + filepath + '.struct', 'rb')
@@ -212,10 +225,10 @@ class MultilayerPerceptron:
 		# Finish the TensorFlow session
 		sess.close()
 
-	'''
-	PRIVATE METHOD: Feeds data through the neural network, returns output of final layer
-	'''
 	def __feed_forward(self, x):
+		'''
+		PRIVATE METHOD: Feeds data through the neural network, returns output of final layer
+		'''
 
 		# First values to matrix multiply are the inputs
 		output = x
@@ -237,10 +250,11 @@ class MultilayerPerceptron:
 		# Return the final layer's output
 		return output
 
-	'''
-	PRIVATE METHOD: Calculates the RMSE of the validation set during training
-	'''
 	def __calc_rmse(self, y_hat, y):
+		'''
+		PRIVATE METHOD: Calculates the RMSE of the validation set during training
+		'''
+
 		try:
 			return(np.sqrt(((y_hat-y)**2).mean()))
 		except:

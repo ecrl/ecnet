@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 #  ecnet/server.py
-#  v.1.4.3.1
+#  v.1.4.4
 #  Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 #  This file contains the "Server" class, which handles ECNet project creation,
@@ -25,16 +25,16 @@ import ecnet.error_utils
 import ecnet.model
 import ecnet.limit_parameters
 
-'''
-Server object: handles project creation/usage for ECNet projects, handles
-data hand-off to neural networks for model training
-'''
 class Server:
+	'''
+	Server object: handles project creation/usage for ECNet projects, handles
+	data hand-off to neural networks for model training
+	'''
 
-	'''
-	Initialization: imports configuration variables from *filename*
-	'''
 	def __init__(self, filename = 'config.yml'):
+		'''
+		Initialization: imports configuration variables from *filename*
+		'''
 
 		# Dictionary containing configuration variables
 		self.vars = {}
@@ -73,14 +73,13 @@ class Server:
 		# Initial state of Server is to create single models
 		self.using_project = False
 
-	
-	'''
-	Creates the folder structure for a project; if not called, Server will create
-	just one neural network model. A project consists of builds, each build
-	containing nodes (node predictions are averaged for final build prediction).
-	Number of builds and nodes are specified in the configuration file.
-	'''
 	def create_project(self, project_name = None):
+		'''
+		Creates the folder structure for a project; if not called, Server will create
+		just one neural network model. A project consists of builds, each build
+		containing nodes (node predictions are averaged for final build prediction).
+		Number of builds and nodes are specified in the configuration file.
+		'''
 
 		# If alternate project name is not given, use configuration file's project name
 		if project_name is None:
@@ -108,11 +107,11 @@ class Server:
 		# Update Server boolean, indicating we are now using a project (instead of single model)
 		self.using_project = True
 
-	'''
-	Imports data from *data_filename*; utilizes 'data_utils' for file I/O, data set splitting
-	and data set packaging for hand-off to neural network models
-	'''
 	def import_data(self, data_filename = None):
+		'''
+		Imports data from *data_filename*; utilizes 'data_utils' for file I/O, data set splitting
+		and data set packaging for hand-off to neural network models
+		'''
 
 		# If no filename specified, use configuration filename
 		if data_filename is None:
@@ -130,31 +129,48 @@ class Server:
 		# Package sets for model hand-off
 		self.packaged_data = self.DataFrame.package_sets()
 
-	'''
-	Limits the input dimensionality of the currently loaded DataFrame to a dimension of *limit_num*.
-	Saves the resulting limited DataFrame to *output_filename*. Option to *shuffle* data sets between
-	inclusions/after each generation if using genetic algorithm. *use_genetic* allows for using a 
-	genetic algorithm to limit the dimensionality (default to iterative inclusion), with arguments 
-	for genetic algorithm *population_size*, *num_survivors* of each generation, and the number of 
-	generations *num_generations* (PyGenetics package).
-	'''
-	def limit_parameters(self, limit_num, output_filename, use_genetic = False, population_size = 500, num_survivors = 200, num_generations = 25, shuffle = False):
+	def limit_parameters(self, 
+						limit_num, 
+						output_filename, 
+						use_genetic = False, 
+						population_size = 500, 
+						num_survivors = 200, 
+						num_generations = 25, 
+						shuffle = False):
+		'''
+		Limits the input dimensionality of the currently loaded DataFrame to a dimension of *limit_num*.
+		Saves the resulting limited DataFrame to *output_filename*. Option to *shuffle* data sets between
+		inclusions/after each generation if using genetic algorithm. *use_genetic* allows for using a 
+		genetic algorithm to limit the dimensionality (default to iterative inclusion), with arguments 
+		for genetic algorithm *population_size*, *num_survivors* of each generation, and the number of 
+		generations *num_generations* (PyGenetics package).
+		'''
 
 		if use_genetic:
-			params = ecnet.limit_parameters.limit_genetic(self.DataFrame, limit_num, population_size, num_survivors, num_generations, shuffle = shuffle, print_feedback = self.vars['project_print_feedback'])
+			params = ecnet.limit_parameters.limit_genetic(self.DataFrame, 
+														limit_num, 
+														population_size, 
+														num_survivors, 
+														num_generations, 
+														shuffle = shuffle, 
+														print_feedback = self.vars['project_print_feedback'])
 		else:
 			params = ecnet.limit_parameters.limit_iterative_include(self.DataFrame, limit_num)
 		ecnet.limit_parameters.output(self.DataFrame, params, output_filename)
 
-	'''
-	Tunes the neural network learning hyperparameters (learning_rate, valid_max_epochs, neuron
-	counts in each hidden layer) using an artificial bee colony algorithm (ecabc package)
-	'''
-	def tune_hyperparameters(self, target_score = None, iteration_amt = 50, amt_employers = 50):
+	def tune_hyperparameters(self, 
+							target_score = None, 
+							iteration_amt = 50, 
+							amt_employers = 50):
+		'''
+		Tunes the neural network learning hyperparameters (learning_rate, valid_max_epochs, neuron
+		counts in each hidden layer) using an artificial bee colony algorithm (ecabc package)
+		'''
 
 		# Make sure project is not constructed
 		if self.using_project:
-			warnings.warn('WARNING: tune_hyperparameters() uses individual neural networks, not projects. Setting using_project boolean to false.')
+			warnings.warn('WARNING: tune_hyperparameters() uses individual neural networks, not projects.\
+						Setting using_project boolean to false.')
 			self.using_project = False
 
 		'''
@@ -171,7 +187,10 @@ class Server:
 			return self.calc_error('rmse', dset = 'test')['rmse']
 
 		# Minimum and maximum values for hyperparameters (learning rate, valid_max_epochs, hidden layer neuron count)
-		hyperparameters = [('float', (0.01, 0.2)), ('int', (1000, 25000)), ('int', (8, 32)), ('int', (8, 32))]
+		hyperparameters = [('float', (0.01, 0.2)), 
+						('int', (1000, 25000)), 
+						('int', (8, 32)), 
+						('int', (8, 32))]
 
 		# If *target_score* (RMSE) is not given, run ABC for *iteration_amt* iterations
 		if target_score is None:
@@ -200,12 +219,12 @@ class Server:
 		# Return ABC-calculated hyperparameters
 		return new_hyperparameters
 
-	'''
-	Trains a neural network (multilayer perceptron) using learning data, and validation data (if *validate*
-	== True). *args is used to specify shuffling of data sets for each trial; use "shuffle_lv" (shuffles 
-	training data) or "shuffle_lvt" (shuffles all data)
-	'''
 	def train_model(self, *args, validate = False):
+		'''
+		Trains a neural network (multilayer perceptron) using learning data, and validation data 
+		(if *validate* == True). *args is used to specify shuffling of data sets for each trial; 
+		use "shuffle_lv" (shuffles training data) or "shuffle_lvt" (shuffles all data)
+		'''
 
 		# Not using project, train single model
 		if not self.using_project:
@@ -273,13 +292,13 @@ class Server:
 							self.DataFrame.create_sets(split = self.vars['data_split'])
 							self.packaged_data = self.DataFrame.package_sets()
 
-	'''
-	Selects the best performing model from each node for each build to represent
-	the node (build prediction = average of node predictions). Selection of best
-	model is based on data set *dset* performance. This method may take a while,
-	depending on project size.
-	'''
 	def select_best(self, dset = None, error_fn = 'rmse'):
+		'''
+		Selects the best performing model from each node for each build to represent
+		the node (build prediction = average of node predictions). Selection of best
+		model is based on data set *dset* performance. This method may take a while,
+		depending on project size.
+		'''
 
 		# If not using a project, no need to call this function!
 		if not self.using_project:
@@ -317,11 +336,11 @@ class Server:
 					mlp_model.load(os.path.join(path_n, 'trial_%d' % current_min))
 					mlp_model.save(os.path.join(path_n, 'final_net'))
 
-	'''
-	Use trained neural network (multilayer perceptron), either single or build,
-	to predict values for specified *dset*
-	'''
 	def use_model(self, dset = None):
+		'''
+		Use trained neural network (multilayer perceptron), either single or build,
+		to predict values for specified *dset*
+		'''
 
 		# Determine data set to be passed to model, specified by *dset*
 		x_vals = self.__determine_x_vals(dset)
@@ -370,13 +389,14 @@ class Server:
 			# Return final predictions
 			return preds
 
-	'''
-	Calculates and returns errors based on input *args; possible arguments are *rmse*,
-	*r2* (r-squared correlation coefficient), *mean_abs_error*, *med_abs_error*. Multiple
-	error arguments can be supplied. *dset* argument specifies which data set the error 
-	is being calculated for (e.g. 'test', 'train'). Returns dictionary of error values.
-	'''
 	def calc_error(self, *args, dset = None):
+		'''
+		Calculates and returns errors based on input *args; possible arguments are *rmse*,
+		*r2* (r-squared correlation coefficient), *mean_abs_error*, *med_abs_error*. Multiple
+		error arguments can be supplied. *dset* argument specifies which data set the error 
+		is being calculated for (e.g. 'test', 'train'). Returns dictionary of error values.
+		'''
+
 		# Dictionary keys = error arguments, values = error values
 		error_dict = {}
 		# Obtain predictions for specified data set
@@ -402,20 +422,20 @@ class Server:
 		# Return error dictionary
 		return error_dict
 
-	'''
-	Outputs the *results* obtained from "use_model()" to a specified *filename*
-	'''
 	def output_results(self, results, filename = 'my_results.csv'):
+		'''
+		Outputs the *results* obtained from "use_model()" to a specified *filename*
+		'''
 
 		# Output results using data_utils function
 		ecnet.data_utils.output_results(results, self.DataFrame, filename)
 
-	'''
-	Saves the current state of Server (including currently imported DataFrame and configuration), 
-	cleans up the project directory if specified in *clean_up* (only keeps final node models),
-	and zips up the current state and project directory into a .project file
-	'''
 	def save_project(self, clean_up = True):
+		'''
+		Saves the current state of Server (including currently imported DataFrame and configuration), 
+		cleans up the project directory if specified in *clean_up* (only keeps final node models),
+		and zips up the current state and project directory into a .project file
+		'''
 
 		# If removing trials from project directory (keeping final models):
 		if clean_up:
@@ -432,7 +452,10 @@ class Server:
 
 		# Save Server configuration to configuration YAML file
 		with open(self.config_filename, 'w') as config_file:
-			yaml.dump(self.vars, config_file, default_flow_style = False, explicit_start = True)
+			yaml.dump(self.vars, 
+					config_file, 
+					default_flow_style = False, 
+					explicit_start = True)
 		config_file.close()
 
 		# Save currently loaded DataFrame
@@ -447,11 +470,11 @@ class Server:
 				zip_file.write(os.path.join(root, file))
 		zip_file.close()
 
-	'''
-	Opens a .project file, imports configuration and last used data set, unzips model files
-	to project directory
-	'''
 	def open_project(self, filename):
+		'''
+		Opens a .project file, imports configuration and last used data set, unzips model files
+		to project directory
+		'''
 
 		# Check for .project file format
 		if '.project' not in filename:
@@ -478,10 +501,10 @@ class Server:
 		# Set project use boolean to True
 		self.using_project = True
 
-	'''
-	PRIVATE METHOD: Helper function for determining data set *dset* to be passed to the model (inputs)
-	'''
 	def __determine_x_vals(self, dset):
+		'''
+		PRIVATE METHOD: Helper function for determining data set *dset* to be passed to the model (inputs)
+		'''
 
 		# Use the test set
 		if dset == 'test':
@@ -511,10 +534,10 @@ class Server:
 				x_vals.append(val)
 			return np.asarray(x_vals)
 
-	'''
-	PRIVATE METHOD: Helper function for determining data set *dset* to be passed to the model (targets)
-	'''
 	def __determine_y_vals(self, dset):
+		'''
+		PRIVATE METHOD: Helper function for determining data set *dset* to be passed to the model (targets)
+		'''
 
 		# Use the test set
 		if dset == 'test':
@@ -544,10 +567,10 @@ class Server:
 				y_vals.append(val)
 			return np.asarray(y_vals)
 
-	'''
-	PRIVATE METHOD: Helper function for creating a neural network (multilayer perceptron)
-	'''
 	def __create_mlp_model(self):
+		'''
+		PRIVATE METHOD: Helper function for creating a neural network (multilayer perceptron)
+		'''
 
 		# Create the model object
 		mlp_model = ecnet.model.MultilayerPerceptron()
@@ -555,7 +578,8 @@ class Server:
 		mlp_model.add_layer(self.DataFrame.num_inputs, self.vars['mlp_in_layer_activ'])
 		# Add hidden layers, sizes and activation functions specified in configuration file
 		for hidden in range(len(self.vars['mlp_hidden_layers'])):
-			mlp_model.add_layer(self.vars['mlp_hidden_layers'][hidden][0], self.vars['mlp_hidden_layers'][hidden][1])
+			mlp_model.add_layer(self.vars['mlp_hidden_layers'][hidden][0],
+								self.vars['mlp_hidden_layers'][hidden][1])
 		# Add output layer, size = number of data targets, activation function specified in configuration file
 		mlp_model.add_layer(self.DataFrame.num_targets, self.vars['mlp_out_layer_activ'])
 		# Connect layers (compute initial weights and biases)
@@ -563,10 +587,11 @@ class Server:
 		# Return the model object
 		return mlp_model
 
-	'''
-	PRIVATE METHOD: used to parse error argument, calculate specified error and return it
-	'''
 	def __error_fn(self, arg, y_hat, y):
+		'''
+		PRIVATE METHOD: used to parse error argument, calculate specified error and return it
+		'''
+
 		if arg == 'rmse':
 			return ecnet.error_utils.calc_rmse(y_hat, y)
 		elif arg == 'r2':

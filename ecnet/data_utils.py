@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 #  ecnet/data_utils.py
-#  v.1.4.3.1
+#  v.1.4.4
 #  Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 #  This program contains the "DataFrame" class, and functions for processing/importing/outputting
@@ -15,10 +15,10 @@ import csv
 import numpy as np
 import random as rm
 
-'''
-Private DataPoint class: Contains all information for each data entry found in CSV database
-'''
 class DataPoint:
+	'''
+	DataPoint class: Contains all information for each data entry found in CSV database
+	'''
 
 	def __init__(self):
 
@@ -29,16 +29,16 @@ class DataPoint:
 		self.targets = []
 		self.inputs = []
 
-'''
-DataFrame class: Handles importing data from formatted CSV database, determining learning,
-validation and testing sets, and packages sets as Numpy arrays for hand-off to models
-'''
 class DataFrame:
+	'''
+	DataFrame class: Handles importing data from formatted CSV database, determining learning,
+	validation and testing sets, and packages sets as Numpy arrays for hand-off to models
+	'''
 
-	'''
-	Initializes object, creates *DataPoint*s for each data entry
-	'''
 	def __init__(self, filename):
+		'''
+		Initializes object, creates *DataPoint*s for each data entry
+		'''
 
 		# Make sure filename is CSV
 		if not '.csv' in filename:
@@ -99,20 +99,20 @@ class DataFrame:
 		self.num_targets = len(self.target_names)
 		self.num_inputs = len(self.input_names)
 
-	'''
-	DataFrame class length = number of data_points
-	'''
 	def __len__(self):
+		'''
+		DataFrame class length = number of data_points
+		'''
 
 		return len(self.data_points)
 
-	'''
-	Creates learning, validation and test sets
-	random: *True* for random assignments, *False* for explicit (point defined) assignments
-	split: if random == *True*, split[0] = learning, split[1] = validation, split[2] = test 
-	(proportions)
-	'''
 	def create_sets(self, random = True, split = [0.7, 0.2, 0.1]):
+		'''
+		Creates learning, validation and test sets
+		random: *True* for random assignments, *False* for explicit (point defined) assignments
+		split: if random == *True*, split[0] = learning, split[1] = validation, split[2] = test 
+		(proportions)
+		'''
 
 		# Define sets
 		self.learn_set = []
@@ -124,7 +124,8 @@ class DataFrame:
 			# Create random indices for sets
 			rand_index = rm.sample(range(len(self)), len(self))
 			learn_index = rand_index[0 : int(len(rand_index) * split[0])]
-			valid_index = rand_index[int(len(rand_index) * split[0]) : int(len(rand_index) * (split[0] + split[1]))]
+			valid_index = rand_index[int(len(rand_index) * split[0]) 
+									: int(len(rand_index) * (split[0] + split[1]))]
 			test_index = rand_index[int(len(rand_index) * (split[0] + split[1])) : -1]
 			test_index.append(rand_index[-1])
 
@@ -150,12 +151,12 @@ class DataFrame:
 				elif point.assignment == 'T':
 					self.test_set.append(point)
 
-	'''
-	Creates learning, validation and test sets containing specified proportions
-	(*split*) of each *sort_string* element (*sort_string* can be any STRING value
-	found in your database file)
-	'''
 	def create_sorted_sets(self, sort_string, split = [0.7, 0.2, 0.1]):
+		'''
+		Creates learning, validation and test sets containing specified proportions
+		(*split*) of each *sort_string* element (*sort_string* can be any STRING value
+		found in your database file)
+		'''
 	
 		# Obtain index of *sort_string* from DataFrame's string names
 		string_idx = self.string_names.index(sort_string)
@@ -197,11 +198,11 @@ class DataFrame:
 				point.assignment = 'T'
 				self.test_set.append(point)
 
-	'''
-	Shuffles (new random assignments) the specified sets in *args*; (learning, validation, testing)
-	or (learning, validation)
-	'''
 	def shuffle(self, *args, split = [0.7, 0.2, 0.1]):
+		'''
+		Shuffles (new random assignments) the specified sets in *args*; (learning, validation, 
+		testing) or (learning, validation)
+		'''
 
 		# Shuffle all sets (can just call create_sets again)
 		if 'l' and 'v' and 't' in args:
@@ -216,7 +217,9 @@ class DataFrame:
 			for point in self.valid_set:
 				lv_set.append(point)
 			# Generate random indices for new learning and validation sets
-			rand_index = rm.sample(range(len(self.learn_set) + len(self.valid_set)), (len(self.learn_set) + len(self.valid_set)))
+			rand_index = rm.sample(range(len(self.learn_set) 
+								+ len(self.valid_set)), 
+								(len(self.learn_set) + len(self.valid_set)))
 			learn_index = rand_index[0 : int(len(rand_index) * (split[0] / (1 - split[2]))) + 1]
 			valid_index = rand_index[int(len(rand_index) * (split[0] / (1 - split[2]))) + 1 : -1]
 			valid_index.append(rand_index[-1])
@@ -233,11 +236,11 @@ class DataFrame:
 		else:
 			raise Exception('ERROR: Shuffle arguments must be *l, v, t* or *l, v*')
 
-	'''
-	Private object containing lists (converted to numpy arrays by package_sets) with target 
-	(y) and input (x) values (filled by package_sets)
-	'''
 	class __PackagedData:
+		'''
+		Private object containing lists (converted to numpy arrays by package_sets) with target 
+		(y) and input (x) values (filled by package_sets)
+		'''
 
 		def __init__(self):
 
@@ -248,11 +251,11 @@ class DataFrame:
 			self.test_x = []
 			self.test_y = []
 
-	'''
-	Creates and returns *PackagedData* object containing numpy arrays with target (y) and 
-	input (x) values for learning, validation and testing sets
-	'''
 	def package_sets(self):
+		'''
+		Creates and returns *PackagedData* object containing numpy arrays with target (y) and 
+		input (x) values for learning, validation and testing sets
+		'''
 
 		# Create PackagedData object to return
 		pd = self.__PackagedData()
@@ -278,12 +281,12 @@ class DataFrame:
 		# Return packaged data
 		return pd
 
-'''
-Outputs *results* to *filename*; *DataFrame*, a 'DataFrame' object, is required for
-header formatting (strings, groups) and outputting individual point data
-(id, assignment, strings, groups)
-'''
 def output_results(results, DataFrame, filename):
+	'''
+	Outputs *results* to *filename*; *DataFrame*, a 'DataFrame' object, is required for
+	header formatting (strings, groups) and outputting individual point data
+	(id, assignment, strings, groups)
+	'''
 
 	# Ensure save filepath is CSV
 	if '.csv' not in filename:

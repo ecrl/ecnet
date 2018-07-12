@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 #  ecnet/limit_parameters.py
-#  v.1.4.3.1
+#  v.1.4.4
 #  Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #  
 #  This program contains the functions necessary for reducing the input dimensionality of a 
@@ -20,11 +20,11 @@ from pygenetics.selection_functions import minimize_best_n
 import ecnet.model
 import ecnet.error_utils
 
-'''
-Limits the dimensionality of input data found in supplied *DataFrame* object to a
-dimensionality of *limit_num* using iterative inclusion
-'''
 def limit_iterative_include(DataFrame, limit_num):
+	'''
+	Limits the dimensionality of input data found in supplied *DataFrame* object to a
+	dimensionality of *limit_num* using iterative inclusion
+	'''
 
 	# List of retained input parameters
 	retained_input_list = []
@@ -124,23 +124,29 @@ def limit_iterative_include(DataFrame, limit_num):
 	# Compiled *limit_num* input parameters, return list of retained parameters
 	return retained_input_list
 
-'''
-Limits the dimensionality of input data found in supplied *DataFrame* object to a
-dimensionality of *limit_num* using a genetic algorithm. Optional arguments for
-*population_size* of genetic algorithm's population, *num_survivors* for selecting
-the best performers from each population generation to reproduce, *num_generations*
-for the number of times the population will reproduce, *shuffle* for shuffling the
-data sets for each population member, and *print_feedback* for printing the average 
-fitness score of the population after each generation.
-'''
-def limit_genetic(DataFrame, limit_num, population_size, num_survivors, num_generations, shuffle = False, print_feedback = True):
+def limit_genetic(DataFrame, 
+				limit_num, 
+				population_size, 
+				num_survivors, 
+				num_generations, 
+				shuffle = False, 
+				print_feedback = True):
+	'''
+	Limits the dimensionality of input data found in supplied *DataFrame* object to a
+	dimensionality of *limit_num* using a genetic algorithm. Optional arguments for
+	*population_size* of genetic algorithm's population, *num_survivors* for selecting
+	the best performers from each population generation to reproduce, *num_generations*
+	for the number of times the population will reproduce, *shuffle* for shuffling the
+	data sets for each population member, and *print_feedback* for printing the average 
+	fitness score of the population after each generation.
+	'''
 
-	'''
-	Genetic algorithm cost function, supplied to the genetic algorithm; returns the RMSE
-	of the test set results from a model constructed using the current permutation of
-	input parameters *feed_dict* supplied by the genetic algorithm
-	'''
 	def ecnet_limit_inputs(feed_dict):
+		'''
+		Genetic algorithm cost function, supplied to the genetic algorithm; returns the RMSE
+		of the test set results from a model constructed using the current permutation of
+		input parameters *feed_dict* supplied by the genetic algorithm
+		'''
 
 		# Set up learning, validation and testing sets
 		learn_input = []
@@ -202,7 +208,9 @@ def limit_genetic(DataFrame, limit_num, population_size, num_survivors, num_gene
 	packaged_data = DataFrame.package_sets()
 
 	# Initialize genetic algorithm population
-	population = Population(size = population_size, cost_fn = ecnet_limit_inputs, select_fn = minimize_best_n)
+	population = Population(size = population_size, 
+							cost_fn = ecnet_limit_inputs, 
+							select_fn = minimize_best_n)
 
 	# Create genetic algorithm parameters for each input parameter *n*
 	for i in range(limit_num):
@@ -213,13 +221,15 @@ def limit_genetic(DataFrame, limit_num, population_size, num_survivors, num_gene
 
 	# Print average population fitness (if printing feedback)
 	if print_feedback:
-		print('Generation: 0 - Population fitness: ' + str(sum(p.fitness_score for p in population.members) / len(population)))
+		print('Generation: 0 - Population fitness: ' 
+			+ str(sum(p.fitness_score for p in population.members) / len(population)))
 
 	# Run the genetic algorithm for *num_generations* generations
 	for gen in range(num_generations):
 		population.next_generation(num_survivors = num_survivors, mut_rate = 0)
 		if print_feedback:
-			print('Generation: ' + str(gen + 1) + ' - Population fitness: ' + str(sum(p.fitness_score for p in population.members) / len(population)))
+			print('Generation: ' + str(gen + 1) + ' - Population fitness: ' 
+				+ str(sum(p.fitness_score for p in population.members) / len(population)))
 
 	# Find the best performing member from the final generation
 	min_idx = 0
@@ -240,12 +250,12 @@ def limit_genetic(DataFrame, limit_num, population_size, num_survivors, num_gene
 	# Return the limited list
 	return input_list
 
-'''
-Saves the parameters *param_list* (obtained from limit) to new database specified
-by *filename*. A *DataFrame* object is required for new database formatting and
-populating.
-'''
 def output(DataFrame, param_list, filename):
+	'''
+	Saves the parameters *param_list* (obtained from limit) to new database specified
+	by *filename*. A *DataFrame* object is required for new database formatting and
+	populating.
+	'''
 
 	# Check filename format
 	if '.csv' not in filename:
