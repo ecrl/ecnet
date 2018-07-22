@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 #  ecnet/server.py
-#  v.1.4.4
+#  v.1.4.5
 #  Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 #  This file contains the "Server" class, which handles ECNet project creation,
@@ -130,13 +130,13 @@ class Server:
 		self.packaged_data = self.DataFrame.package_sets()
 
 	def limit_parameters(self, 
-						limit_num, 
-						output_filename, 
-						use_genetic = False, 
-						population_size = 500, 
-						num_survivors = 200, 
-						num_generations = 25, 
-						shuffle = False):
+			limit_num, 
+			output_filename, 
+			use_genetic = False, 
+			population_size = 500, 
+			num_survivors = 200, 
+			num_generations = 25, 
+			shuffle = False):
 		'''
 		Limits the input dimensionality of the currently loaded DataFrame to a dimension of *limit_num*.
 		Saves the resulting limited DataFrame to *output_filename*. Option to *shuffle* data sets between
@@ -148,12 +148,12 @@ class Server:
 
 		if use_genetic:
 			params = ecnet.limit_parameters.limit_genetic(self.DataFrame, 
-														limit_num, 
-														population_size, 
-														num_survivors, 
-														num_generations, 
-														shuffle = shuffle, 
-														print_feedback = self.vars['project_print_feedback'])
+								limit_num, 
+								population_size, 
+								num_survivors, 
+								num_generations, 
+								shuffle = shuffle, 
+								print_feedback = self.vars['project_print_feedback'])
 		else:
 			params = ecnet.limit_parameters.limit_iterative_include(self.DataFrame, limit_num)
 		ecnet.limit_parameters.output(self.DataFrame, params, output_filename)
@@ -451,7 +451,7 @@ class Server:
 						os.remove(os.path.join(path_n, file))
 
 		# Save Server configuration to configuration YAML file
-		with open(self.config_filename, 'w') as config_file:
+		with open(os.path.join(self.vars['project_name'], self.config_filename), 'w') as config_file:
 			yaml.dump(self.vars, 
 					config_file, 
 					default_flow_style = False, 
@@ -486,8 +486,16 @@ class Server:
 		zip_file.close()
 
 		# Import project configuration
-		with open(self.config_filename, 'r') as config_file:
+		with open(os.path.join(self.vars['project_name'], self.config_filename), 'r') as config_file:
 			self.vars.update(yaml.load(config_file))
+		config_file.close()
+
+		# Re-save Server configuration to working directory
+		with open(self.config_filename, 'w') as config_file:
+			yaml.dump(self.vars, 
+					config_file, 
+					default_flow_style = False, 
+					explicit_start = True)
 		config_file.close()
 
 		# Import last used DataFrame
