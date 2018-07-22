@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 #  ecnet/data_utils.py
-#  v.1.4.4
+#  v.1.4.5
 #  Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 #  This program contains the "DataFrame" class, and functions for processing/importing/outputting
