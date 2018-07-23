@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 #  ecnet/server.py
-#  v.1.4.5
+#  v.1.4.6
 #  Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 #  This file contains the "Server" class, which handles ECNet project creation,
@@ -188,9 +188,9 @@ class Server:
 
 		# Minimum and maximum values for hyperparameters (learning rate, valid_max_epochs, hidden layer neuron count)
 		hyperparameters = [('float', (0.01, 0.2)), 
-						('int', (1000, 25000)), 
-						('int', (8, 32)), 
-						('int', (8, 32))]
+					('int', (1000, 25000)), 
+					('int', (8, 32)), 
+					('int', (8, 32))]
 
 		# If *target_score* (RMSE) is not given, run ABC for *iteration_amt* iterations
 		if target_score is None:
@@ -475,6 +475,9 @@ class Server:
 		Opens a .project file, imports configuration and last used data set, unzips model files
 		to project directory
 		'''
+
+		# Set the project name variable
+		self.vars['project_name'] = filename
 
 		# Check for .project file format
 		if '.project' not in filename:
