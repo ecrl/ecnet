@@ -32,28 +32,28 @@ class Server:
     reduction.
     '''
 
-    def __init__(self, filename='config.yml', project_name=None):
+    def __init__(self, config_filename='config.yml', project_file=None):
         '''
-        Initialization: imports model configuration file *filename*; if
+        Initialization: imports model configuration file *config_filename*; if
         configuration file not found, creates default configuration file with
-        name *filename*; opens an ECNet project instead if *project_name* is
+        name *filename*; opens an ECNet project instead if *project_file* is
         specified.
         '''
 
         if project_name is not None:
-            self.__open_project(project_name)
+            self.__open_project(project_file)
             return
 
         self.vars = {}
-        if '.yml' not in filename:
-            filename += '.yml'
+        if '.yml' not in config_filename:
+            config_filename += '.yml'
         try:
-            file = open(filename, 'r')
+            file = open(config_filename, 'r')
             self.vars.update(yaml.load(file))
         except:
             warn_str = ('Supplied configuration file not found: '
                         'creating default configuration file for {}'.format(
-                            filename
+                            config_filename
                         ))
             warnings.warn(warn_str)
             config_dict = {
@@ -67,11 +67,11 @@ class Server:
                 'train_epochs': 500,
                 'valid_max_epochs': 10000
             }
-            file = open(filename, 'w')
+            file = open(config_filename, 'w')
             yaml.dump(config_dict, file)
             self.vars.update(config_dict)
 
-        self.__config_filename = filename
+        self.__config_filename = config_filename
         self.__using_project = False
 
     def create_project(self, project_name, num_builds=1, num_nodes=5,
