@@ -14,19 +14,20 @@ import numpy as np
 import pickle
 from functools import reduce
 
-ACTIVATION_FUNCTONS = {
-    'relu': tf.nn.relu,
-    'sigmoid': tf.nn.sigmoid,
-    'softmax': tf.nn.softmax,
-    'linear': __linear_fn
-}
-
 
 def __linear_fn(n):
     '''
     Linear definition for activation function dictionary
     '''
     return n
+
+
+ACTIVATION_FUNCTONS = {
+    'relu': tf.nn.relu,
+    'sigmoid': tf.nn.sigmoid,
+    'softmax': tf.nn.softmax,
+    'linear': __linear_fn
+}
 
 
 class Layer:
@@ -221,9 +222,8 @@ class MultilayerPerceptron:
             output = layer.act_fn(
                 tf.add(tf.matmul(
                     output,
-                    self.__weights[idx],
-                    self.__biases[idx]
-                ))
+                    self.__weights[idx]
+                ), self.__biases[idx])
             )
         return output
 

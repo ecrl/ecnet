@@ -32,22 +32,30 @@ class Server:
     reduction.
     '''
 
-    def __init__(self, filename='config.yml'):
+    def __init__(self, filename='config.yml', project_name=None):
         '''
         Initialization: imports model configuration file *filename*; if
-        configuration file not found, creates default configuration file
-        with name *filename*
+        configuration file not found, creates default configuration file with
+        name *filename*; opens an ECNet project instead if *project_name* is
+        specified.
         '''
+
+        if project_name is not None:
+            self.__open_project(project_name)
+            return
 
         self.vars = {}
         if '.yml' not in filename:
             filename += '.yml'
         try:
-            file.open(filename, 'r')
+            file = open(filename, 'r')
             self.vars.update(yaml.load(file))
         except:
-            warnings.warn('Supplied configuration file not found: creating \
-                default configuration for {}'.format(filename))
+            warn_str = ('Supplied configuration file not found: '
+                        'creating default configuration file for {}'.format(
+                            filename
+                        ))
+            warnings.warn(warn_str)
             config_dict = {
                 'learning_rate': 0.1,
                 'mlp_hidden_layers': [
@@ -341,7 +349,7 @@ class Server:
                 self.__project_name,
                 os.path.join('build_1', os.path.join(
                         'node_1',
-                        'trial_1'
+                        'trial_1.meta'
                     )
                 )
             )
@@ -404,6 +412,17 @@ class Server:
             mlp_model.load('./tmp/model')
             return [mlp_model.use(x_vals)]
         else:
+            if not os.path.exists(
+                os.path.join(
+                    self.__project_name,
+                    os.path.join('build_1', os.path.join(
+                            'node_1',
+                            'model.meta'
+                        )
+                    )
+                )
+            ):
+                raise Exception('Select best performers using select_best()')
             preds = []
             for build in range(self.__num_builds):
                 path_b = os.path.join(
@@ -501,7 +520,7 @@ class Server:
             yaml.dump(
                 self.vars,
                 config_save,
-                default_flow_stype=False,
+                default_flow_style=False,
                 explicit_start=True
             )
         config_save.close()
@@ -523,10 +542,11 @@ class Server:
                 zip_file.write(os.path.join(root, file))
         zip_file.close()
 
-    def open_project(self, project_name):
+    def __open_project(self, project_name):
         '''
-        Opens a .project file, imports saved DataFrame, configuration, unzips
-        project folder stucture and model files
+        Private method: Opens a .project file, imports saved DataFrame,
+        configuration, unzipsp roject folder stucture and model files. Called
+        from Server initialization if *project_name* is supplied.
 
         *project_name*  - name of .project file to open
         '''
@@ -534,19 +554,37 @@ class Server:
         self.__project_name = project_name.replace('.project', '')
         if '.project' not in project_name:
             project_name += '.project'
+        self.__print_feedback = False
 
         zip_file = zipfile.ZipFile(project_name, 'r')
         zip_file.extractall('./')
         zip_file.close()
 
+        self.__num_builds = len(
+            [build for build in os.listdir(
+                self.__project_name
+            ) if os.path.isdir(os.path.join(self.__project_name, build))]
+        )
+        self.__num_nodes = len(
+            [node for node in os.listdir(
+                os.path.join(self.__project_name, 'build_1')
+            ) if os.path.isdir(os.path.join(
+                self.__project_name,
+                os.path.join('build_1', node))
+            )]
+        )
+
         for root, dirs, files in os.walk(self.__project_name):
-            if '.yml' in file:
-                self.__config_filename = file
+            for file in files:
+                if '.yml' in file:
+                    self.__config_filename = file
+                    break
 
         with open(
             os.path.join(self.__project_name, self.__config_filename),
             'r'
         ) as config_file:
+            self.vars = {}
             self.vars.update(yaml.load(config_file))
         config_file.close()
 
@@ -667,3 +705,5 @@ class Server:
             return ecnet.error_utils.calc_mean_abs_error(y_hat, y)
         elif arg == 'med_abs_error':
             return ecnet.error_utils.calc_med_abs_error(y_hat, y)
+        else:
+            raise ValueError('Unknown error function {}'.format(arg))

@@ -85,8 +85,8 @@ class DataFrame:
                 self.input_names.append(data_raw[1][header])
         self.num_strings = len(self.string_names)
         self.num_groups = len(self.group_names)
-        self.target_names = len(self.target_names)
-        self.input_names = len(self.input_names)
+        self.num_targets = len(self.target_names)
+        self.num_inputs = len(self.input_names)
 
     def __len__(self):
         '''
@@ -95,7 +95,7 @@ class DataFrame:
 
         return len(self.data_points)
 
-    def create_sets(self, random, split):
+    def create_sets(self, random, split=None):
         '''
         Creates learning, validation and test sets
 
@@ -104,11 +104,13 @@ class DataFrame:
         *split*     - If random == True, [learn%, valid%, test%]
         '''
 
-        self.__learn_set = []
-        self.__valid_set = []
-        self.__test_set = []
+        self.learn_set = []
+        self.valid_set = []
+        self.test_set = []
 
         if random:
+            if split is None:
+                raise ValueError('Need to specify split [l%, v%, t%]')
             rand_index = rm.sample(range(len(self)), len(self))
             split_locs = [
                 int(len(rand_index) * split[0]),
@@ -119,22 +121,22 @@ class DataFrame:
             test_index = rand_index[split_locs[1]:]
             for idx in learn_index:
                 self.data_points[idx].assignment = 'L'
-                self.__learn_set.append(data_points[idx])
+                self.learn_set.append(self.data_points[idx])
             for idx in valid_index:
                 self.data_points[idx].assignment = 'V'
-                self.__learn_set.append(data_points[idx])
+                self.valid_set.append(self.data_points[idx])
             for idx in test_index:
                 self.data_points[idx].assignment = 'T'
-                self.__learn_set.append(data_points[idx])
+                self.test_set.append(self.data_points[idx])
 
         else:
             for point in self.data_points:
                 if point.assignment == 'L':
-                    self.__learn_set.append(point)
+                    self.learn_set.append(point)
                 elif point.assignment == 'V':
-                    self.__test_set.append(point)
+                    self.valid_set.append(point)
                 elif point.assignment == 'T':
-                    self.__test_set.append(point)
+                    self.test_set.append(point)
 
     def create_sorted_sets(self, sort_string, split):
         '''
@@ -160,9 +162,9 @@ class DataFrame:
             else:
                 string_groups[-1].append(point)
 
-        self.__learn_set = []
-        self.__valid_set = []
-        self.__test_set = []
+        self.learn_set = []
+        self.valid_set = []
+        self.test_set = []
 
         for group in string_groups:
             split_locs = [
@@ -171,13 +173,13 @@ class DataFrame:
             ]
             for point in group[0: split_locs[0]]:
                 point.assignment = 'L'
-                self.__learn_set.append(point)
+                self.learn_set.append(point)
             for point in group[split_locs[0]: split_locs[1]]:
                 point.assignment = 'V'
-                self.__learn_set.append(point)
+                self.learn_set.append(point)
             for point in group[split_locs[1]:]:
                 point.assignment = 'T'
-                self.__learn_set.append(point)
+                self.learn_set.append(point)
 
     def shuffle(self, *args, split):
         '''
@@ -192,13 +194,13 @@ class DataFrame:
 
         elif 'l' and 'v' in args:
             lv_set = []
-            for point in self.__learn_set:
+            for point in self.learn_set:
                 lv_set.append(point)
-            for point in self.__valid_set:
+            for point in self.valid_set:
                 lv_set.append(point)
             rand_index = rm.sample(
-                range(len(self.__learn_set), len(self.__valid_set)),
-                (len(self.__learn_set) + len(self.__valid_set))
+                range(len(self.learn_set) + len(self.valid_set)),
+                (len(self.learn_set) + len(self.valid_set))
             )
             learn_index = rand_index[
                 0: int(len(rand_index) * (split[0] / (1 - split[2]))) + 1
@@ -207,13 +209,13 @@ class DataFrame:
                 int(len(rand_index) * (split[0] / (1 - split[2]))) + 1:
             ]
 
-            self.__learn_set = []
-            self.__valid_set = []
+            self.learn_set = []
+            self.valid_set = []
 
             for idx in learn_index:
-                self.__learn_set.append(lv_set[idx])
+                self.learn_set.append(lv_set[idx])
             for idx in valid_index:
-                self.__valid_set.append(lv_set[idx])
+                self.valid_set.append(lv_set[idx])
 
         else:
             raise Exception('Shuffle arguments must be *l, v, t* or *l, v')
@@ -242,13 +244,13 @@ class DataFrame:
         '''
 
         pd = self.__PackagedData()
-        for point in self.__learn_set:
+        for point in self.learn_set:
             pd.learn_x.append(np.asarray(point.inputs).astype('float32'))
             pd.learn_y.append(np.asarray(point.targets).astype('float32'))
-        for point in self.__valid_set:
+        for point in self.valid_set:
             pd.valid_x.append(np.asarray(point.inputs).astype('float32'))
             pd.valid_y.append(np.asarray(point.targets).astype('float32'))
-        for point in self.__test_set:
+        for point in self.test_set:
             pd.test_x.append(np.asarray(point.inputs).astype('float32'))
             pd.test_y.append(np.asarray(point.targets).astype('float32'))
 
@@ -257,98 +259,99 @@ class DataFrame:
         pd.valid_x = np.asarray(pd.valid_x)
         pd.valid_y = np.asarray(pd.valid_y)
         pd.test_x = np.asarray(pd.test_x)
-        pd.test_y = np.asarray(pd.learn_y)
+        pd.test_y = np.asarray(pd.test_y)
         return pd
 
-    def save_results(results, DataFrame, filename):
-        '''
-        Saves *results* to *filename*; uses *DataFrame for header formatting,
-        DataPoint data
-        '''
 
-        if '.csv' not in filename:
-            filename += '.csv'
+def save_results(results, DataFrame, filename):
+    '''
+    Saves *results* to *filename*; uses *DataFrame for header formatting,
+    DataPoint data
+    '''
 
-        rows = []
+    if '.csv' not in filename:
+        filename += '.csv'
 
-        type_row = []
-        type_row.append('DATAID')
-        type_row.append('ASSIGNMENT')
-        for string in range(DataFrame.num_strings):
-            type_row.append('STRING')
-        for group in range(DataFrame.num_groups):
-            type_row.append('GROUP')
-        for target in range(DataFrame.num_targets):
-            type_row.append('TARGET')
+    rows = []
+
+    type_row = []
+    type_row.append('DATAID')
+    type_row.append('ASSIGNMENT')
+    for string in range(DataFrame.num_strings):
+        type_row.append('STRING')
+    for group in range(DataFrame.num_groups):
+        type_row.append('GROUP')
+    for target in range(DataFrame.num_targets):
+        type_row.append('TARGET')
+    for result in results:
+        type_row.append('RESULT')
+    rows.append(type_row)
+
+    title_row = []
+    title_row.append('DATAID')
+    title_row.append('ASSIGNMENT')
+    for string in DataFrame.string_names:
+        title_row.append(string)
+    for group in DataFrame.group_names:
+        title_row.append(group)
+    for target in DataFrame.target_names:
+        title_row.append(target)
+    for result in range(len(results)):
+        title_row.append(result)
+    rows.append(title_row)
+
+    if len(results[0]) == len(DataFrame.learn_set):
+        dset = 'learn'
+    elif len(results[0]) == len(DataFrame.valid_set):
+        dset = 'valid'
+    elif len(results[0]) == len(DataFrame.test_set):
+        dset = 'test'
+    elif len(results[0]) == (
+        len(DataFrame.learn_set) + len(DataFrame.valid_set)
+    ):
+        dset = 'train'
+    else:
+        dset = None
+
+    if dset == 'train':
+        output_points = []
+        for point in DataFrame.learn_set:
+            output_points.append(point)
+        for point in DataFrame.valid_set:
+            output_points.append(point)
+    elif dset == 'learn':
+        output_points = DataFrame.learn_set
+    elif dset == 'valid':
+        output_points = DataFrame.valid_set
+    elif dset == 'test':
+        output_points = DataFrame.test_set
+    else:
+        output_points = []
+        for point in DataFrame.learn_set:
+            output_points.append(point)
+        for point in DataFrame.valid_set:
+            output_points.append(point)
+        for point in DataFrame.test_set:
+            output_points.append(point)
+
+    for idx, point in enumerate(output_points):
+        data_row = []
+        data_row.append(point.id)
+        data_row.append(point.assignment)
+        for string in point.strings:
+            data_row.append(string)
+        for group in point.groups:
+            data_row.append(group)
+        for target in point.targets:
+            data_row.append(target)
         for result in results:
-            type_row.append('RESULT')
-        rows.append(type_row)
+            if DataFrame.num_targets == 1:
+                data_row.append(result[idx][0])
+            else:
+                data_row.append(result[idx])
+        rows.append(data_row)
 
-        title_row = []
-        title_row.append('DATAID')
-        title_row.append('ASSIGNMENT')
-        for string in DataFrame.string_names:
-            title_row.append(string)
-        for group in DataFrame.group_names:
-            title_row.append(group)
-        for target in DataFrame.target_names:
-            title_row.append(target)
-        for result in range(len(results)):
-            title_row.append(result)
-        rows.append(title_row)
-
-        if len(results[0]) == len(DataFrame.__learn_set):
-            dset = 'learn'
-        elif len(results[0]) == len(DataFrame.__valid_set):
-            dset = 'valid'
-        elif len(results[0]) == len(DataFrame.__test_set):
-            dset = 'test'
-        elif len(results[0]) == (
-            len(DataFrame.learn_set) + len(DataFrame.__valid_set)
-        ):
-            dset = 'train'
-        else:
-            dset = None
-
-        if dset == 'train':
-            output_points = []
-            for point in DataFrame.__learn_set:
-                output_points.append(point)
-            for point in DataFrame.__valid_set:
-                output_points.append(point)
-        elif dset == 'learn':
-            output_points = DataFrame.__learn_set
-        elif dset == 'valid':
-            output_points = DataFrame.__valid_set
-        elif dset == 'test':
-            output_points = DataFrame.__test_set
-        else:
-            output_points = []
-            for point in DataFrame.__learn_set:
-                output_points.append(point)
-            for point in DataFrame.__valid_set:
-                output_points.append(point)
-            for point in DataFrame.__test_set:
-                output_points.append(point)
-
-        for idx, point in enumerate(output_points):
-            data_row = []
-            data_row.append(point.id)
-            data_row.append(point.assignment)
-            for string in point.strings:
-                data_row.append(string)
-            for group in point.groups:
-                data_row.append(group)
-            for target in point.targets:
-                data_row.append(target)
-            for result in results:
-                if DataFrame.num_targets == 1:
-                    data_row.append(result[idx][0])
-                else:
-                    data_row.append(result[idx])
-            rows.append(data_row)
-
-        with open(filename, 'w') as file:
-            wr = csv.writer(file, quoting=csv.QUOTE_ALL, lineterminator='\n')
-            for row in rows:
-                wr.writerow(row)
+    with open(filename, 'w') as file:
+        wr = csv.writer(file, quoting=csv.QUOTE_ALL, lineterminator='\n')
+        for row in rows:
+            wr.writerow(row)

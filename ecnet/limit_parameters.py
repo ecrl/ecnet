@@ -77,6 +77,7 @@ def limit_iterative_include(DataFrame, limit_num):
                 packaged_data.learn_y,
                 valid_input,
                 packaged_data.valid_y,
+                learning_rate=0.1,
                 max_epochs=5000
             )
 
@@ -192,6 +193,7 @@ def limit_genetic(DataFrame, limit_num, population_size, num_survivors,
             packaged_data_cf.learn_y,
             valid_input,
             packaged_data_cf.valid_y,
+            learning_rate=0.1,
             max_epochs=5000
         )
 
