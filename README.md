@@ -42,7 +42,7 @@ ECNet operates using a **Server** object that interfaces with data utility class
 
 ## Configuration .yml file format and variables:
 
-Here is what a config.yml file for cetane number prediction looks like:
+Here is a configuration .yml file we use for cetane number predictions:
 
 ```yml
 ---
@@ -55,15 +55,15 @@ mlp_hidden_layers:
 mlp_in_layer_activ: relu
 mlp_out_layer_activ: linear
 train_epochs: 500
-valid_max_epochs: 15000
+valid_max_epochs: 10000
 ```
 
 Here are brief explanations of each of these variables:
 - **learning_rate**: value passed to the AdamOptimizer to use as its learning rate during training
 - **mlp_hidden_layers** - *[[num_neurons_0, layer_type_0],...,[num_neurons_n, layer_type_n]]*: the architecture of the ANN between the input and output layers
 	- Rectified linear unit (**'relu'**), **'sigmoid'**, **'softmax'** and **'linear'** *layer_type*s are currently supported
-- **mlp_in_layer_activ** - the layer type of the input layer: number of nodes is determined by data dimensions
-- **mlp_out_layer_activ** - the layer type of the output layer: number of nodes is determined by data dimensions
+- **mlp_in_layer_activ** - the layer type of the input layer: number of nodes is determined by input data dimensionality
+- **mlp_out_layer_activ** - the layer type of the output layer: number of nodes is determined by target data dimensionality
 - **train_epochs**: number of training iterations (not used with validation)
 - **valid_max_epochs**: the maximum number of training iterations during the validation process
 
