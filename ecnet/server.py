@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  ecnet/server.py
-#  v.1.4.6
-#  Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
+# ecnet/server.py
+# v.1.5
+# Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
-#  This file contains the "Server" class, which handles ECNet project creation,
-#	neural network model creation, data hand-off to models, and project error
-#	calculation. For example scripts, refer to https://github.com/tjkessler/ecnet
+# Contains the "Server" class, which handles ECNet project creation, neural
+# network model creation, data hand-off to models, and prediction error
+# calculation. For example scripts, refer to https://github.com/tjkessler/ecnet
 #
 
-# 3rd party packages (open src.)
 import yaml
 import warnings
 import os
@@ -19,597 +18,652 @@ import zipfile
 import pickle
 from ecabc.abc import ABC
 
-# ECNet source files
 import ecnet.data_utils
 import ecnet.error_utils
 import ecnet.model
 import ecnet.limit_parameters
 
+
 class Server:
-	'''
-	Server object: handles project creation/usage for ECNet projects, handles
-	data hand-off to neural networks for model training
-	'''
+    '''
+    Server object: handles project creation/usage for ECNet, handles data
+    hand-off to neural networks for model training, selection and usage, data
+    importing, error calculations, hyperparameter tuning, input dimensionality
+    reduction.
+    '''
 
-	def __init__(self, filename = 'config.yml'):
-		'''
-		Initialization: imports configuration variables from *filename*
-		'''
+    def __init__(self, filename='config.yml'):
+        '''
+        Initialization: imports model configuration file *filename*; if
+        configuration file not found, creates default configuration file
+        with name *filename*
+        '''
 
-		# Dictionary containing configuration variables
-		self.vars = {}
+        self.vars = {}
+        if '.yml' not in filename:
+            filename += '.yml'
+        try:
+            file.open(filename, 'r')
+            self.vars.update(yaml.load(file))
+        except:
+            warnings.warn('Supplied configuration file not found: creating \
+                default configuration for {}'.format(filename))
+            config_dict = {
+                'learning_rate': 0.1,
+                'mlp_hidden_layers': [
+                    [10, 'relu'],
+                    [10, 'relu']
+                ],
+                'mlp_in_layer_activ': 'relu',
+                'mlp_out_layer_activ': 'linear',
+                'train_epochs': 500,
+                'valid_max_epochs': 10000
+            }
+            file = open(filename, 'w')
+            yaml.dump(config_dict, file)
+            self.vars.update(config_dict)
 
-		# Open configuration file found at *filename*
-		try:
-			file = open(filename, 'r')
-			self.vars.update(yaml.load(file))
+        self.__config_filename = filename
+        self.__using_project = False
 
-		# Configuration file not found, create default 'config.yml'
-		except:
-			warnings.warn('WARNING: supplied configuration file not found: creating default config.yml')
-			config_dict = {
-				'data_filename' : 'data.csv',
-				'data_sort_type' : 'random',
-				'data_split' : [0.65,0.25,0.10],
-				'learning_rate' : 0.1,
-				'mlp_hidden_layers' : [[5, 'relu'], [5, 'relu']],
-				'mlp_in_layer_activ' : 'relu',
-				'mlp_out_layer_activ' : 'linear',
-				'project_name' : 'my_project',
-				'project_num_builds' : 1,
-				'project_num_nodes' : 1,
-				'project_num_trials' : 1,
-				'project_print_feedback': True,
-				'train_epochs' : 500,
-				'valid_max_epochs': 5000
-			}
-			filename = 'config.yml'
-			file = open(filename, 'w')
-			yaml.dump(config_dict, file)
-			self.vars.update(config_dict)
+    def create_project(self, project_name, num_builds=1, num_nodes=5,
+                       num_trials=10, print_feedback=True):
+        '''
+        Creates the folder structure for a project (no single-model creation)
 
-		# Set configuration filename
-		self.config_filename = filename
-		# Initial state of Server is to create single models
-		self.using_project = False
+        *project_name*      - name of your project
+        *num_builds*        - number of builds
+        *num_nodes*         - number of nodes (per build)
+        *num_trials*        - number of trials (per node)
+        *print_feedback*    - whether to print current progress of build
+        '''
 
-	def create_project(self, project_name = None):
-		'''
-		Creates the folder structure for a project; if not called, Server will create
-		just one neural network model. A project consists of builds, each build
-		containing nodes (node predictions are averaged for final build prediction).
-		Number of builds and nodes are specified in the configuration file.
-		'''
+        self.__project_name = project_name
+        self.__num_builds = num_builds
+        self.__num_nodes = num_nodes
+        self.__num_trials = num_trials
+        self.__print_feedback = print_feedback
+        if not os.path.exists(self.__project_name):
+            os.makedirs(self.__project_name)
+        for build in range(self.__num_builds):
+            path_b = os.path.join(self.__project_name, 'build_{}'
+                                  .format(build + 1))
+            if not os.path.exists(path_b):
+                os.makedirs(path_b)
+            for node in range(self.__num_nodes):
+                path_n = os.path.join(path_b, 'node_{}'.format(node + 1))
+                if not os.path.exists(path_n):
+                    os.makedirs(path_n)
+        self.__using_project = True
 
-		# If alternate project name is not given, use configuration file's project name
-		if project_name is None:
-			project_name = self.vars['project_name']
-		# If alternate name is given, update Server config with new name
-		else:
-			self.vars['project_name'] = project_name
-		# Create base project folder in working directory (if not already there)
-		if not os.path.exists(project_name):
-			os.makedirs(project_name)
-		# For each build (number of builds specified in config):
-		for build in range(self.vars['project_num_builds']):
-			# Create build path (project + build number)
-			path_b = os.path.join(project_name, 'build_%d' % build)
-			# Create folder (if it doesn't exist)
-			if not os.path.exists(path_b):
-				os.makedirs(path_b)
-			# For each node (number of nodes specified in config):
-			for node in range(self.vars['project_num_nodes']):
-				# Create node path (project + build number + node number)
-				path_n = os.path.join(path_b, 'node_%d' % node)
-				# Create folder (if it doesn't exits)
-				if not os.path.exists(path_n):
-					os.makedirs(path_n)
-		# Update Server boolean, indicating we are now using a project (instead of single model)
-		self.using_project = True
+    def import_data(self, data_filename, sort_type='random',
+                    data_split=[0.65, 0.25, 0.1]):
+        '''
+        Imports data from ECNet formatted CSV database
 
-	def import_data(self, data_filename = None):
-		'''
-		Imports data from *data_filename*; utilizes 'data_utils' for file I/O, data set splitting
-		and data set packaging for hand-off to neural network models
-		'''
+        *data_filename* - ECNet database file name
+        *sort_type*     - 'random' for randomized learning, validation and
+                          testing sets, 'explicit' to use ASSIGNMENT column
+                          in database
+        *data_split*    - if random sort type, [learn%, valid%, test%]
+        '''
 
-		# If no filename specified, use configuration filename
-		if data_filename is None:
-			data_filename = self.vars['data_filename']
-		# Else, set config variable to supplied filename
-		else:
-			self.vars['data_filename'] = data_filename
-		# Import the data using *data_utils* *DataFrame* object
-		self.DataFrame = ecnet.data_utils.DataFrame(data_filename)
-		# Create learning, validation and testing sets
-		if self.vars['data_sort_type'] == 'random':
-			self.DataFrame.create_sets(random = True, split = self.vars['data_split'])
-		else:
-			self.DataFrame.create_sets(random = False)
-		# Package sets for model hand-off
-		self.packaged_data = self.DataFrame.package_sets()
+        self.DataFrame = ecnet.data_utils.DataFrame(data_filename)
+        if sort_type == 'random':
+            self.DataFrame.create_sets(random=True, split=data_split)
+        elif sort_type == 'explicit':
+            self.DataFrame.create_sets(random=False)
+        else:
+            raise ValueError('Unknown sort_type {}'.format(sort_type))
+        self.__sets = self.DataFrame.package_sets()
 
-	def limit_parameters(self, 
-			limit_num, 
-			output_filename, 
-			use_genetic = False, 
-			population_size = 500, 
-			num_survivors = 200, 
-			num_generations = 25, 
-			shuffle = False):
-		'''
-		Limits the input dimensionality of the currently loaded DataFrame to a dimension of *limit_num*.
-		Saves the resulting limited DataFrame to *output_filename*. Option to *shuffle* data sets between
-		inclusions/after each generation if using genetic algorithm. *use_genetic* allows for using a 
-		genetic algorithm to limit the dimensionality (default to iterative inclusion), with arguments 
-		for genetic algorithm *population_size*, *num_survivors* of each generation, and the number of 
-		generations *num_generations* (PyGenetics package).
-		'''
+    def limit_input_parameters(self, limit_num, output_filename,
+                               use_genetic=False, population_size=500,
+                               num_survivors=200, num_generations=25,
+                               shuffle=False):
+        '''
+        Limits the input dimensionality of currently loaded DataFrame; default
+        method is an iterative inclusion algorithm, options for using a genetic
+        algorithm available.
 
-		if use_genetic:
-			params = ecnet.limit_parameters.limit_genetic(self.DataFrame, 
-								limit_num, 
-								population_size, 
-								num_survivors, 
-								num_generations, 
-								shuffle = shuffle, 
-								print_feedback = self.vars['project_print_feedback'])
-		else:
-			params = ecnet.limit_parameters.limit_iterative_include(self.DataFrame, limit_num)
-		ecnet.limit_parameters.output(self.DataFrame, params, output_filename)
+        *limit_num*         - desired input dimensionality
+        *output_filename*   - filename for resulting ECNet formatted database
 
-	def tune_hyperparameters(self, 
-							target_score = None, 
-							iteration_amt = 50, 
-							amt_employers = 50):
-		'''
-		Tunes the neural network learning hyperparameters (learning_rate, valid_max_epochs, neuron
-		counts in each hidden layer) using an artificial bee colony algorithm (ecabc package)
-		'''
+        If *use_genetic* == True:
+        *population_size*   - population size of genetic algorithm
+        *num_survivors*     - number of population members to reproduce for
+                              next generation
+        *num_generations*   - number of generations the algorithm will run for
+        *shuffle*           - whether to shuffle learning, validation and
+                              testing sets for each population member
 
-		# Make sure project is not constructed
-		if self.using_project:
-			warnings.warn('WARNING: tune_hyperparameters() uses individual neural networks, not projects.\
-						Setting using_project boolean to false.')
-			self.using_project = False
+        See https://github.com/tjkessler/pygenetics for genetic algorithm
+        source code.
+        '''
 
-		'''
-		Fitness function to be used by the artificial bee colony
-		'''
-		def test_neural_network(values):
+        if use_genetic:
+            params = ecnet.limit_parameters.limit_genetic(
+                self.DataFrame, limit_num, population_size, num_survivors,
+                shuffle=shuffle, print_feedback=self.__print_feedback
+            )
+        else:
+            params = ecnet.limit_parameters.limit_iterative_include(
+                self.DataFrame, limit_num
+            )
+        ecnet.limit_parameters.output(self.DataFrame, params, output_filename)
 
-			self.vars['learning_rate'] = values[0]
-			self.vars['valid_max_epochs'] = values[1]
-			self.vars['mlp_hidden_layers'][0][0] = values[2]
-			self.vars['mlp_hidden_layers'][1][0] = values[3]
+    def tune_hyperparameters(self, target_score=None, iteration_amt=50,
+                             amt_employers=50, print_feedback=True):
+        '''
+        Tunes the neural network learning hyperparameters (learning_rate,
+        valid_max_epochs, neuron counts for each hidden layer) using an
+        artificial bee colony searching algorithm.
 
-			self.train_model(validate = True)
-			return self.calc_error('rmse', dset = 'test')['rmse']
+        *target_score*      - target mean absolute error score for test set
+        *iteration_amt*     - if not using target score, run the ABC for this
+                              number of iterations
+        *amt_employers*     - number of employer "bees" for ABC
+        *print_feedback*    - if not already defined in create_project(),
+                              determines whether to print ABC progress
 
-		# Minimum and maximum values for hyperparameters (learning rate, valid_max_epochs, hidden layer neuron count)
-		hyperparameters = [('float', (0.01, 0.2)), 
-					('int', (1000, 25000)), 
-					('int', (8, 32)), 
-					('int', (8, 32))]
+        See https://github.com/hgromer/ecabc for ABC source code.
+        '''
 
-		# If *target_score* (RMSE) is not given, run ABC for *iteration_amt* iterations
-		if target_score is None:
-			abc = ABC(iterationAmount = iteration_amt, 
-				fitnessFunction = test_neural_network, 
-				valueRanges = hyperparameters, 
-				amountOfEmployers = amt_employers)
+        def test_neural_network(values):
+            '''
+            Fitness function used by artificial bee colony
+            '''
+            self.vars['learning_rate'] = values[0]
+            self.vars['mlp_hidden_layers'] = values[1]
+            for idx, layer in enumerate(self.vars['hidden_layers'], 2):
+                layer[0] = values[idx]
+            self.train_model(validate=True)
+            return self.calc_error(
+                'mean_abs_error',
+                dset='test'
+            )['mean_abs_error']
 
-		# Else, run ABC until *target_score* is reached
-		else:
-			abc = ABC(endValue = target_score,
-				fitnessFunction = test_neural_network,
-				valueRanges = hyperparameters,
-				amountOfEmployers = amt_employers)
+        hyperparameters = [
+            ('float', (0.01, 0.2)),
+            ('int', (1000, 25000))
+        ]
+        for _ in range(len(self.vars['mlp_hidden_layers'])):
+            hyperparameters.append(('int', (8, 32)))
 
-		# Run the artificial bee colony
-		abc.printInfo(self.vars['project_print_feedback'])
-		new_hyperparameters = abc.runABC()
+        if target_score is None:
+            abc = ABC(
+                iterationAmount=iteration_amt,
+                fitnessFunction=test_neural_network,
+                valueRanges=hyperparameters,
+                amountOfEmployers=amt_employers
+            )
+        else:
+            abc = ABC(
+                endValue=target_score,
+                fitnessFunction=test_neural_network,
+                valueRanges=hyperparameters,
+                amountOfEmployers=amt_employers
+            )
 
-		# Set Server hyperparameters to ABC-calculated hyperparameters
-		self.vars['learning_rate'] = new_hyperparameters[0]
-		self.vars['valid_max_epochs'] = new_hyperparameters[1]
-		self.vars['mlp_hidden_layers'][0][0] = new_hyperparameters[2]
-		self.vars['mlp_hidden_layers'][1][0] = new_hyperparameters[3]
+        try:
+            abc.printInfo(self.__print_feedback)
+        except:
+            abc.printInfo(print_feedback)
 
-		# Return ABC-calculated hyperparameters
-		return new_hyperparameters
+        use_proj = False
+        if self.__using_project:
+            use_proj = True
+            self.__using_project = False
 
-	def train_model(self, *args, validate = False):
-		'''
-		Trains a neural network (multilayer perceptron) using learning data, and validation data 
-		(if *validate* == True). *args is used to specify shuffling of data sets for each trial; 
-		use "shuffle_lv" (shuffles training data) or "shuffle_lvt" (shuffles all data)
-		'''
+        new_hyperparameters = abc.runABC()
 
-		# Not using project, train single model
-		if not self.using_project:
-			# Create the model, train the model, save the model to temp folder
-			mlp_model = self.__create_mlp_model()
-			# Use validation sets to periodically test model's performance and determine when to stop;
-			#	prevents overfitting
-			if validate:
-				mlp_model.fit_validation(
-					self.packaged_data.learn_x,
-					self.packaged_data.learn_y,
-					self.packaged_data.valid_x,
-					self.packaged_data.valid_y,
-					self.vars['learning_rate'],
-					self.vars['valid_max_epochs'])
-			# No validation is used, just train for 'training_epochs' iterations
-			else:
-				mlp_model.fit(
-					self.packaged_data.learn_x,
-					self.packaged_data.learn_y,
-					self.vars['learning_rate'],
-					self.vars['train_epochs'])
-			mlp_model.save('./tmp/model_output')
+        if use_proj:
+            self.__using_project = True
 
-		# Project is constructed, create models according to configuration specifications
-		else:
-			# For each build:
-			for build in range(self.vars['project_num_builds']):
-				# For each node:
-				for node in range(self.vars['project_num_nodes']):
-					# For each trial:
-					for trial in range(self.vars['project_num_trials']):
-						# Print status update (if config variable is True)
-						if self.vars['project_print_feedback']:
-							print('Build %d, Node %d, Trial %d...' % (build + 1, node + 1, trial + 1))
-						# Determine filepath where trial will be saved
-						path_b = os.path.join(self.vars['project_name'], 'build_%d' % build)
-						path_n = os.path.join(path_b, 'node_%d' % node)
-						path_t = os.path.join(path_n, 'trial_%d' % trial)
-						# Create the model, train the model, save the model to trial filepath
-						mlp_model = self.__create_mlp_model()
-						# Use validation sets to periodically test model's performance and determine when done training
-						if validate:
-							mlp_model.fit_validation(
-								self.packaged_data.learn_x,
-								self.packaged_data.learn_y,
-								self.packaged_data.valid_x,
-								self.packaged_data.valid_y,
-								self.vars['learning_rate'],
-								self.vars['valid_max_epochs'])
-						# No validation is used, just train for 'training_epochs' iterations
-						else:
-							mlp_model.fit(
-								self.packaged_data.learn_x,
-								self.packaged_data.learn_y,
-								self.vars['learning_rate'],
-								self.vars['train_epochs'])
-						mlp_model.save(path_t)
-						# Shuffle the training data sets
-						if 'shuffle_lv' in args:
-							self.DataFrame.shuffle('l', 'v', split = self.vars['data_split'])
-							self.packaged_data = self.DataFrame.package_sets()
-						# Shuffle all data sets
-						elif 'shuffle_lvt' in args:
-							self.DataFrame.create_sets(split = self.vars['data_split'])
-							self.packaged_data = self.DataFrame.package_sets()
+        self.vars['learning_rate'] = new_hyperparameters[0]
+        self.vars['valid_max_epochs'] = new_hyperparameters[1]
+        for idx, layer in enumerate(self.vars['hidden_layers'], 2):
+            layer[0] = new_hyperparameters[idx]
 
-	def select_best(self, dset = None, error_fn = 'rmse'):
-		'''
-		Selects the best performing model from each node for each build to represent
-		the node (build prediction = average of node predictions). Selection of best
-		model is based on data set *dset* performance. This method may take a while,
-		depending on project size.
-		'''
+        return new_hyperparameters
 
-		# If not using a project, no need to call this function!
-		if not self.using_project:
-			raise Exception('ERROR: Project is not created; project structure is required to select best models!')
-		# Using a project
-		else:
-			# Print status update (if config variable is True)
-			print('Selecting best models from each node for each build...')
-			# Determine input values and target values to use for selection (based on dset arg)
-			x_vals = self.__determine_x_vals(dset)
-			y_vals = self.__determine_y_vals(dset)
-			# For each build:
-			for build in range(self.vars['project_num_builds']):
-				# Determine build path
-				path_b = os.path.join(self.vars['project_name'], 'build_%d' % build)
-				# For each node:
-				for node in range(self.vars['project_num_nodes']):
-					# Determine node path
-					path_n = os.path.join(path_b, 'node_%d' % node)
-					# List of trial errors within the node
-					rmse_list = []
-					# For each trial:
-					for trial in range(self.vars['project_num_trials']):
-						# Create model, load trial, calculate error, append to list
-						mlp_model = ecnet.model.MultilayerPerceptron()
-						mlp_model.load(os.path.join(path_n, 'trial_%d' % trial))
-						rmse_list.append(self.__error_fn(error_fn, mlp_model.use(x_vals), y_vals))
-					# Determines the lowest error in error list
-					current_min = 0
-					for new_min in range(len(rmse_list)):
-						if rmse_list[new_min] < rmse_list[current_min]:
-							current_min = new_min
-					# Load the model with the lowest error, resave as 'final_net' in the node folder
-					mlp_model = ecnet.model.MultilayerPerceptron()
-					mlp_model.load(os.path.join(path_n, 'trial_%d' % current_min))
-					mlp_model.save(os.path.join(path_n, 'final_net'))
+    def train_model(self, validate=False, shuffle=None,
+                    data_split=[0.65, 0.25, 0.1]):
+        '''
+        create_project() not called before: trains one neural network
+        create_project() called before: creates build*node*trial neural
+                         networks
 
-	def use_model(self, dset = None):
-		'''
-		Use trained neural network (multilayer perceptron), either single or build,
-		to predict values for specified *dset*
-		'''
+        *shuffle*   - if using a project, 'lvt' shuffles learning, validation
+                      and testing sets for each trial; 'lv' shuffles learning
+                      and validation sets for each trial
+        *validate*  - if True, uses validation set to periodically check if
+                      any additional learning is needed (if validation set
+                      performance stops improving, stop learning)
+        '''
 
-		# Determine data set to be passed to model, specified by *dset*
-		x_vals = self.__determine_x_vals(dset)
-		# Not using project, use single model
-		if not self.using_project:
-			# Create model object
-			mlp_model = ecnet.model.MultilayerPerceptron()
-			# Load the trained model
-			mlp_model.load('./tmp/model_output')
-			# Return results obtained from model
-			return [mlp_model.use(x_vals)]
-		# Project is constructed, use project builds to predict values
-		else:
-			# List of final predictions
-			preds = []
-			# For each project build:
-			for build in range(self.vars['project_num_builds']):
-				# Determine build path
-				path_b = os.path.join(self.vars['project_name'], 'build_%d' % build)
-				# Build predictions (one from each node)
-				build_preds = []
-				# For each node:
-				for node in range(self.vars['project_num_nodes']):
-					# Determine node path
-					path_n = os.path.join(path_b, 'node_%d' % node)
-					# Determine final build (from select_best) path
-					path_f = os.path.join(path_n, 'final_net')
-					# Create model, load net, append results
-					mlp_model = ecnet.model.MultilayerPerceptron()
-					mlp_model.load(path_f)
-					build_preds.append(mlp_model.use(x_vals))
-				# Average build prediction = average of node predictions
-				ave_build_preds = []
-				# For each data point
-				for point in range(len(build_preds[0])):
-					# List of node predictions for individual data point
-					local_pred = []
-					# For each node prediction
-					for pred in range(len(build_preds)):
-						# Append node prediction for data point
-						local_pred.append(build_preds[pred][point])
-					# Compute average of node predictions for point, append to ave list
-					ave_build_preds.append(sum(local_pred) / len(local_pred))
-				# Append average build prediction to list of final predictions
-				preds.append(list(ave_build_preds))
-			# Return final predictions
-			return preds
+        if not self.__using_project:
+            mlp_model = self.__create_mlp_model()
+            if validate:
+                mlp_model.fit_validation(
+                    self.__sets.learn_x,
+                    self.__sets.learn_y,
+                    self.__sets.valid_x,
+                    self.__sets.valid_y,
+                    self.vars['learning_rate'],
+                    self.vars['valid_max_epochs']
+                )
+            else:
+                mlp_model.fit(
+                    self.__sets.learn_x,
+                    self.__sets.learn_y,
+                    self.vars['learning_rate'],
+                    self.vars['train_epochs']
+                )
+            mlp_model.save('./tmp/model')
 
-	def calc_error(self, *args, dset = None):
-		'''
-		Calculates and returns errors based on input *args; possible arguments are *rmse*,
-		*r2* (r-squared correlation coefficient), *mean_abs_error*, *med_abs_error*. Multiple
-		error arguments can be supplied. *dset* argument specifies which data set the error 
-		is being calculated for (e.g. 'test', 'train'). Returns dictionary of error values.
-		'''
+        else:
+            for build in range(self.__num_builds):
+                path_b = os.path.join(
+                    self.__project_name, 'build_{}'.format(build + 1)
+                )
+                for node in range(self.__num_nodes):
+                    path_n = os.path.join(
+                        path_b, 'node_{}'.format(node + 1)
+                    )
+                    for trial in range(self.__num_trials):
+                        if self.__print_feedback:
+                            print('Build {}, Node {}, Trial {}...'.format(
+                                build + 1,
+                                node + 1,
+                                trial + 1
+                            ))
+                        path_t = os.path.join(
+                            path_n, 'trial_{}'.format(trial + 1)
+                        )
+                        mlp_model = self.__create_mlp_model()
+                        if validate:
+                            mlp_model.fit_validation(
+                                self.__sets.learn_x,
+                                self.__sets.learn_y,
+                                self.__sets.valid_x,
+                                self.__sets.valid_y,
+                                self.vars['learning_rate'],
+                                self.vars['valid_max_epochs']
+                            )
+                        else:
+                            mlp_model.fit(
+                                self.__sets.learn_x,
+                                self.__sets.learn_y,
+                                self.vars['learning_rate'],
+                                self.vars['train_epochs']
+                            )
+                        mlp_model.save(path_t)
+                        if shuffle == 'lv':
+                            self.DataFrame.shuffle(
+                                'l', 'v', split=data_split
+                            )
+                            self.__sets = self.DataFrame.package_sets()
+                        elif shuffle == 'lvt':
+                            self.DataFrame.create_sets(
+                                split=data_split
+                            )
+                            self.__sets = self.DataFrame.package_sets()
+                        elif shuffle is None:
+                            continue
+                        else:
+                            raise ValueError(
+                                'Unknown shuffle arg {}'.format(shuffle)
+                            )
 
-		# Dictionary keys = error arguments, values = error values
-		error_dict = {}
-		# Obtain predictions for specified data set
-		y_hat = self.use_model(dset)
-		# Determine target values for specified data set
-		y = self.__determine_y_vals(dset)
-		# For each supplied error argument:
-		for arg in args:
-			# Using project
-			if self.using_project:
-				# List of error for each build
-				error_list = []
-				# For each build's prediction:
-				for pred in y_hat:
-					# Append build error to error list
-					error_list.append(self.__error_fn(arg, pred, y))
-				# Key error = error list
-				error_dict[arg] = error_list
-			# Using single model
-			else:
-				# Key error = calculated error
-				error_dict[arg] = self.__error_fn(arg, y_hat, y)
-		# Return error dictionary
-		return error_dict
+    def select_best(self, dset=None, error_fn='mean_abs_error'):
+        '''
+        Selects the best performing neural network trial from each node for
+        each build (requires create_project())
 
-	def output_results(self, results, filename = 'my_results.csv'):
-		'''
-		Outputs the *results* obtained from "use_model()" to a specified *filename*
-		'''
+        *dset*      - None    == select based on entire DataFrame performance
+                    - 'learn' == select based on learning set performance
+                    - 'valid' == select based on validation set performance
+                    - 'train' == select based on learn + valid sets performance
+                    - 'test'  == select based on test set performance
+        *error_fn*  - 'rmse'  == measure performance using RMSE
+                    - 'r2'    == measure performance using r-squared
+                    - 'mean_abs_error' == measure performance using mean
+                      absolute error
+                    - 'med_abs_error'  == measure performance using median
+                      absolute error
+        '''
 
-		# Output results using data_utils function
-		ecnet.data_utils.output_results(results, self.DataFrame, filename)
+        if not self.__using_project:
+            raise Exception('Project has not been created! (create_project())')
+        if not os.path.exists(
+            os.path.join(
+                self.__project_name,
+                os.path.join('build_1', os.path.join(
+                        'node_1',
+                        'trial_1'
+                    )
+                )
+            )
+        ):
+            raise Exception('Models must be trained first! (train_model())')
+        if self.__print_feedback:
+            print('Selecting best models from each node for each build...')
+        x_vals = self.__determine_x_vals(dset)
+        y_vals = self.__determine_y_vals(dset)
+        for build in range(self.__num_builds):
+            path_b = os.path.join(
+                self.__project_name, 'build_{}'.format(build + 1)
+            )
+            for node in range(self.__num_nodes):
+                path_n = os.path.join(
+                    path_b, 'node_{}'.format(node + 1)
+                )
+                error_list = []
+                for trial in range(self.__num_trials):
+                    path_t = os.path.join(
+                        path_n, 'trial_{}'.format(trial + 1)
+                    )
+                    mlp_model = ecnet.model.MultilayerPerceptron()
+                    mlp_model.load(path_t)
+                    error_list.append(
+                        self.__error_fn(
+                            error_fn, mlp_model.use(x_vals), y_vals
+                        )
+                    )
+                current_min_idx = 0
+                for idx, error in enumerate(error_list):
+                    if error < error_list[current_min_idx]:
+                        current_min_idx = idx
+                mlp_model = ecnet.model.MultilayerPerceptron()
+                path_t_best = os.path.join(
+                    path_n, 'trial_{}'.format(current_min_idx + 1)
+                )
+                path_best = os.path.join(
+                    path_n, 'model'
+                )
+                mlp_model.load(path_t_best)
+                mlp_model.save(path_best)
 
-	def save_project(self, clean_up = True):
-		'''
-		Saves the current state of Server (including currently imported DataFrame and configuration), 
-		cleans up the project directory if specified in *clean_up* (only keeps final node models),
-		and zips up the current state and project directory into a .project file
-		'''
+    def use_model(self, dset=None):
+        '''
+        Use trained neural network(s), either single or project-built,
+        to predict values for specified *dset* of currently loaded
+        DataFrame
 
-		# If removing trials from project directory (keeping final models):
-		if clean_up:
-			# For each build
-			for build in range(self.vars['project_num_builds']):
-				path_b = os.path.join(self.vars['project_name'], 'build_%d' % build)
-				# For each node
-				for node in range(self.vars['project_num_nodes']):
-					path_n = os.path.join(path_b, 'node_%d' % node)
-					# Remove trials
-					trial_files = [file for file in os.listdir(path_n) if 'trial' in file]
-					for file in trial_files:
-						os.remove(os.path.join(path_n, file))
+        *dset*  - None    == predict for entire DataFrame
+                - 'learn' == predict for learning set
+                - 'valid' == predict for validation set
+                - 'train' == predict for learning and validation sets
+                - 'test'  == predict for test set
+        '''
 
-		# Save Server configuration to configuration YAML file
-		with open(os.path.join(self.vars['project_name'], self.config_filename), 'w') as config_file:
-			yaml.dump(self.vars, 
-					config_file, 
-					default_flow_style = False, 
-					explicit_start = True)
-		config_file.close()
+        x_vals = self.__determine_x_vals(dset)
+        if not self.__using_project:
+            mlp_model = ecnet.model.MultilayerPerceptron()
+            mlp_model.load('./tmp/model')
+            return [mlp_model.use(x_vals)]
+        else:
+            preds = []
+            for build in range(self.__num_builds):
+                path_b = os.path.join(
+                    self.__project_name, 'build_{}'.format(build + 1)
+                )
+                build_preds = []
+                for node in range(self.__num_nodes):
+                    path_n = os.path.join(
+                        path_b, 'node_{}'.format(node + 1)
+                    )
+                    path_best = os.path.join(
+                        path_n, 'model'
+                    )
+                    mlp_model = ecnet.model.MultilayerPerceptron()
+                    mlp_model.load(path_best)
+                    build_preds.append(mlp_model.use(x_vals))
+                ave_build_preds = []
+                for pred in range(len(build_preds[0])):
+                    node_preds = []
+                    for node in range(len(build_preds)):
+                        node_preds.append(build_preds[node][pred])
+                    ave_build_preds.append(sum(node_preds)/len(node_preds))
+                preds.append(list(ave_build_preds))
+            return preds
 
-		# Save currently loaded DataFrame
-		with open(os.path.join(self.vars['project_name'], 'data.d'), 'wb') as data_file:
-			pickle.dump(self.DataFrame, data_file)
-		data_file.close()
+    def calc_error(self, *args, dset=None):
+        '''
+        Calculates and returns error(s) for the specified *dset*; multiple
+        errors can be calculated at once
 
-		# Zip up all files in project directory, save to .project file
-		zip_file = zipfile.ZipFile(self.vars['project_name'] + '.project', 'w', zipfile.ZIP_DEFLATED)
-		for root, dirs, files in os.walk(self.vars['project_name']):
-			for file in files:
-				zip_file.write(os.path.join(root, file))
-		zip_file.close()
+        **args* - 'rmse' == calculates RMSE
+                - 'r2'   == calculates r-squared
+                - 'mean_abs_error'  == calculates mean absolute error
+                - 'med_abs_error'   == calculates median absolute error
+        *dset*  - None    == calculate errors for entire DataFrame
+                - 'learn' == calculate errors for learning set
+                - 'valid' == calculate errors for validation set
+                - 'train' == calculate errors for learning and validation sets
+                - 'test'  == calculate errors for test set
+        '''
 
-	def open_project(self, filename):
-		'''
-		Opens a .project file, imports configuration and last used data set, unzips model files
-		to project directory
-		'''
+        error_dict = {}
+        y_hat = self.use_model(dset)
+        y = self.__determine_y_vals(dset)
+        for arg in args:
+            if self.__using_project:
+                error_list = []
+                for y_build in y_hat:
+                    error_list.append(self.__error_fn(arg, y_build, y))
+                error_dict[arg] = error_list
+            else:
+                error_dict[arg] = self.__error_fn(arg, y_hat, y)
+        return error_dict
 
-		# Set the project name variable
-		self.vars['project_name'] = filename
+    def save_results(self, results, filename):
+        '''
+        Saves *results* obtained from *use_model()* to CSV file with name
+        *filename*
+        '''
 
-		# Check for .project file format
-		if '.project' not in filename:
-			filename += '.project'
+        ecnet.data_utils.save_results(results, self.DataFrame, filename)
 
-		# Extract project directory from .project file
-		zip_file = zipfile.ZipFile(filename, 'r')
-		zip_file.extractall('./')
-		zip_file.close()
+    def save_project(self, clean_up=True):
+        '''
+        Saves the current state of the Server (including currently imported
+        DataFrame and model configuration), zips up the current state and
+        project directory to "self.__project_name".project file
 
-		# Import project configuration
-		with open(os.path.join(self.vars['project_name'], self.config_filename), 'r') as config_file:
-			self.vars.update(yaml.load(config_file))
-		config_file.close()
+        *clean_up*  - deletes trial neural networks, leaving only best models
+                      if select_best() has been run
+        '''
 
-		# Re-save Server configuration to working directory
-		with open(self.config_filename, 'w') as config_file:
-			yaml.dump(self.vars, 
-					config_file, 
-					default_flow_style = False, 
-					explicit_start = True)
-		config_file.close()
+        if not self.__using_project:
+            raise Exception('Project has not been created! (create_project())')
 
-		# Import last used DataFrame
-		with open(os.path.join(self.vars['project_name'], 'data.d'), 'rb') as data_file:
-			self.DataFrame = pickle.load(data_file)
-		data_file.close()
+        if clean_up:
+            for build in range(self.__num_builds):
+                path_b = os.path.join(
+                    self.__project_name, 'build_{}'.format(build + 1)
+                )
+                for node in range(self.__num_nodes):
+                    path_n = os.path.join(
+                        path_b, 'node_{}'.format(node + 1)
+                    )
+                    trial_files = [
+                        file for file in os.listdir(path_n) if 'trial' in file
+                    ]
+                    for file in trial_files:
+                        os.remove(os.path.join(path_n, file))
 
-		# Package data for model usage
-		self.packaged_data = self.DataFrame.package_sets()
+        with open(
+            os.path.join(self.__project_name, self.__config_filename),
+            'w'
+        ) as config_save:
+            yaml.dump(
+                self.vars,
+                config_save,
+                default_flow_stype=False,
+                explicit_start=True
+            )
+        config_save.close()
 
-		# Set project use boolean to True
-		self.using_project = True
+        with open(
+            os.path.join(self.__project_name, 'data.d'),
+            'wb'
+        ) as data_save:
+            pickle.dump(self.DataFrame, data_save)
+        data_save.close()
 
-	def __determine_x_vals(self, dset):
-		'''
-		PRIVATE METHOD: Helper function for determining data set *dset* to be passed to the model (inputs)
-		'''
+        zip_file = zipfile.ZipFile(
+            '{}.project'.format(self.__project_name),
+            'w',
+            zipfile.ZIP_DEFLATED
+        )
+        for root, dirs, files in os.walk(self.__project_name):
+            for file in files:
+                zip_file.write(os.path.join(root, file))
+        zip_file.close()
 
-		# Use the test set
-		if dset == 'test':
-			return self.packaged_data.test_x
-		# Use the validation set
-		elif dset == 'valid':
-			return self.packaged_data.valid_x
-		# Use the learning set
-		elif dset == 'learn':
-			return self.packaged_data.learn_x
-		# Use training set (learning and validation)
-		elif dset == 'train':
-			x_vals = []
-			for val in self.packaged_data.learn_x:
-				x_vals.append(val)
-			for val in self.packaged_data.valid_x:
-				x_vals.append(val)
-			return np.asarray(x_vals)
-		# Use all data sets (learning, validation and testing)
-		else:
-			x_vals = []
-			for val in self.packaged_data.learn_x:
-				x_vals.append(val)
-			for val in self.packaged_data.valid_x:
-				x_vals.append(val)
-			for val in self.packaged_data.test_x:
-				x_vals.append(val)
-			return np.asarray(x_vals)
+    def open_project(self, project_name):
+        '''
+        Opens a .project file, imports saved DataFrame, configuration, unzips
+        project folder stucture and model files
 
-	def __determine_y_vals(self, dset):
-		'''
-		PRIVATE METHOD: Helper function for determining data set *dset* to be passed to the model (targets)
-		'''
+        *project_name*  - name of .project file to open
+        '''
 
-		# Use the test set
-		if dset == 'test':
-			return self.packaged_data.test_y
-		# Use the validation set
-		elif dset == 'valid':
-			return self.packaged_data.valid_y
-		# Use the learning set
-		elif dset == 'learn':
-			return self.packaged_data.learn_y
-		# Use training set (learning and validation)
-		elif dset == 'train':
-			y_vals = []
-			for val in self.packaged_data.learn_y:
-				y_vals.append(val)
-			for val in self.packaged_data.valid_y:
-				y_vals.append(val)
-			return np.asarray(y_vals)
-		# Use all data sets (learning, validation and testing)
-		else:
-			y_vals = []
-			for val in self.packaged_data.learn_y:
-				y_vals.append(val)
-			for val in self.packaged_data.valid_y:
-				y_vals.append(val)
-			for val in self.packaged_data.test_y:
-				y_vals.append(val)
-			return np.asarray(y_vals)
+        self.__project_name = project_name.replace('.project', '')
+        if '.project' not in project_name:
+            project_name += '.project'
 
-	def __create_mlp_model(self):
-		'''
-		PRIVATE METHOD: Helper function for creating a neural network (multilayer perceptron)
-		'''
+        zip_file = zipfile.ZipFile(project_name, 'r')
+        zip_file.extractall('./')
+        zip_file.close()
 
-		# Create the model object
-		mlp_model = ecnet.model.MultilayerPerceptron()
-		# Add input layer, size = number of data inputs, activation function specified in configuration file
-		mlp_model.add_layer(self.DataFrame.num_inputs, self.vars['mlp_in_layer_activ'])
-		# Add hidden layers, sizes and activation functions specified in configuration file
-		for hidden in range(len(self.vars['mlp_hidden_layers'])):
-			mlp_model.add_layer(self.vars['mlp_hidden_layers'][hidden][0],
-								self.vars['mlp_hidden_layers'][hidden][1])
-		# Add output layer, size = number of data targets, activation function specified in configuration file
-		mlp_model.add_layer(self.DataFrame.num_targets, self.vars['mlp_out_layer_activ'])
-		# Connect layers (compute initial weights and biases)
-		mlp_model.connect_layers()
-		# Return the model object
-		return mlp_model
+        for root, dirs, files in os.walk(self.__project_name):
+            if '.yml' in file:
+                self.__config_filename = file
 
-	def __error_fn(self, arg, y_hat, y):
-		'''
-		PRIVATE METHOD: used to parse error argument, calculate specified error and return it
-		'''
+        with open(
+            os.path.join(self.__project_name, self.__config_filename),
+            'r'
+        ) as config_file:
+            self.vars.update(yaml.load(config_file))
+        config_file.close()
 
-		if arg == 'rmse':
-			return ecnet.error_utils.calc_rmse(y_hat, y)
-		elif arg == 'r2':
-			return ecnet.error_utils.calc_r2(y_hat, y)
-		elif arg == 'mean_abs_error':
-			return ecnet.error_utils.calc_mean_abs_error(y_hat, y)
-		elif arg == 'med_abs_error':
-			return ecnet.error_utils.calc_med_abs_error(y_hat, y)
-		else:
-			raise Exception('ERROR: Unknown/unsupported error function')
+        with open(self.__config_filename, 'w') as config_file:
+            yaml.dump(
+                self.vars,
+                config_file,
+                default_flow_style=False,
+                explicit_start=True
+            )
+        config_file.close()
+
+        with open(
+            os.path.join(self.__project_name, 'data.d'),
+            'rb'
+        ) as data_file:
+            self.DataFrame = pickle.load(data_file)
+        data_file.close()
+
+        self.__sets = self.DataFrame.package_sets()
+        self.__using_project = True
+
+    def __determine_x_vals(self, dset):
+        '''
+        Private method: Helper function for determining which data set input
+        data will be passed to functions
+        '''
+
+        if dset == 'test':
+            return self.__sets.test_x
+        elif dset == 'valid':
+            return self.__sets.valid_x
+        elif dset == 'learn':
+            return self.__sets.learn_x
+        elif dset == 'train':
+            x_vals = []
+            for val in self.__sets.learn_x:
+                x_vals.append(val)
+            for val in self.__sets.valid_x:
+                x_vals.append(val)
+            return np.asarray(x_vals)
+        elif dset is None:
+            x_vals = []
+            for val in self.__sets.learn_x:
+                x_vals.append(val)
+            for val in self.__sets.valid_x:
+                x_vals.append(val)
+            for val in self.__sets.test_x:
+                x_vals.append(val)
+            return np.asarray(x_vals)
+        else:
+            raise ValueError('Unknown dset argument {}'.format(dset))
+
+    def __determine_y_vals(self, dset):
+        '''
+        Private method: Helper function for determining which data set target
+        data will be passed to functions
+        '''
+
+        if dset == 'test':
+            return self.__sets.test_y
+        elif dset == 'valid':
+            return self.__sets.valid_y
+        elif dset == 'learn':
+            return self.__sets.learn_y
+        elif dset == 'train':
+            y_vals = []
+            for val in self.__sets.learn_y:
+                y_vals.append(val)
+            for val in self.__sets.valid_y:
+                y_vals.append(val)
+            return np.asarray(y_vals)
+        elif dset is None:
+            y_vals = []
+            for val in self.__sets.learn_y:
+                y_vals.append(val)
+            for val in self.__sets.valid_y:
+                y_vals.append(val)
+            for val in self.__sets.test_y:
+                y_vals.append(val)
+            return np.asarray(y_vals)
+        else:
+            raise ValueError('Unknown dset argument {}'.format(dset))
+
+    def __create_mlp_model(self):
+        '''
+        Private method: Helper function for creating a neural network
+        '''
+
+        mlp_model = ecnet.model.MultilayerPerceptron()
+        mlp_model.add_layer(
+            self.DataFrame.num_inputs,
+            self.vars['mlp_in_layer_activ']
+        )
+        for layer in self.vars['mlp_hidden_layers']:
+            mlp_model.add_layer(
+                layer[0],
+                layer[1]
+            )
+        mlp_model.add_layer(
+            self.DataFrame.num_targets,
+            self.vars['mlp_out_layer_activ']
+        )
+        mlp_model.connect_layers()
+        return mlp_model
+
+    def __error_fn(self, arg, y_hat, y):
+        '''
+        Private method: Parses error argument, calculates corresponding error
+        and returns it
+        '''
+
+        if arg == 'rmse':
+            return ecnet.error_utils.calc_rmse(y_hat, y)
+        elif arg == 'r2':
+            return ecnet.error_utils.calc_r2(y_hat, y)
+        elif arg == 'mean_abs_error':
+            return ecnet.error_utils.calc_mean_abs_error(y_hat, y)
+        elif arg == 'med_abs_error':
+            return ecnet.error_utils.calc_med_abs_error(y_hat, y)
