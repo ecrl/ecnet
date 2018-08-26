@@ -1,4 +1,4 @@
-import ecnet.server
+from ecnet.server import Server
 import ecnet.data_utils
 import ecnet.error_utils
 import ecnet.model
