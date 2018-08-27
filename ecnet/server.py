@@ -40,7 +40,7 @@ class Server:
         specified.
         '''
 
-        if project_name is not None:
+        if project_file is not None:
             self.__open_project(project_file)
             return
 
