@@ -176,10 +176,10 @@ class DataFrame:
                 self.learn_set.append(point)
             for point in group[split_locs[0]: split_locs[1]]:
                 point.assignment = 'V'
-                self.learn_set.append(point)
+                self.valid_set.append(point)
             for point in group[split_locs[1]:]:
                 point.assignment = 'T'
-                self.learn_set.append(point)
+                self.test_set.append(point)
 
     def shuffle(self, *args, split):
         '''
