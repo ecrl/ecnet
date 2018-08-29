@@ -1,6 +1,6 @@
-import ecnet.server
+from ecnet.server import Server
 import ecnet.data_utils
 import ecnet.error_utils
 import ecnet.model
 import ecnet.limit_parameters
-__version__ = '1.4.6'
+__version__ = '1.5'
