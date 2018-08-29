@@ -47,25 +47,25 @@ Here is a configuration .yml file we use for cetane number predictions:
 ```yml
 ---
 learning_rate: 0.1
-mlp_hidden_layers:
+hidden_layers:
 - - 32
   - relu
 - - 32
   - relu
-mlp_in_layer_activ: relu
-mlp_out_layer_activ: linear
+input_layer: relu
+output_layer: linear
 train_epochs: 500
-valid_max_epochs: 10000
+validation_max_epochs: 10000
 ```
 
 Here are brief explanations of each of these variables:
 - **learning_rate**: value passed to the AdamOptimizer to use as its learning rate during training
-- **mlp_hidden_layers** - *[[num_neurons_0, layer_type_0],...,[num_neurons_n, layer_type_n]]*: the architecture of the ANN between the input and output layers
+- **hidden_layers** - *[[num_neurons_0, layer_type_0],...,[num_neurons_n, layer_type_n]]*: the architecture of the ANN between the input and output layers
 	- Rectified linear unit (**'relu'**), **'sigmoid'**, **'softmax'** and **'linear'** *layer_type*s are currently supported
-- **mlp_in_layer_activ** - the layer type of the input layer: number of nodes is determined by input data dimensionality
-- **mlp_out_layer_activ** - the layer type of the output layer: number of nodes is determined by target data dimensionality
+- **input_activation** - the layer type of the input layer: number of nodes is determined by input data dimensionality
+- **output_activation** - the layer type of the output layer: number of nodes is determined by target data dimensionality
 - **train_epochs**: number of training iterations (not used with validation)
-- **valid_max_epochs**: the maximum number of training iterations during the validation process
+- **validation_max_epochs**: the maximum number of training iterations during the validation process
 
 ## Server methods:
 
@@ -90,7 +90,7 @@ Here is an overview of the Server object's methods:
 			- Only if *target_score* is not supplied
 		- **amt_employers** (specify the amount of employer bees in the colony)
 - **train_model(*validate=False, shuffle=None, data_split=[0.65, 0.25, 0.1]*)**: fits neural network(s) to the imported data
-	- If validate is **True**, the data's validation set will be used to periodically test model performance to determine when to stop learning up to *valid_max_epochs* config variable epochs; else, trains for *train_epochs* config variable epochs
+	- If validate is **True**, the data's validation set will be used to periodically test model performance to determine when to stop learning up to *validation_max_epochs* config variable epochs; else, trains for *train_epochs* config variable epochs
 	- **shuffle** arguments: 
 		- **None** (no re-shuffling between trials)
 		- **'lv'** (shuffles learning and validation sets between trials)
@@ -169,7 +169,7 @@ sv.train_model(
 sv.select_best(dset='test')
 
 # Predict values for the test data set
-test_results = sv.use_mlp_model(dset='test')	
+test_results = sv.use_model(dset='test')	
 
 # Output results to specified file
 sv.save_results(results=test_results, filename='my_results.csv')	
@@ -192,8 +192,8 @@ sv = Server(config_filename='my_model_configuration.yml')
 
 # Configuration variables are found in the server's 'vars' dictionary
 sv.vars['learning_rate'] = 0.05
-sv.vars['mlp_hidden_layers'] = [[32, 'relu'], [32, 'relu']]
-sv.vars['valid_max_epochs'] = 10000
+sv.vars['hidden_layers'] = [[32, 'relu'], [32, 'relu']]
+sv.vars['validation_max_epochs'] = 10000
 ```
 
 Once you save a project, the .project file can be used for predictions:

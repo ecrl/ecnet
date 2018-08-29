@@ -58,14 +58,14 @@ class Server:
             warnings.warn(warn_str)
             config_dict = {
                 'learning_rate': 0.1,
-                'mlp_hidden_layers': [
+                'hidden_layers': [
                     [10, 'relu'],
                     [10, 'relu']
                 ],
-                'mlp_in_layer_activ': 'relu',
-                'mlp_out_layer_activ': 'linear',
+                'input_activation': 'relu',
+                'output_activation': 'linear',
                 'train_epochs': 500,
-                'valid_max_epochs': 10000
+                'validation_max_epochs': 10000
             }
             file = open(config_filename, 'w')
             yaml.dump(config_dict, file)
@@ -164,7 +164,7 @@ class Server:
                              amt_employers=50, print_feedback=True):
         '''
         Tunes the neural network learning hyperparameters (learning_rate,
-        valid_max_epochs, neuron counts for each hidden layer) using an
+        validation_max_epochs, neuron counts for each hidden layer) using an
         artificial bee colony searching algorithm.
 
         *target_score*      - target mean absolute error score for test set
@@ -182,7 +182,7 @@ class Server:
             Fitness function used by artificial bee colony
             '''
             self.vars['learning_rate'] = values[0]
-            self.vars['mlp_hidden_layers'] = values[1]
+            self.vars['validation_max_epochs'] = values[1]
             for idx, layer in enumerate(self.vars['hidden_layers'], 2):
                 layer[0] = values[idx]
             self.train_model(validate=True)
@@ -195,7 +195,7 @@ class Server:
             ('float', (0.01, 0.2)),
             ('int', (1000, 25000))
         ]
-        for _ in range(len(self.vars['mlp_hidden_layers'])):
+        for _ in range(len(self.vars['hidden_layers'])):
             hyperparameters.append(('int', (8, 32)))
 
         if target_score is None:
@@ -229,7 +229,7 @@ class Server:
             self.__using_project = True
 
         self.vars['learning_rate'] = new_hyperparameters[0]
-        self.vars['valid_max_epochs'] = new_hyperparameters[1]
+        self.vars['validation_max_epochs'] = new_hyperparameters[1]
         for idx, layer in enumerate(self.vars['hidden_layers'], 2):
             layer[0] = new_hyperparameters[idx]
 
@@ -251,24 +251,24 @@ class Server:
         '''
 
         if not self.__using_project:
-            mlp_model = self.__create_mlp_model()
+            model = self.__create_model()
             if validate:
-                mlp_model.fit_validation(
+                model.fit_validation(
                     self.__sets.learn_x,
                     self.__sets.learn_y,
                     self.__sets.valid_x,
                     self.__sets.valid_y,
                     self.vars['learning_rate'],
-                    self.vars['valid_max_epochs']
+                    self.vars['validation_max_epochs']
                 )
             else:
-                mlp_model.fit(
+                model.fit(
                     self.__sets.learn_x,
                     self.__sets.learn_y,
                     self.vars['learning_rate'],
                     self.vars['train_epochs']
                 )
-            mlp_model.save('./tmp/model')
+            model.save('./tmp/model')
 
         else:
             for build in range(self.__num_builds):
@@ -289,24 +289,24 @@ class Server:
                         path_t = os.path.join(
                             path_n, 'trial_{}'.format(trial + 1)
                         )
-                        mlp_model = self.__create_mlp_model()
+                        model = self.__create_model()
                         if validate:
-                            mlp_model.fit_validation(
+                            model.fit_validation(
                                 self.__sets.learn_x,
                                 self.__sets.learn_y,
                                 self.__sets.valid_x,
                                 self.__sets.valid_y,
                                 self.vars['learning_rate'],
-                                self.vars['valid_max_epochs']
+                                self.vars['validation_max_epochs']
                             )
                         else:
-                            mlp_model.fit(
+                            model.fit(
                                 self.__sets.learn_x,
                                 self.__sets.learn_y,
                                 self.vars['learning_rate'],
                                 self.vars['train_epochs']
                             )
-                        mlp_model.save(path_t)
+                        model.save(path_t)
                         if shuffle == 'lv':
                             self.DataFrame.shuffle(
                                 'l', 'v', split=data_split
@@ -372,26 +372,26 @@ class Server:
                     path_t = os.path.join(
                         path_n, 'trial_{}'.format(trial + 1)
                     )
-                    mlp_model = ecnet.model.MultilayerPerceptron()
-                    mlp_model.load(path_t)
+                    model = ecnet.model.MultilayerPerceptron()
+                    model.load(path_t)
                     error_list.append(
                         self.__error_fn(
-                            error_fn, mlp_model.use(x_vals), y_vals
+                            error_fn, model.use(x_vals), y_vals
                         )
                     )
                 current_min_idx = 0
                 for idx, error in enumerate(error_list):
                     if error < error_list[current_min_idx]:
                         current_min_idx = idx
-                mlp_model = ecnet.model.MultilayerPerceptron()
+                model = ecnet.model.MultilayerPerceptron()
                 path_t_best = os.path.join(
                     path_n, 'trial_{}'.format(current_min_idx + 1)
                 )
                 path_best = os.path.join(
                     path_n, 'model'
                 )
-                mlp_model.load(path_t_best)
-                mlp_model.save(path_best)
+                model.load(path_t_best)
+                model.save(path_best)
 
     def use_model(self, dset=None):
         '''
@@ -408,9 +408,9 @@ class Server:
 
         x_vals = self.__determine_x_vals(dset)
         if not self.__using_project:
-            mlp_model = ecnet.model.MultilayerPerceptron()
-            mlp_model.load('./tmp/model')
-            return [mlp_model.use(x_vals)]
+            model = ecnet.model.MultilayerPerceptron()
+            model.load('./tmp/model')
+            return [model.use(x_vals)]
         else:
             if not os.path.exists(
                 os.path.join(
@@ -436,9 +436,9 @@ class Server:
                     path_best = os.path.join(
                         path_n, 'model'
                     )
-                    mlp_model = ecnet.model.MultilayerPerceptron()
-                    mlp_model.load(path_best)
-                    build_preds.append(mlp_model.use(x_vals))
+                    model = ecnet.model.MultilayerPerceptron()
+                    model.load(path_best)
+                    build_preds.append(model.use(x_vals))
                 ave_build_preds = []
                 for pred in range(len(build_preds[0])):
                     node_preds = []
@@ -669,27 +669,27 @@ class Server:
         else:
             raise ValueError('Unknown dset argument {}'.format(dset))
 
-    def __create_mlp_model(self):
+    def __create_model(self):
         '''
         Private method: Helper function for creating a neural network
         '''
 
-        mlp_model = ecnet.model.MultilayerPerceptron()
-        mlp_model.add_layer(
+        model = ecnet.model.MultilayerPerceptron()
+        model.add_layer(
             self.DataFrame.num_inputs,
-            self.vars['mlp_in_layer_activ']
+            self.vars['input_activation']
         )
-        for layer in self.vars['mlp_hidden_layers']:
-            mlp_model.add_layer(
+        for layer in self.vars['hidden_layers']:
+            model.add_layer(
                 layer[0],
                 layer[1]
             )
-        mlp_model.add_layer(
+        model.add_layer(
             self.DataFrame.num_targets,
-            self.vars['mlp_out_layer_activ']
+            self.vars['output_activation']
         )
-        mlp_model.connect_layers()
-        return mlp_model
+        model.connect_layers()
+        return model
 
     def __error_fn(self, arg, y_hat, y):
         '''

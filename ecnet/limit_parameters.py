@@ -65,14 +65,14 @@ def limit_iterative_include(DataFrame, limit_num):
                 for idx_add, param_add in enumerate(test_input_add):
                     test_input[idx_add].append(param_add[0])
 
-            mlp_model = ecnet.model.MultilayerPerceptron()
-            mlp_model.add_layer(len(learn_input[0]), 'relu')
-            mlp_model.add_layer(8, 'relu')
-            mlp_model.add_layer(8, 'relu')
-            mlp_model.add_layer(len(packaged_data.learn_y[0]), 'linear')
-            mlp_model.connect_layers()
+            model = ecnet.model.MultilayerPerceptron()
+            model.add_layer(len(learn_input[0]), 'relu')
+            model.add_layer(8, 'relu')
+            model.add_layer(8, 'relu')
+            model.add_layer(len(packaged_data.learn_y[0]), 'linear')
+            model.connect_layers()
 
-            mlp_model.fit_validation(
+            model.fit_validation(
                 learn_input,
                 packaged_data.learn_y,
                 valid_input,
@@ -82,7 +82,7 @@ def limit_iterative_include(DataFrame, limit_num):
             )
 
             retained_rmse_list.append(ecnet.error_utils.calc_rmse(
-                mlp_model.use(test_input),
+                model.use(test_input),
                 packaged_data.test_y))
 
         rmse_val, rmse_idx = min(
@@ -181,14 +181,14 @@ def limit_genetic(DataFrame, limit_num, population_size, num_survivors,
                 for idx_add, param_add in enumerate(test_input_add):
                     test_input[idx_add].append(param_add[0])
 
-        mlp_model = ecnet.model.MultilayerPerceptron()
-        mlp_model.add_layer(len(learn_input[0]), 'relu')
-        mlp_model.add_layer(8, 'relu')
-        mlp_model.add_layer(8, 'relu')
-        mlp_model.add_layer(len(packaged_data_cf.learn_y[0]), 'linear')
-        mlp_model.connect_layers()
+        model = ecnet.model.MultilayerPerceptron()
+        model.add_layer(len(learn_input[0]), 'relu')
+        model.add_layer(8, 'relu')
+        model.add_layer(8, 'relu')
+        model.add_layer(len(packaged_data_cf.learn_y[0]), 'linear')
+        model.connect_layers()
 
-        mlp_model.fit_validation(
+        model.fit_validation(
             learn_input,
             packaged_data_cf.learn_y,
             valid_input,
@@ -198,7 +198,7 @@ def limit_genetic(DataFrame, limit_num, population_size, num_survivors,
         )
 
         return ecnet.error_utils.calc_rmse(
-            mlp_model.use(test_input),
+            model.use(test_input),
             packaged_data_cf.test_y
         )
 
