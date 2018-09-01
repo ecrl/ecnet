@@ -52,8 +52,8 @@ hidden_layers:
   - relu
 - - 32
   - relu
-input_layer: relu
-output_layer: linear
+input_activation: relu
+output_activation: linear
 train_epochs: 500
 validation_max_epochs: 10000
 ```
