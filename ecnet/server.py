@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/server.py
-# v.1.5
+# v.1.5.1
 # Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "Server" class, which handles ECNet project creation, neural
@@ -128,7 +128,7 @@ class Server:
     def limit_input_parameters(self, limit_num, output_filename,
                                use_genetic=False, population_size=500,
                                num_survivors=200, num_generations=25,
-                               shuffle=False):
+                               shuffle=False, data_split=[0.65, 0.25, 0.1]):
         '''
         Limits the input dimensionality of currently loaded DataFrame; default
         method is an iterative inclusion algorithm, options for using a genetic
@@ -144,20 +144,36 @@ class Server:
         *num_generations*   - number of generations the algorithm will run for
         *shuffle*           - whether to shuffle learning, validation and
                               testing sets for each population member
+        *data_split*        - if shuffling, learning/validation/testing data
+                              is split using this argument
 
         See https://github.com/tjkessler/pygenetics for genetic algorithm
         source code.
         '''
 
         if use_genetic:
-            params = ecnet.limit_parameters.limit_genetic(
-                self.DataFrame, limit_num, population_size, num_survivors,
-                shuffle=shuffle, print_feedback=self.__print_feedback
-            )
+            try:
+                params = ecnet.limit_parameters.limit_genetic(
+                    self.DataFrame, limit_num, population_size,
+                    num_survivors, num_generations, shuffle=shuffle,
+                    print_feedback=self.__print_feedback
+                )
+            except:
+                params = ecnet.limit_parameters.limit_genetic(
+                    self.DataFrame, limit_num, population_size, num_survivors,
+                    num_generations, shuffle=shuffle, data_split=data_split,
+                    print_feedback=True
+                )
         else:
-            params = ecnet.limit_parameters.limit_iterative_include(
-                self.DataFrame, limit_num
-            )
+            try:
+                params = ecnet.limit_parameters.limit_iterative_include(
+                    self.DataFrame, limit_num,
+                    print_feedback=self.__print_feedback
+                )
+            except:
+                params = ecnet.limit_parameters.limit_iterative_include(
+                    self.DataFrame, limit_num, print_feedback=True
+                )
         ecnet.limit_parameters.output(self.DataFrame, params, output_filename)
 
     def tune_hyperparameters(self, target_score=None, iteration_amt=50,

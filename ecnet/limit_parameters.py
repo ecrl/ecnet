@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/limit_parameters.py
-# v.1.5
+# v.1.5.1
 # Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the functions necessary for reducing the input dimensionality of a
@@ -20,7 +20,7 @@ import ecnet.model
 import ecnet.error_utils
 
 
-def limit_iterative_include(DataFrame, limit_num):
+def limit_iterative_include(DataFrame, limit_num, print_feedback=True):
     '''
     Limits the dimensionality of input data found in supplied *DataFrame*
     object to a dimensionality of *limit_num* using iterative inclusion
@@ -114,15 +114,17 @@ def limit_iterative_include(DataFrame, limit_num):
                 test_input_retained[idx].append(param[0])
 
         retained_input_list.append(DataFrame.input_names[rmse_idx])
-        print(retained_input_list)
-        print(rmse_val)
-        print()
+        if print_feedback:
+            print(retained_input_list)
+            print(rmse_val)
+            print()
 
     return retained_input_list
 
 
 def limit_genetic(DataFrame, limit_num, population_size, num_survivors,
-                  num_generations, shuffle=False, print_feedback=True):
+                  num_generations, shuffle=False, data_split=[0.65, 0.25, 0.1],
+                  print_feedback=True):
     '''
     Limits the dimensionality of input data found in supplied *DataFrame*
     object to a dimensionality of *limit_num* using a genetic algorithm.
@@ -130,8 +132,9 @@ def limit_genetic(DataFrame, limit_num, population_size, num_survivors,
     *num_survivors* for selecting the best performers from each population
     generation to reproduce, *num_generations* for the number of times the
     population will reproduce, *shuffle* for shuffling the data sets for each
-    population member, and *print_feedback* for printing the average fitness
-    score of the population after each generation.
+    population member, *data_split* to determine l/v/t splits if shuffling,
+    and *print_feedback* for printing the average fitness score of the
+    population after each generation.
     '''
 
     def ecnet_limit_inputs(feed_dict):
@@ -147,7 +150,7 @@ def limit_genetic(DataFrame, limit_num, population_size, num_survivors,
         test_input = []
 
         if shuffle:
-            DataFrame.shuffle('l', 'v', 't')
+            DataFrame.shuffle('l', 'v', 't', split=data_split)
             packaged_data_cf = DataFrame.package_sets()
         else:
             packaged_data_cf = packaged_data

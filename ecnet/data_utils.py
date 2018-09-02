@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/data_utils.py
-# v.1.5
+# v.1.5.1
 # Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "DataFrame" class, and functions for processing/importing/
@@ -190,7 +190,7 @@ class DataFrame:
         '''
 
         if 'l' and 'v' and 't' in args:
-            self.create_sets(split=split)
+            self.create_sets(random=True, split=split)
 
         elif 'l' and 'v' in args:
             lv_set = []
