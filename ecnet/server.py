@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/server.py
-# v.1.5.1
+# v.1.5.2
 # Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "Server" class, which handles ECNet project creation, neural
@@ -573,7 +573,7 @@ class Server:
         self.__print_feedback = False
 
         zip_file = zipfile.ZipFile(project_name, 'r')
-        zip_file.extractall('./')
+        zip_file.extractall(self.__project_name + '\\..\\')
         zip_file.close()
 
         self.__num_builds = len(
@@ -602,15 +602,6 @@ class Server:
         ) as config_file:
             self.vars = {}
             self.vars.update(yaml.load(config_file))
-        config_file.close()
-
-        with open(self.__config_filename, 'w') as config_file:
-            yaml.dump(
-                self.vars,
-                config_file,
-                default_flow_style=False,
-                explicit_start=True
-            )
         config_file.close()
 
         with open(
