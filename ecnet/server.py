@@ -143,6 +143,7 @@ class Server:
         *num_survivors*     - number of population members to reproduce for
                               next generation
         *num_generations*   - number of generations the algorithm will run for
+        *num_processes*     - number of logical processors the GA will utilize
         *shuffle*           - whether to shuffle learning, validation and
                               testing sets for each population member
         *data_split*        - if shuffling, learning/validation/testing data
