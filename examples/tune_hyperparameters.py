@@ -1,25 +1,27 @@
 # Import the Server object
 from ecnet import Server
 
-# Create Server
-sv = Server()
+if __name__ == '__main__':
 
-# Create ECNet project
-sv.create_project('my_project')
+    # Create Server
+    sv = Server()
 
-# Import data (change 'my_data.csv' to your database name)
-sv.import_data('my_data.csv')
+    # Create ECNet project
+    sv.create_project('my_project')
 
-# Tune neural network hyperparemters (learning rate, maximum
-# training epochs during validation, number of neurons in
-# each hidden layer)
-hp = sv.tune_hyperparameters()
+    # Import data (change 'my_data.csv' to your database name)
+    sv.import_data('my_data.csv')
 
-# Print the tuned hyperparameters
-print(hp)
+    # Tune neural network hyperparemters (learning rate, maximum
+    # training epochs during validation, number of neurons in
+    # each hidden layer)
+    hp = sv.tune_hyperparameters()
 
-# Tuned hyperparameters are now ready to be used!
-sv.train_model('shufflelv', validate=True)
+    # Print the tuned hyperparameters
+    print(hp)
 
-# Save ECNet project
-sv.save_project()
+    # Tuned hyperparameters are now ready to be used!
+    sv.train_model('shufflelv', validate=True)
+
+    # Save ECNet project
+    sv.save_project()
