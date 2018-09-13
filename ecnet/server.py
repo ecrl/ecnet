@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/server.py
-# v.1.5.2
+# v.1.5.3
 # Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "Server" class, which handles ECNet project creation, neural
@@ -128,7 +128,8 @@ class Server:
     def limit_input_parameters(self, limit_num, output_filename,
                                use_genetic=False, population_size=500,
                                num_survivors=200, num_generations=25,
-                               shuffle=False, data_split=[0.65, 0.25, 0.1]):
+                               num_processes=0, shuffle=False,
+                               data_split=[0.65, 0.25, 0.1]):
         '''
         Limits the input dimensionality of currently loaded DataFrame; default
         method is an iterative inclusion algorithm, options for using a genetic
@@ -155,14 +156,14 @@ class Server:
             try:
                 params = ecnet.limit_parameters.limit_genetic(
                     self.DataFrame, limit_num, population_size,
-                    num_survivors, num_generations, shuffle=shuffle,
-                    print_feedback=self.__print_feedback
+                    num_survivors, num_generations, num_processes,
+                    shuffle=shuffle, print_feedback=self.__print_feedback
                 )
             except:
                 params = ecnet.limit_parameters.limit_genetic(
                     self.DataFrame, limit_num, population_size, num_survivors,
-                    num_generations, shuffle=shuffle, data_split=data_split,
-                    print_feedback=True
+                    num_generations, num_processes, shuffle=shuffle,
+                    data_split=data_split, print_feedback=True
                 )
         else:
             try:
