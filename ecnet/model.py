@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/error_utils.py
-# v.1.5.2
+# v.1.5.3
 # Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions necessary creating, training, saving, and reusing neural
@@ -13,6 +13,9 @@ import tensorflow as tf
 import numpy as np
 import pickle
 from functools import reduce
+import os
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
 def __linear_fn(n):
@@ -53,7 +56,7 @@ class MultilayerPerceptron:
     previously trained model
     '''
 
-    def __init__(self):
+    def __init__(self, id=0):
         '''
         Initialization of object
         '''
@@ -61,6 +64,9 @@ class MultilayerPerceptron:
         self.__layers = []
         self.__weights = []
         self.__biases = []
+        self.__id = id
+        if not os.path.isdir('./tmp/'):
+            os.mkdir('./tmp/')
         tf.reset_default_graph()
 
     def add_layer(self, size, act_fn):
@@ -120,7 +126,7 @@ class MultilayerPerceptron:
             for _ in range(train_epochs):
                 sess.run(optimizer, feed_dict={x: x_l, y: y_l})
             saver = tf.train.Saver()
-            saver.save(sess, './tmp/_ckpt')
+            saver.save(sess, './tmp/_m{}/_ckpt'.format(self.__id))
         sess.close()
 
     def fit_validation(self, x_l, y_l, x_v, y_v, learning_rate, max_epochs):
@@ -168,7 +174,7 @@ class MultilayerPerceptron:
                         break
 
             saver = tf.train.Saver()
-            saver.save(sess, './tmp/_ckpt')
+            saver.save(sess, './tmp/_m{}/_ckpt'.format(self.__id))
         sess.close()
 
     def use(self, x):
@@ -178,7 +184,7 @@ class MultilayerPerceptron:
 
         with tf.Session() as sess:
             saver = tf.train.Saver()
-            saver.restore(sess, './tmp/_ckpt')
+            saver.restore(sess, './tmp/_m{}/_ckpt'.format(self.__id))
             results = self.__feed_forward(x).eval()
         sess.close()
         return results
@@ -190,7 +196,7 @@ class MultilayerPerceptron:
 
         with tf.Session() as sess:
             saver = tf.train.Saver()
-            saver.restore(sess, './tmp/_ckpt')
+            saver.restore(sess, './tmp/_m{}/_ckpt'.format(self.__id))
             saver.save(sess, filepath)
         sess.close()
         architecture_file = open('{}.struct'.format(filepath), 'wb')
@@ -208,7 +214,7 @@ class MultilayerPerceptron:
         with tf.Session() as sess:
             saver = tf.train.Saver()
             saver.restore(sess, filepath)
-            saver.save(sess, './tmp/_ckpt')
+            saver.save(sess, './tmp/_m{}/_ckpt'.format(self.__id))
         sess.close()
 
     def __feed_forward(self, x):

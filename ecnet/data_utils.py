@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/data_utils.py
-# v.1.5.2
+# v.1.5.3
 # Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "DataFrame" class, and functions for processing/importing/
@@ -29,6 +29,23 @@ class DataPoint:
         self.groups = []
         self.targets = []
         self.inputs = []
+
+
+class PackagedData:
+    '''
+    Private object: contains lists (converted to numpy arrays by
+    package_sets when returned) with target (y) and input (x) values, also
+    filled by package_sets
+    '''
+
+    def __init__(self):
+
+        self.learn_x = []
+        self.learn_y = []
+        self.valid_x = []
+        self.valid_y = []
+        self.test_x = []
+        self.test_y = []
 
 
 class DataFrame:
@@ -220,22 +237,6 @@ class DataFrame:
         else:
             raise Exception('Shuffle arguments must be *l, v, t* or *l, v')
 
-    class __PackagedData:
-        '''
-        Private object: contains lists (converted to numpy arrays by
-        package_sets when returned) with target (y) and input (x) values, also
-        filled by package_sets
-        '''
-
-        def __init__(self):
-
-            self.learn_x = []
-            self.learn_y = []
-            self.valid_x = []
-            self.valid_y = []
-            self.test_x = []
-            self.test_y = []
-
     def package_sets(self):
         '''
         Creates and returns PackagedData object containing numpy arrays with
@@ -243,7 +244,7 @@ class DataFrame:
         sets
         '''
 
-        pd = self.__PackagedData()
+        pd = PackagedData()
         for point in self.learn_set:
             pd.learn_x.append(np.asarray(point.inputs).astype('float32'))
             pd.learn_y.append(np.asarray(point.targets).astype('float32'))
