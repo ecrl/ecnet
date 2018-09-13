@@ -77,10 +77,11 @@ Here is an overview of the Server object's methods:
 - **import_data(*data_filename, sort_type='random', data_split=[0.65, 0.25, 0.1]*)**: imports the data from an ECNet formatted CSV database specified in *data_filename*.
 	- **sort_type** (either 'random' for random learning, validation and testing set assignments, or 'explicit' for database-specified assignments)
 	- **data_split** ([learning %, validation %, testing %] if using random sort_type)
-- **limit_parameters(*limit_num, output_filename, use_genetic=False, population_size=500, num_survivors=200, num_generations=25*, shuffle=False)**: reduces the input dimensionality of the currently loaded database to *limit_num* through a "retain the best" algorithm; saves the limited database to *output_filename*. If *use_genetic* is True, a genetic algorithm will be used instead of the retention algorithm; optional arguments for the genetic algorithm are:
+- **limit_input_parameters(*limit_num, output_filename, use_genetic=False, population_size=500, num_survivors=200, num_generations=25, num_processes=0, shuffle=False*)**: reduces the input dimensionality of the currently loaded database to *limit_num* through a "retain the best" algorithm; saves the limited database to *output_filename*. If *use_genetic* is True, a genetic algorithm will be used instead of the retention algorithm; optional arguments for the genetic algorithm are:
 	- **population_size** (size of the genetic algorithm population)
 	- **num_survivors** (number of population members used to generate the next generation)
 	- **num_generations** (number of generations the genetic algorithm runs for)
+	- **num_processes** (if your machine supports it, number of parallel processes the genetic algorithm will utilize)
 	- **shuffle** (shuffles learning, validation and test sets for each population member)
 - **tune_hyperparameters(*target_score=None, iteration_amt=50, amt_employers=50*)**: optimizes neural network hyperparameters (learning rate, maximum epochs during validation, neuron counts for each hidden layer) using an artifical bee colony algorithm
 	- arguments:
