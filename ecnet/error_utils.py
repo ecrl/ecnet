@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/error_utils.py
-# v.1.5.2
+# v.1.5.3
 # Developed in 2018 by Travis Kessler <Travis_Kessler@student.uml.edu>
 #
 # Contains functions for error calculations
