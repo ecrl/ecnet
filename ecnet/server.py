@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/server.py
-# v.1.5.3
+# v.1.6.0
 # Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "Server" class, which handles ECNet project creation, neural
@@ -17,6 +17,7 @@ import numpy as np
 import zipfile
 import pickle
 from ecabc.abc import ABC
+from colorlogging import ColorLogger
 
 import ecnet.data_utils
 import ecnet.error_utils
@@ -36,9 +37,11 @@ class Server:
         '''
         Initialization: imports model configuration file *config_filename*; if
         configuration file not found, creates default configuration file with
-        name *filename*; opens an ECNet project instead if *project_file* is
-        specified.
+        name *config_filename*; opens an ECNet project instead if
+        *project_file* is specified.
         '''
+
+        self.__logger = ColorLogger(stream_level='info', file_level='info')
 
         if project_file is not None:
             self.__open_project(project_file)
@@ -75,7 +78,7 @@ class Server:
         self.__using_project = False
 
     def create_project(self, project_name, num_builds=1, num_nodes=5,
-                       num_trials=10, print_feedback=True):
+                       num_trials=10):
         '''
         Creates the folder structure for a project (no single-model creation)
 
@@ -83,14 +86,12 @@ class Server:
         *num_builds*        - number of builds
         *num_nodes*         - number of nodes (per build)
         *num_trials*        - number of trials (per node)
-        *print_feedback*    - whether to print current progress of build
         '''
 
         self.__project_name = project_name
         self.__num_builds = num_builds
         self.__num_nodes = num_nodes
         self.__num_trials = num_trials
-        self.__print_feedback = print_feedback
         if not os.path.exists(self.__project_name):
             os.makedirs(self.__project_name)
         for build in range(self.__num_builds):
@@ -154,32 +155,19 @@ class Server:
         '''
 
         if use_genetic:
-            try:
-                params = ecnet.limit_parameters.limit_genetic(
-                    self.DataFrame, limit_num, population_size,
-                    num_survivors, num_generations, num_processes,
-                    shuffle=shuffle, print_feedback=self.__print_feedback
-                )
-            except:
-                params = ecnet.limit_parameters.limit_genetic(
-                    self.DataFrame, limit_num, population_size, num_survivors,
-                    num_generations, num_processes, shuffle=shuffle,
-                    data_split=data_split, print_feedback=True
-                )
+            params = ecnet.limit_parameters.limit_genetic(
+                self.DataFrame, limit_num, population_size, num_survivors,
+                num_generations, num_processes, shuffle=shuffle,
+                logger=self.__logger
+            )
         else:
-            try:
-                params = ecnet.limit_parameters.limit_iterative_include(
-                    self.DataFrame, limit_num,
-                    print_feedback=self.__print_feedback
-                )
-            except:
-                params = ecnet.limit_parameters.limit_iterative_include(
-                    self.DataFrame, limit_num, print_feedback=True
-                )
+            params = ecnet.limit_parameters.limit_iterative_include(
+                self.DataFrame, limit_num, logger=self.__logger
+            )
         ecnet.limit_parameters.output(self.DataFrame, params, output_filename)
 
     def tune_hyperparameters(self, target_score=None, iteration_amt=50,
-                             amt_employers=50, print_feedback=True):
+                             amt_employers=50):
         '''
         Tunes the neural network learning hyperparameters (learning_rate,
         validation_max_epochs, neuron counts for each hidden layer) using an
@@ -189,8 +177,6 @@ class Server:
         *iteration_amt*     - if not using target score, run the ABC for this
                               number of iterations
         *amt_employers*     - number of employer "bees" for ABC
-        *print_feedback*    - if not already defined in create_project(),
-                              determines whether to print ABC progress
 
         See https://github.com/hgromer/ecabc for ABC source code.
         '''
@@ -230,11 +216,6 @@ class Server:
                 valueRanges=hyperparameters,
                 amountOfEmployers=amt_employers
             )
-
-        try:
-            abc.printInfo(self.__print_feedback)
-        except:
-            abc.printInfo(print_feedback)
 
         use_proj = False
         if self.__using_project:
@@ -298,11 +279,9 @@ class Server:
                         path_b, 'node_{}'.format(node + 1)
                     )
                     for trial in range(self.__num_trials):
-                        if self.__print_feedback:
-                            print('Build {}, Node {}, Trial {}...'.format(
-                                build + 1,
-                                node + 1,
-                                trial + 1
+                        self.__logger.log(
+                            'info', 'Build {}, Node {}, Trial {}...'.format(
+                                build + 1, node + 1, trial + 1
                             ))
                         path_t = os.path.join(
                             path_n, 'trial_{}'.format(trial + 1)
@@ -373,8 +352,10 @@ class Server:
             )
         ):
             raise Exception('Models must be trained first! (train_model())')
-        if self.__print_feedback:
-            print('Selecting best models from each node for each build...')
+        self.__logger.log(
+            'info',
+            'Selecting best models from each node for each build...'
+        )
         x_vals = self.__determine_x_vals(dset)
         y_vals = self.__determine_y_vals(dset)
         for build in range(self.__num_builds):
@@ -572,7 +553,6 @@ class Server:
         self.__project_name = project_name.replace('.project', '')
         if '.project' not in project_name:
             project_name += '.project'
-        self.__print_feedback = False
 
         zip_file = zipfile.ZipFile(project_name, 'r')
         zip_file.extractall(self.__project_name + '\\..\\')

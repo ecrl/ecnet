@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/limit_parameters.py
-# v.1.5.3
+# v.1.6.0
 # Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the functions necessary for reducing the input dimensionality of a
@@ -14,6 +14,7 @@
 import csv
 import copy
 import multiprocessing as mp
+from colorlogging import ColorLogger
 from pygenetics.ga_core import Population
 from pygenetics.selection_functions import minimize_best_n
 
@@ -21,11 +22,15 @@ import ecnet.model
 import ecnet.error_utils
 
 
-def limit_iterative_include(DataFrame, limit_num, print_feedback=True):
+def limit_iterative_include(DataFrame, limit_num, logger=None):
     '''
     Limits the dimensionality of input data found in supplied *DataFrame*
-    object to a dimensionality of *limit_num* using iterative inclusion
+    object to a dimensionality of *limit_num* using iterative inclusion.
+    *logger* is an optional argument to pass a pre-existing ColorLogger.
     '''
+
+    if logger is None:
+        logger = ColorLogger(stream_level='info', file_level='info')
 
     retained_input_list = []
 
@@ -115,17 +120,17 @@ def limit_iterative_include(DataFrame, limit_num, print_feedback=True):
                 test_input_retained[idx].append(param[0])
 
         retained_input_list.append(DataFrame.input_names[rmse_idx])
-        if print_feedback:
-            print(retained_input_list)
-            print(rmse_val)
-            print()
+        logger.log('info', 'Currently retained: {}'.format(
+            retained_input_list
+        ))
+        logger.log('info', 'Current RMSE: {}'.format(rmse_val))
 
     return retained_input_list
 
 
 def limit_genetic(DataFrame, limit_num, population_size, num_survivors,
                   num_generations, num_processes, shuffle=False,
-                  data_split=[0.65, 0.25, 0.1], print_feedback=True):
+                  data_split=[0.65, 0.25, 0.1], logger=None):
     '''
     Limits the dimensionality of input data found in supplied *DataFrame*
     object to a dimensionality of *limit_num* using a genetic algorithm.
@@ -134,9 +139,11 @@ def limit_genetic(DataFrame, limit_num, population_size, num_survivors,
     generation to reproduce, *num_generations* for the number of times the
     population will reproduce, *shuffle* for shuffling the data sets for each
     population member, *data_split* to determine l/v/t splits if shuffling,
-    and *print_feedback* for printing the average fitness score of the
-    population after each generation.
+    and *logger* to pass an existing ColorLogger for logging.
     '''
+
+    if logger is None:
+        logger = ColorLogger(stream_level='info', file_level='info')
 
     packaged_data = DataFrame.package_sets()
 
@@ -160,21 +167,16 @@ def limit_genetic(DataFrame, limit_num, population_size, num_survivors,
         population.add_parameter(i, 0, DataFrame.num_inputs - 1)
 
     population.generate_population()
-
-    if print_feedback:
-        print('Generation: 0 - Population fitness: {}'.format(
-            sum(p.fitness_score for p in population.members) / len(population)
-        ))
+    logger.log('info', 'Generation: 0 - Population fitness: {}'.format(
+        sum(p.fitness_score for p in population.members) / len(population)
+    ))
 
     for gen in range(num_generations):
         population.next_generation(num_survivors=num_survivors, mut_rate=0)
-        if print_feedback:
-            print('Generation: {} - Population fitness: {}'.format(
-                gen + 1,
-                sum(p.fitness_score for p in population.members) / len(
-                    population
-                )
-            ))
+        logger.log('info', 'Generation: {} - Population fitness: {}'.format(
+            gen + 1,
+            sum(p.fitness_score for p in population.members) / len(population)
+        ))
 
     min_idx = 0
     for new_idx, member in enumerate(population.members):
@@ -185,11 +187,9 @@ def limit_genetic(DataFrame, limit_num, population_size, num_survivors,
     for val in population.members[min_idx].feed_dict.values():
         input_list.append(DataFrame.input_names[val])
 
-    if print_feedback:
-        print('Best member fitness score: {}'.format(
-            population.members[min_idx].fitness_score)
-        )
-        print(input_list)
+    logger.log('info', 'Best member fitness score: {}'.format(
+        population.members[min_idx].fitness_score
+    ))
 
     return input_list
 
