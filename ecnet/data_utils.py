@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/data_utils.py
-# v.1.5.3
+# v.1.6.0
 # Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "DataFrame" class, and functions for processing/importing/
@@ -112,7 +112,7 @@ class DataFrame:
 
         return len(self.data_points)
 
-    def create_sets(self, random, split=None):
+    def create_sets(self, random=False, split=None):
         '''
         Creates learning, validation and test sets
 
