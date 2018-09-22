@@ -16,7 +16,7 @@ Using ECNet, [T. Kessler et al.](https://doi.org/10.1016/j.fuel.2017.06.015) hav
 # Installation:
 
 ### Prerequisites:
-- Have Python 3.5 installed
+- Have Python 3.5/3.6 installed
 - Have the ability to install Python packages
 
 ### Method 1: pip
@@ -26,7 +26,7 @@ If you are working in a Linux/Mac environment:
 Alternatively, in a Windows or virtualenv environment:
 - **pip install ecnet**
 
-Note: if multiple Python releases are installed on your system (e.g. 2.7 and 3.5), you may need to execute the correct version of pip. For Python 3.5, change **"pip install ecnet"** to **"pip3 install ecnet"**.
+Note: if multiple Python releases are installed on your system (e.g. 2.7 and 3.6), you may need to execute the correct version of pip. For Python 3.5, change **"pip install ecnet"** to **"pip3 install ecnet"**.
 
 ### Method 2: From source
 - Download the ECNet repository, navigate to the download location on the command line/terminal, and execute 
@@ -65,14 +65,14 @@ Here are brief explanations of each of these variables:
 - **input_activation** - the layer type of the input layer: number of nodes is determined by input data dimensionality
 - **output_activation** - the layer type of the output layer: number of nodes is determined by target data dimensionality
 - **train_epochs**: number of training iterations (not used with validation)
-- **validation_max_epochs**: the maximum number of training iterations during the validation process
+- **validation_max_epochs**: the maximum number of training iterations during the validation process (if training with periodic validation)
 
 ## Server methods:
 
 Here is an overview of the Server object's methods:
 
 - **Server(*config_filename='config.yml', project_file=None*)**: Initialization of Server object - either creates a model configuration file *config_filename*, *or* opens a preexisting *.project* file specified by *project_file*.
-- **create_project(*project_name, num_builds=1, num_nodes=5, num_trials=10, print_feedback=True*)**: creates the folder hierarchy for a project with name *project_filename*. Optional variables for the number of builds *num_builds*, number of nodes *num_nodes*, number of trial neural networks per node *num_trials*, and whether to print build status *print_feedback*.
+- **create_project(*project_name, num_builds=1, num_nodes=5, num_trials=10*)**: creates the folder hierarchy for a project with name *project_filename*. Optional variables for the number of builds *num_builds*, number of nodes *num_nodes*, number of trial neural networks per node *num_trials*
 	- note: if this is not called, a project will not be created, and single models will be saved to the 'tmp' folder in your working directory
 - **import_data(*data_filename, sort_type='random', data_split=[0.65, 0.25, 0.1]*)**: imports the data from an ECNet formatted CSV database specified in *data_filename*.
 	- **sort_type** (either 'random' for random learning, validation and testing set assignments, or 'explicit' for database-specified assignments)
