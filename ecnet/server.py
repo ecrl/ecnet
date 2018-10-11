@@ -17,7 +17,7 @@ import numpy as np
 import zipfile
 import pickle
 from ecabc.abc import ABC
-from colorlogging import ColorLogger
+from colorlogging import log
 
 import ecnet.data_utils
 import ecnet.error_utils
@@ -40,8 +40,6 @@ class Server:
         name *config_filename*; opens an ECNet project instead if
         *project_file* is specified.
         '''
-
-        self.__logger = ColorLogger(stream_level='info', file_level='info')
 
         if project_file is not None:
             self.__open_project(project_file)
@@ -157,12 +155,11 @@ class Server:
         if use_genetic:
             params = ecnet.limit_parameters.limit_genetic(
                 self.DataFrame, limit_num, population_size, num_survivors,
-                num_generations, num_processes, shuffle=shuffle,
-                logger=self.__logger
+                num_generations, num_processes, shuffle=shuffle
             )
         else:
             params = ecnet.limit_parameters.limit_iterative_include(
-                self.DataFrame, limit_num, logger=self.__logger
+                self.DataFrame, limit_num
             )
         ecnet.limit_parameters.output(self.DataFrame, params, output_filename)
 
@@ -279,10 +276,9 @@ class Server:
                         path_b, 'node_{}'.format(node + 1)
                     )
                     for trial in range(self.__num_trials):
-                        self.__logger.log(
-                            'info', 'Build {}, Node {}, Trial {}...'.format(
-                                build + 1, node + 1, trial + 1
-                            ))
+                        log('info', 'Build {}, Node {}, Trial {}...'.format(
+                            build + 1, node + 1, trial + 1
+                        ))
                         path_t = os.path.join(
                             path_n, 'trial_{}'.format(trial + 1)
                         )
@@ -352,10 +348,7 @@ class Server:
             )
         ):
             raise Exception('Models must be trained first! (train_model())')
-        self.__logger.log(
-            'info',
-            'Selecting best models from each node for each build...'
-        )
+        log('info', 'Selecting best models from each mode for each build')
         x_vals = self.__determine_x_vals(dset)
         y_vals = self.__determine_y_vals(dset)
         for build in range(self.__num_builds):

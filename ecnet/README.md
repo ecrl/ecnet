@@ -42,5 +42,5 @@ Error Functions:
 
 ## limit_parameters.py
 Functions:
-- **limit_iterative_include(DataFrame, limit_num, logger=None)**: limits the input dimensionality of data found in *DataFrame* to a dimensionality of *limit_num* using a "retain the best" algorithm. If a ColorLogger *logger* is not supplied, a new logger is initialized.
+- **limit_iterative_include(DataFrame, limit_num)**: limits the input dimensionality of data found in *DataFrame* to a dimensionality of *limit_num* using a "retain the best" algorithm.
 - **limit_genetic(DataFrame, limit_num, population_size, num_survivors, num_generations, num_processes, shuffle=False, data_split=[0.65, 0.25, 0.1], logger=None)**: limits the input dimensionality of data found in *DataFrame* to a dimensionality of *limit_num* using a genetic algorithm; *population_size* indicates the number of members for each generation, *num_survivors* indicates how many members of each generation survive, *num_generations* indicates how many generations the genetic algorithm runs for, *num_processes* specifies the number of parallel processes used for creating each generation, *shuffle* indicates whether to shuffle data set assignments for each population member, and *data_split* specifies the data set assignments if shuffle == True. If a ColorLogger *logger* is not supplied, a new logger is initialized.
