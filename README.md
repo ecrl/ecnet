@@ -60,10 +60,10 @@ validation_max_epochs: 10000
 
 Here are brief explanations of each of these variables:
 - **learning_rate**: value passed to the AdamOptimizer to use as its learning rate during training
-- **hidden_layers** - *[[num_neurons_0, layer_type_0],...,[num_neurons_n, layer_type_n]]*: the architecture of the ANN between the input and output layers
+- **hidden_layers**: *[[num_neurons_0, layer_type_0],...,[num_neurons_n, layer_type_n]]*: the architecture of the ANN between the input and output layers
 	- Rectified linear unit (**'relu'**), **'sigmoid'**, **'softmax'** and **'linear'** *layer_type*s are currently supported
-- **input_activation** - the layer type of the input layer: number of nodes is determined by input data dimensionality
-- **output_activation** - the layer type of the output layer: number of nodes is determined by target data dimensionality
+- **input_activation**: the layer type of the input layer: number of nodes is determined by input data dimensionality
+- **output_activation**: the layer type of the output layer: number of nodes is determined by target data dimensionality
 - **train_epochs**: number of training iterations (not used with validation)
 - **validation_max_epochs**: the maximum number of training iterations during the validation process (if training with periodic validation)
 
