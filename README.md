@@ -67,6 +67,8 @@ Here are brief explanations of each of these variables:
 - **train_epochs**: number of training iterations (not used with validation)
 - **validation_max_epochs**: the maximum number of training iterations during the validation process (if training with periodic validation)
 
+## Using the Server object
+
 To get started, create a Python script to handle your task and copy an ECNet-formatted CSV database file to your working directory. The Server object will create a default configuration file if an existing one is not specified. Example scripts, configuration files, and databases are provided ([examples/config](https://github.com/TJKessler/ECNet/tree/master/examples), [databases](https://github.com/TJKessler/ECNet/tree/master/databases)).
 
 Here is a script for building a project, importing a database, creating and training models for the project, selecting the best model from each build node, grabbing results and errors for the test set, and saving the project. Outlined are a few ways each method can be called:
