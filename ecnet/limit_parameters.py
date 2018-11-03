@@ -11,21 +11,34 @@
 # (limit_genetic).
 #
 
-import csv
-import copy
-import multiprocessing as mp
+# Stdlib imports
+from csv import writer, QUOTE_ALL
+from copy import deepcopy
+from multiprocessing import current_process
+
+# 3rd party imports
 from colorlogging import log
 from pygenetics.ga_core import Population
 from pygenetics.selection_functions import minimize_best_n
 
+# ECNet imports
 import ecnet.model
 import ecnet.error_utils
 
 
-def limit_iterative_include(DataFrame, limit_num):
+def limit_iterative_include(DataFrame, limit_num, log_progress=True):
     '''
-    Limits the dimensionality of input data found in supplied *DataFrame*
-    object to a dimensionality of *limit_num* using iterative inclusion.
+    Limits the dimensionality of input data using an iterative inclusion
+    algorithm (best parameter is found, retained, paired with all others, best
+    pair retained, continues until desired dimensionality is reached)
+
+    Args:
+        DataFrame (DataFrame): ECNet DataFrame object to limit
+        limit_num (int): desired input dimensionality
+        log_progress (bool): whether or not to log progress to console and file
+
+    Returns:
+        list: list of resulting input parameter names
     '''
 
     retained_input_list = []
@@ -57,9 +70,9 @@ def limit_iterative_include(DataFrame, limit_num):
                 valid_input = valid_input_add
                 test_input = test_input_add
             else:
-                learn_input = copy.deepcopy(learn_input_retained)
-                valid_input = copy.deepcopy(valid_input_retained)
-                test_input = copy.deepcopy(test_input_retained)
+                learn_input = deepcopy(learn_input_retained)
+                valid_input = deepcopy(valid_input_retained)
+                test_input = deepcopy(test_input_retained)
                 for idx_add, param_add in enumerate(learn_input_add):
                     learn_input[idx_add].append(param_add[0])
                 for idx_add, param_add in enumerate(valid_input_add):
@@ -116,23 +129,33 @@ def limit_iterative_include(DataFrame, limit_num):
                 test_input_retained[idx].append(param[0])
 
         retained_input_list.append(DataFrame.input_names[rmse_idx])
-        log('info', 'Currently retained: {}'.format(retained_input_list))
-        log('info', 'Current RMSE: {}'.format(rmse_val))
+        if log_progress:
+            log('info', 'Currently retained: {}'.format(retained_input_list)
+                use_color=False)
+            log('info', 'Current RMSE: {}'.format(rmse_val), use_color=False)
 
     return retained_input_list
 
 
-def limit_genetic(DataFrame, limit_num, population_size, num_survivors,
-                  num_generations, num_processes, shuffle=False,
-                  data_split=[0.65, 0.25, 0.1]):
+def limit_genetic(DataFrame, limit_num, population_size, num_generations,
+                  num_processes, shuffle=False, data_split=[0.65, 0.25, 0.1],
+                  log_progress=True):
     '''
-    Limits the dimensionality of input data found in supplied *DataFrame*
-    object to a dimensionality of *limit_num* using a genetic algorithm.
-    Optional arguments for *population_size* of genetic algorithm's population,
-    *num_survivors* for selecting the best performers from each population
-    generation to reproduce, *num_generations* for the number of times the
-    population will reproduce, *shuffle* for shuffling the data sets for each
-    population member, and *data_split* to determine l/v/t splits if shuffling
+    Limits the dimensionality of input data using a genetic algorithm
+
+    Args:
+        DataFrame (DataFrame): ECNet DataFrame object to limit
+        limit_num (int): desired input dimensionality
+        population_size (int): size of genetic algorithm population
+        num_generations (int): number of generations to run the GA for
+        num_processes (int): number of concurrent processes used by the GA
+        shuffle (bool): whether to shuffle the data sets for each population
+                        member
+        data_split (list): [learn%, valid%, test%] if shuffle == True
+        log_progress (bool): whether or not to log progress to console and file
+
+    Returns:
+        list: list of resulting input parameter names
     '''
 
     packaged_data = DataFrame.package_sets()
@@ -157,16 +180,22 @@ def limit_genetic(DataFrame, limit_num, population_size, num_survivors,
         population.add_parameter(i, 0, DataFrame.num_inputs - 1)
 
     population.generate_population()
-    log('info', 'Generation: 0 - Population fitness: {}'.format(
-        sum(p.fitness_score for p in population.members) / len(population)
-    ))
+    if log_progress:
+        log('info', 'Generation: 0 - Population fitness: {}'.format(
+            sum(p.fitness_score for p in population.members) / len(population),
+            use_color=False
+        ))
 
     for gen in range(num_generations):
-        population.next_generation(num_survivors=num_survivors, mut_rate=0)
-        log('info', 'Generation: {} - Population fitness: {}'.format(
-            gen + 1,
-            sum(p.fitness_score for p in population.members) / len(population)
-        ))
+        population.next_generation()
+        if log_progress:
+            log('info', 'Generation: {} - Population fitness: {}'.format(
+                gen + 1,
+                sum(
+                    p.fitness_score for p in population.members
+                ) / len(population),
+                use_color=False
+            ))
 
     min_idx = 0
     for new_idx, member in enumerate(population.members):
@@ -177,19 +206,24 @@ def limit_genetic(DataFrame, limit_num, population_size, num_survivors,
     for val in population.members[min_idx].feed_dict.values():
         input_list.append(DataFrame.input_names[val])
 
-    log('info', 'Best member fitness score: {}'.format(
-        population.members[min_idx].fitness_score
-    ))
+    if log_progress:
+        log('info', 'Best member fitness score: {}'.format(
+            population.members[min_idx].fitness_score
+        ), use_color=False)
 
     return input_list
 
 
 def ecnet_limit_inputs(feed_dict, cost_fn_args):
     '''
-    Genetic algorithm cost function, supplied to the genetic algorithm;
-    returns the RMSE of the test set results from a model constructed
-    using the current permutation of input parameters *feed_dict* supplied
-    by the genetic algorithm
+    Genetic algorithm cost function, supplied to the genetic algorithm
+
+    Args:
+        feed_dict (dictionary): dictionary of parameter names and values
+        cost_fn_args (dictionary): dictionary of arguments to pass
+
+    Returns:
+        float: RMSE of model used with supplied parameters
     '''
 
     learn_input = []
@@ -236,7 +270,7 @@ def ecnet_limit_inputs(feed_dict, cost_fn_args):
 
     if cost_fn_args['num_processes'] != 0:
         model = ecnet.model.MultilayerPerceptron(
-            id=mp.current_process()._identity[0] % cost_fn_args[
+            id=current_process()._identity[0] % cost_fn_args[
                 'num_processes'
             ]
         )
@@ -265,9 +299,12 @@ def ecnet_limit_inputs(feed_dict, cost_fn_args):
 
 def output(DataFrame, param_list, filename):
     '''
-    Saves the parameters *param_list* (obtained from limit) to new database
-    specified by *filename*. A *DataFrame* object is required for new database
-    formatting and populating.
+    Saves an ECNet formatted database with the specified parameters
+
+    Args:
+        DataFrame (DataFrame): ECNet DataFrame object used for DB formatting
+        param_list (list): list of parameter names (str)
+        filename (str): path to location of saved database
     '''
 
     if '.csv' not in filename:
@@ -320,6 +357,6 @@ def output(DataFrame, param_list, filename):
         rows.append(data_row)
 
     with open(filename, 'w') as file:
-        wr = csv.writer(file, quoting=csv.QUOTE_ALL, lineterminator='\n')
+        wr = writer(file, quoting=QUOTE_ALL, lineterminator='\n')
         for row in rows:
             wr.writerow(row)
