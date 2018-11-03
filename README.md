@@ -172,7 +172,7 @@ sv.save_results(
     filename='new_data_results.csv'
 )
 ```
-To view more examples of common ECNet tasks, view the [examples](https://github.com/TJKessler/ECNet/tree/master/examples) directory.
+To view more examples of common ECNet tasks, view the [examples](https://github.com/TJKessler/ECNet/tree/master/examples) directory. For additional documentation on Server methods, including tasks for limiting input parameter dimensionality, view the README in the [ecnet](https://github.com/tjkessler/ecnet/tree/master/ecnet) directory.
 
 # Database Format:
 
