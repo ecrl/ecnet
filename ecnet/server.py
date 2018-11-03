@@ -55,7 +55,7 @@ class Server:
             file = open(config_filename, 'r')
             self.vars.update(load(file))
         except:
-            if log:
+            if self.__log:
                 log('warn', 'Supplied configuration file not found - '
                             'generating default configuration for {}'.format(
                                 config_filename
@@ -106,6 +106,9 @@ class Server:
                 if not path.exists(path_n):
                     makedirs(path_n)
         self.__using_project = True
+        if self.__log:
+            log('info', 'Created project {}'.format(project_name),
+                use_color=False)
 
     def import_data(self, data_filename, sort_type='random',
                     data_split=[0.65, 0.25, 0.1]):
@@ -126,6 +129,9 @@ class Server:
         else:
             raise ValueError('Unknown sort_type {}'.format(sort_type))
         self.__sets = self.DataFrame.package_sets()
+        if self.__log:
+            log('info', 'Imported data from {}'.format(data_filename),
+                use_color=False)
 
     def limit_input_parameters(self, limit_num, output_filename,
                                use_genetic=False, population_size=500,
@@ -155,15 +161,30 @@ class Server:
         '''
 
         if use_genetic:
+            if self.__log:
+                log(
+                    'info',
+                    'Limiting input parameters using a genetic algorithm',
+                    use_color=False
+                )
             params = ecnet.limit_parameters.limit_genetic(
-                self.DataFrame, limit_num, population_size, num_survivors,
-                num_generations, num_processes, shuffle=shuffle
+                self.DataFrame, limit_num, population_size, num_generations,
+                num_processes, shuffle=shuffle, log_progress=self.__log
             )
         else:
+            if self.__log:
+                log(
+                    'info',
+                    'Limiting input parameters using iterative inclusion',
+                    use_color=False
+                )
             params = ecnet.limit_parameters.limit_iterative_include(
-                self.DataFrame, limit_num
+                self.DataFrame, limit_num, log_progress=self.__log
             )
         ecnet.limit_parameters.output(self.DataFrame, params, output_filename)
+        if self.__log:
+            log('info', 'Saved limited database to {}'.format(output_filename),
+                use_color=False)
 
     def tune_hyperparameters(self, target_score=None, num_iterations=50,
                              num_employers=50):
@@ -206,6 +227,10 @@ class Server:
         for _ in range(len(self.vars['hidden_layers'])):
             hyperparameters.append(('int', (8, 32)))
 
+        if self.__log:
+            log('info', 'Tuning neural network hyperparameters with an ABC',
+                use_color=False)
+
         if target_score is None:
             abc = ABC(
                 iterationAmount=num_iterations,
@@ -236,6 +261,18 @@ class Server:
         for idx, layer in enumerate(self.vars['hidden_layers'], 2):
             layer[0] = new_hyperparameters[idx]
 
+        if self.__log:
+            log('info', 'Tuned learning rate: {}'.format(
+                new_hyperparameters[0]), use_color=False)
+            log('info', 'Tuned max validation epochs: {}'.format(
+                new_hyperparameters[1]), use_color=False)
+            for idx, layer in enumerate(self.vars['hidden_layers'], 2):
+                log(
+                    'info',
+                    'Tuned number of neurons in hidden layer {}: {}'.format(
+                        idx - 1, new_hyperparameters[idx]
+                    ), use_color=False)
+
         return new_hyperparameters
 
     def train_model(self, validate=False, shuffle=None,
@@ -252,6 +289,8 @@ class Server:
         '''
 
         if not self.__using_project:
+            if self.__log:
+                log('info', 'Training single model', use_color=False)
             model = self.__create_model()
             if validate:
                 model.fit_validation(
@@ -272,6 +311,13 @@ class Server:
             model.save('./tmp/model')
 
         else:
+            if self.__log:
+                log(
+                    'info',
+                    'Generating {} x {} x {} neural networks'.format(
+                        self.__num_builds, self.__num_nodes, self.__num_trials
+                    ),
+                    use_color=False)
             for build in range(self.__num_builds):
                 path_b = path.join(
                     self.__project_name, 'build_{}'.format(build + 1)
@@ -281,10 +327,10 @@ class Server:
                         path_b, 'node_{}'.format(node + 1)
                     )
                     for trial in range(self.__num_trials):
-                        if log:
+                        if self.__log:
                             log(
                                 'info',
-                                'Build {}, Node {}, Trial {}...'.format(
+                                'Build {}, Node {}, Trial {}'.format(
                                     build + 1, node + 1, trial + 1
                                 ),
                                 use_color=False
@@ -354,7 +400,7 @@ class Server:
             )
         ):
             raise Exception('Models must be trained first! (train_model())')
-        if log:
+        if self.__log:
             log('info', 'Selecting best models from each mode for each build',
                 use_color=False)
         x_vals = self.__determine_x_vals(dset)
@@ -408,6 +454,9 @@ class Server:
                   prediction with a length of the number of DB targets
         '''
 
+        if self.__log:
+            log('info', 'Predicting values for {} set'.format(dset),
+                use_color=False)
         x_vals = self.__determine_x_vals(dset)
         if not self.__using_project:
             model = ecnet.model.MultilayerPerceptron()
@@ -466,6 +515,10 @@ class Server:
             dictionary: dictionary of supplied error functions and their values
         '''
 
+        if self.__log:
+            for arg in args:
+                log('info', 'Calculating {} for {} set'.format(arg, dset),
+                    use_color=False)
         error_dict = {}
         y_hat = self.use_model(dset)
         y = self.__determine_y_vals(dset)
@@ -489,6 +542,9 @@ class Server:
         '''
 
         ecnet.data_utils.save_results(results, self.DataFrame, filename)
+        if self.__log:
+            log('info', 'Results saved to {}'.format(filename),
+                use_color=False)
 
     def save_project(self, clean_up=True):
         '''
@@ -546,6 +602,10 @@ class Server:
             for file in files:
                 zip_file.write(path.join(root, file))
         zip_file.close()
+        if self.__log:
+            log('info', 'Project saved to {}.project'.format(
+                    self.__project_name
+                ), use_color=False)
 
     def __open_project(self, project_name):
         '''
@@ -601,6 +661,9 @@ class Server:
 
         self.__sets = self.DataFrame.package_sets()
         self.__using_project = True
+        if self.__log:
+            log('info', 'Opened project {}.project'.format(project_name),
+                use_color=False)
 
     def __determine_x_vals(self, dset):
         '''
