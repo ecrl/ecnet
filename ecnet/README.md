@@ -1,4 +1,67 @@
-# Low-level usage of model, data_utils, error_utils, limit_parameters, and abc
+# Server methods, and low-level usage of model, data_utils, error_utils, and limit_parameters
+
+## server.py
+#### Class: Server
+
+Methods:
+- **Server(*config_filename='config.yml', project_file=None*)**: Initialization of Server object - either creates a model configuration file *config_filename*, *or* opens a preexisting *.project* file specified by *project_file*.
+- **create_project(*project_name, num_builds=1, num_nodes=5, num_trials=10*)**: creates the folder hierarchy for a project with name *project_filename*. Optional variables for the number of builds *num_builds*, number of nodes *num_nodes*, number of trial neural networks per node *num_trials*
+	- note: if this is not called, a project will not be created, and single models will be saved to the 'tmp' folder in your working directory
+- **import_data(*data_filename, sort_type='random', data_split=[0.65, 0.25, 0.1]*)**: imports the data from an ECNet formatted CSV database specified in *data_filename*.
+	- **sort_type** (either 'random' for random learning, validation and testing set assignments, or 'explicit' for database-specified assignments)
+	- **data_split** ([learning %, validation %, testing %] if using random sort_type)
+- **limit_input_parameters(*limit_num, output_filename, use_genetic=False, population_size=500, num_survivors=200, num_generations=25, num_processes=0, shuffle=False*)**: reduces the input dimensionality of the currently loaded database to *limit_num* through a "retain the best" algorithm; saves the limited database to *output_filename*. If *use_genetic* is True, a genetic algorithm will be used instead of the retention algorithm; optional arguments for the genetic algorithm are:
+	- **population_size** (size of the genetic algorithm population)
+	- **num_survivors** (number of population members used to generate the next generation)
+	- **num_generations** (number of generations the genetic algorithm runs for)
+	- **num_processes** (if your machine supports it, number of parallel processes the genetic algorithm will utilize)
+	- **shuffle** (shuffles learning, validation and test sets for each population member)
+- **tune_hyperparameters(*target_score=None, iteration_amt=50, amt_employers=50*)**: optimizes neural network hyperparameters (learning rate, maximum epochs during validation, neuron counts for each hidden layer) using an artifical bee colony algorithm
+	- arguments:
+		- **target_score** (specify target score for program to terminate)
+			- If *None*, ABC will run for *iteration_amt* iterations
+		- **iteration_amt** (specify how many iterations to run the colony)
+			- Only if *target_score* is not supplied
+		- **amt_employers** (specify the amount of employer bees in the colony)
+- **train_model(*validate=False, shuffle=None, data_split=[0.65, 0.25, 0.1]*)**: fits neural network(s) to the imported data
+	- If validate is **True**, the data's validation set will be used to periodically test model performance to determine when to stop learning up to *validation_max_epochs* config variable epochs; else, trains for *train_epochs* config variable epochs
+	- **shuffle** arguments: 
+		- **None** (no re-shuffling between trials)
+		- **'lv'** (shuffles learning and validation sets between trials)
+		- **'lvt'** (shuffles all sets between trials)
+	- **data_split** ([learning %, validation %, testing %] if shuffling data)
+- **select_best(*dset=None, error_fn='mean_abs_error'*)**: selects the best performing neural network to represent each node of each build; requires a project to be created
+	- dset arguments:
+		- **None** (best performers are based on entire database)
+		- **'learn'** (best performers are based on learning set)
+		- **'valid'** (best performers are based on validation set)
+		- **'train'** (best performers are based on learning & validation sets)
+		- **'test'** (best performers are based on test set)
+	- error_fn arguments:
+		- **'rmse'** (RMSE is used as the metric to determine best performing neural network)
+		- **'mean_abs_error'** (Mean absolute error is used as the metric to determine best performing neural network)
+		- **'med_abs_error'** (Median absolute error is used as the metric to determine best performing neural network)
+- **use_model(*dset=None*)**: predicts values for a specified data set; returns a list of results for each build
+	- dset arguments: 
+		- **None** (defaults to whole dataset)
+		- **'learn'** (obtains results for learning set)
+		- **'valid'** (obtains results for validation set)
+		- **'train'** (obtains results for learning & validation sets)
+		- **'test'** (obtains results for test set)
+- **calc_error(*args, dset=None*)**: calculates various metrics for error for a specified data set
+	- arguments: 
+		- **'rmse'** (root-mean-squared error)
+		- **'r2'** (r-squared value)
+		- **'mean_abs_error'** (mean absolute error)
+		- **'med_abs_error'** (median absolute error)
+	- dset values: 
+		- **None** (defaults to calculating error for whole dataset)
+		- **'learn'** (errors for learning set)
+		- **'valid'** (errors for validation set)
+		- **'train'** (errors for learning & validation sets)
+		- **'test'** (errors for test set)
+- **save_results(*results, filename*)**: saves your **results** obtained through *use_model()* to a specified output **filename**
+- **save_project(*clean_up=True*)**: cleans the project directory (if *clean_up* is True, removing trial neural networks and keeping best neural network from select_best()), copies config and currently loaded dataset into project directory, and creates a '.project' file for later use
 
 ## model.py
 #### Class: MultilayerPerceptron
