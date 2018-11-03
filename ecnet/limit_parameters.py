@@ -182,9 +182,8 @@ def limit_genetic(DataFrame, limit_num, population_size, num_generations,
     population.generate_population()
     if log_progress:
         log('info', 'Generation: 0 - Population fitness: {}'.format(
-            sum(p.fitness_score for p in population.members) / len(population),
-            use_color=False
-        ))
+            sum(p.fitness_score for p in population.members) / len(population)
+        ), use_color=False)
 
     for gen in range(num_generations):
         population.next_generation()
@@ -193,9 +192,8 @@ def limit_genetic(DataFrame, limit_num, population_size, num_generations,
                 gen + 1,
                 sum(
                     p.fitness_score for p in population.members
-                ) / len(population),
-                use_color=False
-            ))
+                ) / len(population)
+            ), use_color=False)
 
     min_idx = 0
     for new_idx, member in enumerate(population.members):
@@ -203,23 +201,25 @@ def limit_genetic(DataFrame, limit_num, population_size, num_generations,
             min_idx = new_idx
 
     input_list = []
-    for val in population.members[min_idx].feed_dict.values():
+    for val in population.members[min_idx].parameters.values():
         input_list.append(DataFrame.input_names[val])
 
     if log_progress:
         log('info', 'Best member fitness score: {}'.format(
             population.members[min_idx].fitness_score
         ), use_color=False)
+        log('info', 'Best member parameters: {}'.format(input_list),
+            use_color=False)
 
     return input_list
 
 
-def ecnet_limit_inputs(feed_dict, cost_fn_args):
+def ecnet_limit_inputs(parameters, cost_fn_args):
     '''
     Genetic algorithm cost function, supplied to the genetic algorithm
 
     Args:
-        feed_dict (dictionary): dictionary of parameter names and values
+        parameters (dictionary): dictionary of parameter names and values
         cost_fn_args (dictionary): dictionary of arguments to pass
 
     Returns:
@@ -239,20 +239,20 @@ def ecnet_limit_inputs(feed_dict, cost_fn_args):
     else:
         packaged_data_cf = cost_fn_args['packaged_data']
 
-    for param in feed_dict:
+    for param in parameters:
         learn_input_add = [
             [sublist[
-                feed_dict[param]
+                parameters[param]
             ]] for sublist in packaged_data_cf.learn_x
         ]
         valid_input_add = [
             [sublist[
-                feed_dict[param]
+                parameters[param]
             ]] for sublist in packaged_data_cf.valid_x
         ]
         test_input_add = [
             [sublist[
-                feed_dict[param]
+                parameters[param]
             ]] for sublist in packaged_data_cf.test_x
         ]
 
