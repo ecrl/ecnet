@@ -9,6 +9,6 @@ setup(
     author_email='travis.j.kessler@gmail.com, Hernan_Gelafromer@student.uml.edu, Sanskriti_Sharma@student.uml.edu',
     license='MIT',
     packages=['ecnet'],
-    install_requires=['tensorflow', 'pyyaml', 'numpy', 'ecabc', 'pygenetics'],
+    install_requires=['tensorflow', 'pyyaml', 'numpy', 'ecabc', 'pygenetics', 'colorlogging'],
     zip_safe=False
 )
