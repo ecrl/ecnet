@@ -130,7 +130,7 @@ def limit_iterative_include(DataFrame, limit_num, log_progress=True):
 
         retained_input_list.append(DataFrame.input_names[rmse_idx])
         if log_progress:
-            log('info', 'Currently retained: {}'.format(retained_input_list)
+            log('info', 'Currently retained: {}'.format(retained_input_list),
                 use_color=False)
             log('info', 'Current RMSE: {}'.format(rmse_val), use_color=False)
 
