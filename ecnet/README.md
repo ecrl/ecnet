@@ -72,7 +72,7 @@ Methods:
 - **connect_layers()**: initializes TensorFlow variables for weights and biases between each layer; fully connected
 - **fit(x_l, y_l, learning_rate, train_epochs)**: fits the MLP to the inputs (**x_l**) and outputs (**y_l**) for **train_epochs** iterations with a learning rate of **learning_rate**
 - **fit_validation(x_l, x_v, y_l, y_v, learning_rate, max_epochs)**: fits the MLP, periodically checking MLP performance using validation data; learning is stopped when validation data performance stops improving
-  - **max_epochs** is the cutoff point if mdrmse has not fallen below mdrmse_stop
+  - **max_epochs** is the cutoff point if validation cutoff has not been reached
 - **use(x)**: used to pass data through the trained model to get a prediction; returns predicted values
 - **save(filepath)**: saves the TensorFlow session (.sess) and model architecture information (.struct) to specified filename
 - **load(filepath)**: opens a TensorFlow session (.sess) and model architecture information (.struct) from specified filename
