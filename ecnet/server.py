@@ -10,14 +10,18 @@
 # calculation. For example scripts, refer to https://github.com/tjkessler/ecnet
 #
 
-from yaml import dump, load
+# Stdlib imports
 from os import listdir, makedirs, path, remove, walk
-from numpy import asarray
 from zipfile import ZipFile, ZIP_DEFLATED
 from pickle import dump as pdump, load as pload
+
+# 3rd party imports
+from yaml import dump, load
+from numpy import asarray
 from ecabc.abc import ABC
 from colorlogging import log
 
+# ECNet imports
 import ecnet.data_utils
 import ecnet.error_utils
 import ecnet.model
@@ -27,7 +31,7 @@ import ecnet.limit_parameters
 class Server:
 
     def __init__(self, config_filename='config.yml', project_file=None,
-                 log=True):
+                 log_progress=True):
         '''
         Server object: handles data importing, model creation, data to model
         hand-off, error calculations, project saving and loading
@@ -35,10 +39,10 @@ class Server:
         Args:
             config_filename (str): (optional) path of model configuration file
             project_file (str): (optional) path of pre-existing project
-            log (bool): whether to use console and file logging or not
+            log_progress (bool): whether to use console and file logging or not
         '''
 
-        self.__log = log
+        self.__log = log_progress
 
         if project_file is not None:
             self.__open_project(project_file)
