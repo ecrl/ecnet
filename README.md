@@ -40,7 +40,7 @@ To update your version of ECNet to the latest release version, use "**pip instal
 
 ECNet operates using a **Server** object that interfaces with data utility classes, error calculation functions, and neural network creation classes. The Server object handles importing data and model creation for your project, and serves the data to the model. Configurable variables for neural networks, such as learning rate, number of neurons per hidden layer, activation functions for hidden/input/output layers, and number of training epochs are found in a **.yml** configuration file.
 
-## Configuration .yml file format and variables:
+## Configuration .yml file format and variables
 
 Here is a configuration .yml file we use for cetane number predictions:
 
@@ -76,11 +76,12 @@ Here is a script for building a project, importing a database, creating and trai
 ```python
 from ecnet import Server
 
-# Create server object with configuration file 'my_model_configuration.yml' (default config will be generated if the file does not already exist)
+# Create server object with configuration file 'my_model_configuration.yml' (default config will be
+# generated if the file does not already exist)
 sv = Server(config_filename='my_model_configuration.yml')
 
-# By default, the Server will log build/selection process to the console and a log file in a local "Logs" directory
-# To turn off logging, specify it in the Server initialization:
+# By default, the Server will log build/selection process to the console and a log file in a local
+# "Logs" directory. To turn off logging, specify it in the Server initialization:
 sv = Server(config_filename='my_model_configuration.yml', log_progress=False)
 
 # Create a project 'my_project', with 10 builds, 5 nodes/build, 75 trials/node
@@ -119,11 +120,13 @@ sv.train_model(validate=True)
 sv.train_model()
 
 # Select best neural network from each build node (based on test set performance) to predict for the node
-# Models can be selected based on 'test', 'learn', 'valid' and 'train' (learning and validation) sets, or None (all sets)
+# Models can be selected based on 'test', 'learn', 'valid' and 'train' (learning and validation) sets,
+# or None (default argument, selects based on performance of all sets)
 sv.select_best(dset='test')
 
 # Predict values for the test data set
-# Results can be obtained from 'test', 'learn', 'valid' and 'train' (learning and validation) sets, or None (all sets)
+# Results can be obtained from 'test', 'learn', 'valid' and 'train' (learning and validation) sets,
+# or None (default argument, obtains results for all sets)
 test_results = sv.use_model(dset='test')	
 
 # Output results to specified file
@@ -171,13 +174,13 @@ sv.save_results(
 ```
 To view more examples of common ECNet tasks, view the [examples](https://github.com/TJKessler/ECNet/tree/master/examples) directory.
 
-## Database Format:
+# Database Format:
 
 ECNet databases are comma-separated value (CSV) formatted files that provide information such as the ID of each molecule, an optional explicit sort type, various strings and groups to identify molecules, and output/target and input parameters. Row 1 is used to identify which columns are used for ID, sorting assignment, various strings and groups, and target and input data.
 
 The [databases](https://github.com/TJKessler/ECNet/tree/master/databases) directory contains databases for cetane number as well as a database template.
 
-## Contributing, Reporting Issues and Other Support:
+# Contributing, Reporting Issues and Other Support:
 
 To contribute to ECNet, make a pull request. Contributions should include tests for new features added, as well as extensive documentation.
 
