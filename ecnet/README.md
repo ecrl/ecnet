@@ -4,25 +4,25 @@
 #### Class: Server
 
 Methods:
-- **Server(*config_filename='config.yml', project_file=None*)**: Initialization of Server object - either creates a model configuration file *config_filename*, *or* opens a preexisting *.project* file specified by *project_file*.
+- **Server(*config_filename='config.yml', project_file=None, log_progress=True*)**: Initialization of Server object - either creates a model configuration file *config_filename*, *or* opens a preexisting *.project* file specified by *project_file*. Will log training, selection, limiting, etc. progress to the console and a log file if *log_progress* == True
 - **create_project(*project_name, num_builds=1, num_nodes=5, num_trials=10*)**: creates the folder hierarchy for a project with name *project_filename*. Optional variables for the number of builds *num_builds*, number of nodes *num_nodes*, number of trial neural networks per node *num_trials*
 	- note: if this is not called, a project will not be created, and single models will be saved to the 'tmp' folder in your working directory
 - **import_data(*data_filename, sort_type='random', data_split=[0.65, 0.25, 0.1]*)**: imports the data from an ECNet formatted CSV database specified in *data_filename*.
 	- **sort_type** (either 'random' for random learning, validation and testing set assignments, or 'explicit' for database-specified assignments)
 	- **data_split** ([learning %, validation %, testing %] if using random sort_type)
-- **limit_input_parameters(*limit_num, output_filename, use_genetic=False, population_size=500, num_survivors=200, num_generations=25, num_processes=0, shuffle=False*)**: reduces the input dimensionality of the currently loaded database to *limit_num* through a "retain the best" algorithm; saves the limited database to *output_filename*. If *use_genetic* is True, a genetic algorithm will be used instead of the retention algorithm; optional arguments for the genetic algorithm are:
+- **limit_input_parameters(*limit_num, output_filename, use_genetic=False, population_size=500, num_generations=25, num_processes=0, shuffle=False, data_split=[0.65, 0.25, 0.1]*)**: reduces the input dimensionality of the currently loaded database to *limit_num* through a "retain the best" algorithm; saves the limited database to *output_filename*. If *use_genetic* is True, a genetic algorithm will be used instead of the retention algorithm; optional arguments for the genetic algorithm are:
 	- **population_size** (size of the genetic algorithm population)
-	- **num_survivors** (number of population members used to generate the next generation)
 	- **num_generations** (number of generations the genetic algorithm runs for)
 	- **num_processes** (if your machine supports it, number of parallel processes the genetic algorithm will utilize)
 	- **shuffle** (shuffles learning, validation and test sets for each population member)
-- **tune_hyperparameters(*target_score=None, iteration_amt=50, amt_employers=50*)**: optimizes neural network hyperparameters (learning rate, maximum epochs during validation, neuron counts for each hidden layer) using an artifical bee colony algorithm
+    - **data_split** (if shuffle == True, these are data set proportions)
+- **tune_hyperparameters(*target_score=None, num_iterations=50, num_employers=50*)**: optimizes neural network hyperparameters (learning rate, maximum epochs during validation, neuron counts for each hidden layer) using an artifical bee colony algorithm
 	- arguments:
 		- **target_score** (specify target score for program to terminate)
-			- If *None*, ABC will run for *iteration_amt* iterations
-		- **iteration_amt** (specify how many iterations to run the colony)
+			- If *None*, ABC will run for *num_iterations* iterations
+		- **num_iterations** (specify how many iterations to run the colony)
 			- Only if *target_score* is not supplied
-		- **amt_employers** (specify the amount of employer bees in the colony)
+		- **num_employers** (specify the amount of employer bees in the colony)
 - **train_model(*validate=False, shuffle=None, data_split=[0.65, 0.25, 0.1]*)**: fits neural network(s) to the imported data
 	- If validate is **True**, the data's validation set will be used to periodically test model performance to determine when to stop learning up to *validation_max_epochs* config variable epochs; else, trains for *train_epochs* config variable epochs
 	- **shuffle** arguments: 
@@ -80,7 +80,7 @@ Methods:
 ## data_utils.py
 #### Class: DataFrame
 Methods:
-- **__init__(filename)**: imports a formatted database, creates DataPoints for each data entry, grabs string and group names and counts
+- **DataFrame(filename)**: imports a formatted database, creates DataPoints for each data entry, grabs string and group names and counts
 - **create_sets(random=False, split=None)**: create learning, validation and testing sets from database set assignments; if *random* == True, random set assignments are assigned with a split of *split=[learn%, valid%, test%]*
 - **create_sorted_sets(sort_string, split)**: using *sort_string*, a string contained in the DataFrame's imported database, assigns proportions *split=[learn%, valid%, test%]* of each possible string value to learning, validation and testing sets
 - **shuffle(args*, split)**: shuffles data for specified sets with *split=[learn%, valid%, test%]* set assignments
@@ -105,5 +105,5 @@ Error Functions:
 
 ## limit_parameters.py
 Functions:
-- **limit_iterative_include(DataFrame, limit_num)**: limits the input dimensionality of data found in *DataFrame* to a dimensionality of *limit_num* using a "retain the best" algorithm.
-- **limit_genetic(DataFrame, limit_num, population_size, num_survivors, num_generations, num_processes, shuffle=False, data_split=[0.65, 0.25, 0.1], logger=None)**: limits the input dimensionality of data found in *DataFrame* to a dimensionality of *limit_num* using a genetic algorithm; *population_size* indicates the number of members for each generation, *num_survivors* indicates how many members of each generation survive, *num_generations* indicates how many generations the genetic algorithm runs for, *num_processes* specifies the number of parallel processes used for creating each generation, *shuffle* indicates whether to shuffle data set assignments for each population member, and *data_split* specifies the data set assignments if shuffle == True. If a ColorLogger *logger* is not supplied, a new logger is initialized.
+- **limit_iterative_include(DataFrame, limit_num, log_progress=True)**: limits the input dimensionality of data found in *DataFrame* to a dimensionality of *limit_num* using a "retain the best" algorithm.
+- **limit_genetic(DataFrame, limit_num, population_size, num_survivors, num_generations, num_processes, shuffle=False, data_split=[0.65, 0.25, 0.1], log_progress=True)**: limits the input dimensionality of data found in *DataFrame* to a dimensionality of *limit_num* using a genetic algorithm; *population_size* indicates the number of members for each generation, *num_survivors* indicates how many members of each generation survive, *num_generations* indicates how many generations the genetic algorithm runs for, *num_processes* specifies the number of parallel processes used for creating each generation, *shuffle* indicates whether to shuffle data set assignments for each population member, and *data_split* specifies the data set assignments if shuffle == True. Will log limiting progress if *log_progress* == True.
