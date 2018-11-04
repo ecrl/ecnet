@@ -112,7 +112,8 @@ sv.import_data(
     sort_type='explicit'
 )
 
-# Trains neural network candidates for all nodes using periodic validation, shuffling learn and validate sets for each candidate
+# Trains neural network candidates for all nodes using periodic validation, shuffling learn and validate sets for
+# each candidate
 sv.train_model(
     validate=True,
     shuffle='lv',
@@ -122,7 +123,8 @@ sv.train_model(
 # To avoid shuffling for each candidate, omit the shuffle variable (defaults to None)
 sv.train_model(validate=True)
 
-# If periodic validation (determines when to stop training) is not required, omit the validate variable (defaults to False)
+# If periodic validation (determines when to stop training) is not required, omit the validate variable (defaults
+# to False)
 sv.train_model()
 
 # Select best neural network from each build's nodes (based on test set performance) to predict for the node
