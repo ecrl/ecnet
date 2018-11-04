@@ -5,7 +5,7 @@
 
 Methods:
 - **Server(*config_filename='config.yml', project_file=None, log_progress=True*)**: Initialization of Server object - either creates a model configuration file *config_filename*, *or* opens a preexisting *.project* file specified by *project_file*. Will log training, selection, limiting, etc. progress to the console and a log file if *log_progress* == True
-- **create_project(*project_name, num_builds=1, num_nodes=5, num_trials=10*)**: creates the folder hierarchy for a project with name *project_filename*. Optional variables for the number of builds *num_builds*, number of nodes *num_nodes*, number of trial neural networks per node *num_trials*
+- **create_project(*project_name, num_builds=1, num_nodes=5, num_candidates=10*)**: creates the folder hierarchy for a project with name *project_filename*. Optional variables for the number of builds *num_builds*, number of nodes *num_nodes*, number of candidate neural networks per node *num_candidates*
 	- note: if this is not called, a project will not be created, and single models will be saved to the 'tmp' folder in your working directory
 - **import_data(*data_filename, sort_type='random', data_split=[0.65, 0.25, 0.1]*)**: imports the data from an ECNet formatted CSV database specified in *data_filename*.
 	- **sort_type** (either 'random' for random learning, validation and testing set assignments, or 'explicit' for database-specified assignments)
@@ -26,9 +26,9 @@ Methods:
 - **train_model(*validate=False, shuffle=None, data_split=[0.65, 0.25, 0.1]*)**: fits neural network(s) to the imported data
 	- If validate is **True**, the data's validation set will be used to periodically test model performance to determine when to stop learning up to *validation_max_epochs* config variable epochs; else, trains for *train_epochs* config variable epochs
 	- **shuffle** arguments: 
-		- **None** (no re-shuffling between trials)
-		- **'lv'** (shuffles learning and validation sets between trials)
-		- **'lvt'** (shuffles all sets between trials)
+		- **None** (no re-shuffling data for each neural network)
+		- **'lv'** (shuffles learning and validation sets data for each neural network)
+		- **'lvt'** (shuffles all sets data for each neural network)
 	- **data_split** ([learning %, validation %, testing %] if shuffling data)
 - **select_best(*dset=None, error_fn='mean_abs_error'*)**: selects the best performing neural network to represent each node of each build; requires a project to be created
 	- dset arguments:
@@ -61,7 +61,7 @@ Methods:
 		- **'train'** (errors for learning & validation sets)
 		- **'test'** (errors for test set)
 - **save_results(*results, filename*)**: saves your **results** obtained through *use_model()* to a specified output **filename**
-- **save_project(*clean_up=True*)**: cleans the project directory (if *clean_up* is True, removing trial neural networks and keeping best neural network from select_best()), copies config and currently loaded dataset into project directory, and creates a '.project' file for later use
+- **save_project(*clean_up=True*)**: cleans the project directory (if *clean_up* is True, removing candidate neural networks and keeping best neural network from select_best()), copies config and currently loaded dataset into project directory, and creates a '.project' file for later use
 
 ## model.py
 #### Class: MultilayerPerceptron
