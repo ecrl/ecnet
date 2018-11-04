@@ -33,16 +33,18 @@ class Server:
     def __init__(self, config_filename='config.yml', project_file=None,
                  log_progress=True):
         '''
-        Server object: handles data importing, model creation, data to model
-        hand-off, error calculations, project saving and loading
+        Server object: handles data importing, neural network creation, data
+        to neural network hand-off, error calculations, project saving and
+        loading
 
         Args:
-            config_filename (str): (optional) path of model configuration file
+            config_filename (str): (optional) path of neural network
+                                   configuration file
             project_file (str): (optional) path of pre-existing project
-            log_progress (bool): whether to use console and file logging or not
+            log_progress (bool): whether or not to use console and file logging
         '''
 
-        self.__log = log_progress
+        self._log = log_progress
 
         if project_file is not None:
             self.__open_project(project_file)
@@ -55,7 +57,7 @@ class Server:
             file = open(config_filename, 'r')
             self.vars.update(load(file))
         except:
-            if self.__log:
+            if self._log:
                 log('warn', 'Supplied configuration file not found - '
                             'generating default configuration for {}'.format(
                                 config_filename
@@ -79,7 +81,7 @@ class Server:
         self.__using_project = False
 
     def create_project(self, project_name, num_builds=1, num_nodes=5,
-                       num_trials=10):
+                       num_candidates=10):
         '''
         Creates the folder structure for a project
 
@@ -87,26 +89,26 @@ class Server:
             project_name (str): name of the project
             num_builds (int): number of builds in the project
             num_nodes (int): number of nodes for each build
-            num_trials (int): number of trials per node
+            num_candidates (int): number of candidates per node
         '''
 
-        self.__project_name = project_name
-        self.__num_builds = num_builds
-        self.__num_nodes = num_nodes
-        self.__num_trials = num_trials
-        if not path.exists(self.__project_name):
-            makedirs(self.__project_name)
-        for build in range(self.__num_builds):
-            path_b = path.join(self.__project_name, 'build_{}'
+        self._project_name = project_name
+        self._num_builds = num_builds
+        self._num_nodes = num_nodes
+        self._num_candidates = num_candidates
+        if not path.exists(self._project_name):
+            makedirs(self._project_name)
+        for build in range(self._num_builds):
+            path_b = path.join(self._project_name, 'build_{}'
                                .format(build + 1))
             if not path.exists(path_b):
                 makedirs(path_b)
-            for node in range(self.__num_nodes):
+            for node in range(self._num_nodes):
                 path_n = path.join(path_b, 'node_{}'.format(node + 1))
                 if not path.exists(path_n):
                     makedirs(path_n)
         self.__using_project = True
-        if self.__log:
+        if self._log:
             log('info', 'Created project {}'.format(project_name),
                 use_color=False)
 
@@ -129,7 +131,7 @@ class Server:
         else:
             raise ValueError('Unknown sort_type {}'.format(sort_type))
         self.__sets = self.DataFrame.package_sets()
-        if self.__log:
+        if self._log:
             log('info', 'Imported data from {}'.format(data_filename),
                 use_color=False)
 
@@ -161,7 +163,7 @@ class Server:
         '''
 
         if use_genetic:
-            if self.__log:
+            if self._log:
                 log(
                     'info',
                     'Limiting input parameters using a genetic algorithm',
@@ -169,20 +171,20 @@ class Server:
                 )
             params = ecnet.limit_parameters.limit_genetic(
                 self.DataFrame, limit_num, population_size, num_generations,
-                num_processes, shuffle=shuffle, log_progress=self.__log
+                num_processes, shuffle=shuffle, log_progress=self._log
             )
         else:
-            if self.__log:
+            if self._log:
                 log(
                     'info',
                     'Limiting input parameters using iterative inclusion',
                     use_color=False
                 )
             params = ecnet.limit_parameters.limit_iterative_include(
-                self.DataFrame, limit_num, log_progress=self.__log
+                self.DataFrame, limit_num, log_progress=self._log
             )
         ecnet.limit_parameters.output(self.DataFrame, params, output_filename)
-        if self.__log:
+        if self._log:
             log('info', 'Saved limited database to {}'.format(output_filename),
                 use_color=False)
 
@@ -227,7 +229,7 @@ class Server:
         for _ in range(len(self.vars['hidden_layers'])):
             hyperparameters.append(('int', (8, 32)))
 
-        if self.__log:
+        if self._log:
             log('info', 'Tuning neural network hyperparameters with an ABC',
                 use_color=False)
 
@@ -261,7 +263,7 @@ class Server:
         for idx, layer in enumerate(self.vars['hidden_layers'], 2):
             layer[0] = new_hyperparameters[idx]
 
-        if self.__log:
+        if self._log:
             log('info', 'Tuned learning rate: {}'.format(
                 new_hyperparameters[0]), use_color=False)
             log('info', 'Tuned max validation epochs: {}'.format(
@@ -278,18 +280,18 @@ class Server:
     def train_model(self, validate=False, shuffle=None,
                     data_split=[0.65, 0.25, 0.1]):
         '''
-        Trains models (fills project if create_project() called, otherwise
-        creates one neural network)
+        Trains neural networks (fills project if create_project() called,
+        otherwise creates one neural network)
 
         Args:
             validate (bool): whether to use periodic validation to determine
                              learning cutoff
-            shuffle (bool): whether to shuffle the data sets for each trial
+            shuffle (bool): whether to shuffle the data sets for each candidate
             data_split (list): [learn%, valid%, test%] if shuffle == True
         '''
 
         if not self.__using_project:
-            if self.__log:
+            if self._log:
                 log('info', 'Training single model', use_color=False)
             model = self.__create_model()
             if validate:
@@ -311,32 +313,33 @@ class Server:
             model.save('./tmp/model')
 
         else:
-            if self.__log:
+            if self._log:
                 log(
                     'info',
                     'Generating {} x {} x {} neural networks'.format(
-                        self.__num_builds, self.__num_nodes, self.__num_trials
+                        self._num_builds, self._num_nodes,
+                        self._num_candidates
                     ),
                     use_color=False)
-            for build in range(self.__num_builds):
+            for build in range(self._num_builds):
                 path_b = path.join(
-                    self.__project_name, 'build_{}'.format(build + 1)
+                    self._project_name, 'build_{}'.format(build + 1)
                 )
-                for node in range(self.__num_nodes):
+                for node in range(self._num_nodes):
                     path_n = path.join(
                         path_b, 'node_{}'.format(node + 1)
                     )
-                    for trial in range(self.__num_trials):
-                        if self.__log:
+                    for candidate in range(self._num_candidates):
+                        if self._log:
                             log(
                                 'info',
-                                'Build {}, Node {}, Trial {}'.format(
-                                    build + 1, node + 1, trial + 1
+                                'Build {}, Node {}, candidate {}'.format(
+                                    build + 1, node + 1, candidate + 1
                                 ),
                                 use_color=False
                             )
                         path_t = path.join(
-                            path_n, 'trial_{}'.format(trial + 1)
+                            path_n, 'candidate_{}'.format(candidate + 1)
                         )
                         model = self.__create_model()
                         if validate:
@@ -375,7 +378,7 @@ class Server:
 
     def select_best(self, dset=None, error_fn='mean_abs_error'):
         '''
-        Selects the best performing neural network trial from each node for
+        Selects the best performing neural network candidate from each node for
         each build (requires create_project())
 
         Args:
@@ -391,32 +394,32 @@ class Server:
             raise Exception('Project has not been created! (create_project())')
         if not path.exists(
             path.join(
-                self.__project_name,
+                self._project_name,
                 path.join('build_1', path.join(
                         'node_1',
-                        'trial_1.meta'
+                        'candidate_1.meta'
                     )
                 )
             )
         ):
             raise Exception('Models must be trained first! (train_model())')
-        if self.__log:
+        if self._log:
             log('info', 'Selecting best models from each mode for each build',
                 use_color=False)
         x_vals = self.__determine_x_vals(dset)
         y_vals = self.__determine_y_vals(dset)
-        for build in range(self.__num_builds):
+        for build in range(self._num_builds):
             path_b = path.join(
-                self.__project_name, 'build_{}'.format(build + 1)
+                self._project_name, 'build_{}'.format(build + 1)
             )
-            for node in range(self.__num_nodes):
+            for node in range(self._num_nodes):
                 path_n = path.join(
                     path_b, 'node_{}'.format(node + 1)
                 )
                 error_list = []
-                for trial in range(self.__num_trials):
+                for candidate in range(self._num_candidates):
                     path_t = path.join(
-                        path_n, 'trial_{}'.format(trial + 1)
+                        path_n, 'candidate_{}'.format(candidate + 1)
                     )
                     model = ecnet.model.MultilayerPerceptron()
                     model.load(path_t)
@@ -431,7 +434,7 @@ class Server:
                         current_min_idx = idx
                 model = ecnet.model.MultilayerPerceptron()
                 path_t_best = path.join(
-                    path_n, 'trial_{}'.format(current_min_idx + 1)
+                    path_n, 'candidate_{}'.format(current_min_idx + 1)
                 )
                 path_best = path.join(
                     path_n, 'model'
@@ -454,7 +457,7 @@ class Server:
                   prediction with a length of the number of DB targets
         '''
 
-        if self.__log:
+        if self._log:
             log('info', 'Predicting values for {} set'.format(dset),
                 use_color=False)
         x_vals = self.__determine_x_vals(dset)
@@ -465,7 +468,7 @@ class Server:
         else:
             if not path.exists(
                 path.join(
-                    self.__project_name,
+                    self._project_name,
                     path.join('build_1', path.join(
                             'node_1',
                             'model.meta'
@@ -475,12 +478,12 @@ class Server:
             ):
                 raise Exception('Select best performers using select_best()')
             preds = []
-            for build in range(self.__num_builds):
+            for build in range(self._num_builds):
                 path_b = path.join(
-                    self.__project_name, 'build_{}'.format(build + 1)
+                    self._project_name, 'build_{}'.format(build + 1)
                 )
                 build_preds = []
-                for node in range(self.__num_nodes):
+                for node in range(self._num_nodes):
                     path_n = path.join(
                         path_b, 'node_{}'.format(node + 1)
                     )
@@ -515,7 +518,7 @@ class Server:
             dictionary: dictionary of supplied error functions and their values
         '''
 
-        if self.__log:
+        if self._log:
             for arg in args:
                 log('info', 'Calculating {} for {} set'.format(arg, dset),
                     use_color=False)
@@ -542,7 +545,7 @@ class Server:
         '''
 
         ecnet.data_utils.save_results(results, self.DataFrame, filename)
-        if self.__log:
+        if self._log:
             log('info', 'Results saved to {}'.format(filename),
                 use_color=False)
 
@@ -560,22 +563,22 @@ class Server:
             raise Exception('Project has not been created! (create_project())')
 
         if clean_up:
-            for build in range(self.__num_builds):
+            for build in range(self._num_builds):
                 path_b = path.join(
-                    self.__project_name, 'build_{}'.format(build + 1)
+                    self._project_name, 'build_{}'.format(build + 1)
                 )
-                for node in range(self.__num_nodes):
+                for node in range(self._num_nodes):
                     path_n = path.join(
                         path_b, 'node_{}'.format(node + 1)
                     )
-                    trial_files = [
-                        file for file in listdir(path_n) if 'trial' in file
+                    candidate_files = [
+                        file for file in listdir(path_n) if 'candidate' in file
                     ]
-                    for file in trial_files:
+                    for file in candidate_files:
                         remove(path.join(path_n, file))
 
         with open(
-            path.join(self.__project_name, self.__config_filename),
+            path.join(self._project_name, self.__config_filename),
             'w'
         ) as config_save:
             dump(
@@ -587,24 +590,24 @@ class Server:
         config_save.close()
 
         with open(
-            path.join(self.__project_name, 'data.d'),
+            path.join(self._project_name, 'data.d'),
             'wb'
         ) as data_save:
             pdump(self.DataFrame, data_save)
         data_save.close()
 
         zip_file = ZipFile(
-            '{}.project'.format(self.__project_name),
+            '{}.project'.format(self._project_name),
             'w',
             ZIP_DEFLATED
         )
-        for root, dirs, files in walk(self.__project_name):
+        for root, dirs, files in walk(self._project_name):
             for file in files:
                 zip_file.write(path.join(root, file))
         zip_file.close()
-        if self.__log:
+        if self._log:
             log('info', 'Project saved to {}.project'.format(
-                    self.__project_name
+                    self._project_name
                 ), use_color=False)
 
     def __open_project(self, project_name):
@@ -616,36 +619,36 @@ class Server:
             project_name (string): path to .project file
         '''
 
-        self.__project_name = project_name.replace('.project', '')
+        self._project_name = project_name.replace('.project', '')
         if '.project' not in project_name:
             project_name += '.project'
 
         zip_file = ZipFile(project_name, 'r')
-        zip_file.extractall(self.__project_name + '\\..\\')
+        zip_file.extractall(self._project_name + '\\..\\')
         zip_file.close()
 
-        self.__num_builds = len(
+        self._num_builds = len(
             [build for build in listdir(
-                self.__project_name
-            ) if path.isdir(path.join(self.__project_name, build))]
+                self._project_name
+            ) if path.isdir(path.join(self._project_name, build))]
         )
-        self.__num_nodes = len(
+        self._num_nodes = len(
             [node for node in listdir(
-                path.join(self.__project_name, 'build_1')
+                path.join(self._project_name, 'build_1')
             ) if path.isdir(path.join(
-                self.__project_name,
+                self._project_name,
                 path.join('build_1', node))
             )]
         )
 
-        for root, dirs, files in walk(self.__project_name):
+        for root, dirs, files in walk(self._project_name):
             for file in files:
                 if '.yml' in file:
                     self.__config_filename = file
                     break
 
         with open(
-            path.join(self.__project_name, self.__config_filename),
+            path.join(self._project_name, self.__config_filename),
             'r'
         ) as config_file:
             self.vars = {}
@@ -653,7 +656,7 @@ class Server:
         config_file.close()
 
         with open(
-            path.join(self.__project_name, 'data.d'),
+            path.join(self._project_name, 'data.d'),
             'rb'
         ) as data_file:
             self.DataFrame = pload(data_file)
@@ -661,7 +664,7 @@ class Server:
 
         self.__sets = self.DataFrame.package_sets()
         self.__using_project = True
-        if self.__log:
+        if self._log:
             log('info', 'Opened project {}.project'.format(project_name),
                 use_color=False)
 
