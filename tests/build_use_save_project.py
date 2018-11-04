@@ -5,7 +5,12 @@ def build(validate, shuffle, dset, sort_type):
 
     sv = Server()
     sv.import_data('cn_model_v1.0.csv', sort_type=sort_type)
-    sv.create_project('test_project', num_builds=1, num_nodes=2, num_trials=2)
+    sv.create_project(
+        'test_project',
+        num_builds=1,
+        num_nodes=2,
+        num_candidates=2
+    )
     sv.train_model(validate=validate, shuffle=shuffle)
     sv.select_best(dset)
     results = sv.use_model(dset)
