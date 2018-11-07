@@ -2,20 +2,27 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/error_utils.py
-# v.1.5.3
+# v.1.6.0
 # Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions necessary creating, training, saving, and reusing neural
 # network models
 #
 
-import tensorflow as tf
-import numpy as np
+# Stdlib imports
 import pickle
+from pickle import dump, load
 from functools import reduce
-import os
+from os import environ, mkdir, path
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+# 3rd party imports
+import tensorflow as tf
+from tensorflow import add, global_variables_initializer, matmul, nn
+from tensorflow import placeholder, random_normal, reset_default_graph
+from tensorflow import Session, square, train, Variable
+from numpy import asarray, sqrt as nsqrt
+
+environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
 def __linear_fn(n):
@@ -26,9 +33,9 @@ def __linear_fn(n):
 
 
 ACTIVATION_FUNCTONS = {
-    'relu': tf.nn.relu,
-    'sigmoid': tf.nn.sigmoid,
-    'softmax': tf.nn.softmax,
+    'relu': nn.relu,
+    'sigmoid': nn.sigmoid,
+    'softmax': nn.softmax,
     'linear': __linear_fn
 }
 
@@ -65,9 +72,9 @@ class MultilayerPerceptron:
         self.__weights = []
         self.__biases = []
         self.__id = id
-        if not os.path.isdir('./tmp/'):
-            os.mkdir('./tmp/')
-        tf.reset_default_graph()
+        if not path.isdir('./tmp/'):
+            mkdir('./tmp/')
+        reset_default_graph()
 
     def add_layer(self, size, act_fn):
         '''
@@ -87,14 +94,14 @@ class MultilayerPerceptron:
 
         for layer in range(len(self.__layers) - 1):
             self.__weights.append(
-                tf.Variable(tf.random_normal([
+                Variable(random_normal([
                     self.__layers[layer].size,
                     self.__layers[layer + 1].size
                 ]), name='W_fc{}'.format(layer + 1))
             )
         for layer in range(1, len(self.__layers)):
             self.__biases.append(
-                tf.Variable(tf.random_normal([
+                Variable(random_normal([
                     self.__layers[layer].size
                 ]), name='B_fc{}'.format(layer))
             )
@@ -112,20 +119,20 @@ class MultilayerPerceptron:
         if len(y_l) is 0 or len(x_l) is 0:
             raise ValueError('Learning set cannot be empty - check data split')
 
-        x = tf.placeholder('float', [None, self.__layers[0].size])
-        y = tf.placeholder('float', [None, self.__layers[-1].size])
+        x = placeholder('float', [None, self.__layers[0].size])
+        y = placeholder('float', [None, self.__layers[-1].size])
 
         pred = self.__feed_forward(x)
-        cost = tf.square(y - pred)
-        optimizer = tf.train.AdamOptimizer(
+        cost = square(y - pred)
+        optimizer = train.AdamOptimizer(
             learning_rate=learning_rate
         ).minimize(cost)
 
-        with tf.Session() as sess:
-            sess.run(tf.global_variables_initializer())
+        with Session() as sess:
+            sess.run(global_variables_initializer())
             for _ in range(train_epochs):
                 sess.run(optimizer, feed_dict={x: x_l, y: y_l})
-            saver = tf.train.Saver()
+            saver = train.Saver()
             saver.save(sess, './tmp/_m{}/_ckpt'.format(self.__id))
         sess.close()
 
@@ -144,17 +151,17 @@ class MultilayerPerceptron:
                 'Validation set cannot be empty - check data split'
             )
 
-        x = tf.placeholder('float', [None, self.__layers[0].size])
-        y = tf.placeholder('float', [None, self.__layers[-1].size])
+        x = placeholder('float', [None, self.__layers[0].size])
+        y = placeholder('float', [None, self.__layers[-1].size])
 
         pred = self.__feed_forward(x)
-        cost = tf.square(y - pred)
-        optimizer = tf.train.AdamOptimizer(
+        cost = square(y - pred)
+        optimizer = train.AdamOptimizer(
             learning_rate=learning_rate
         ).minimize(cost)
 
-        with tf.Session() as sess:
-            sess.run(tf.global_variables_initializer())
+        with Session() as sess:
+            sess.run(global_variables_initializer())
 
             valid_rmse_lowest = 100
             current_epoch = 0
@@ -173,7 +180,7 @@ class MultilayerPerceptron:
                     ):
                         break
 
-            saver = tf.train.Saver()
+            saver = train.Saver()
             saver.save(sess, './tmp/_m{}/_ckpt'.format(self.__id))
         sess.close()
 
@@ -182,8 +189,8 @@ class MultilayerPerceptron:
         Use the neural network on input data *x*, returns predicted values
         '''
 
-        with tf.Session() as sess:
-            saver = tf.train.Saver()
+        with Session() as sess:
+            saver = train.Saver()
             saver.restore(sess, './tmp/_m{}/_ckpt'.format(self.__id))
             results = self.__feed_forward(x).eval()
         sess.close()
@@ -194,13 +201,13 @@ class MultilayerPerceptron:
         Saves the neural network to *filepath* for later use
         '''
 
-        with tf.Session() as sess:
-            saver = tf.train.Saver()
+        with Session() as sess:
+            saver = train.Saver()
             saver.restore(sess, './tmp/_m{}/_ckpt'.format(self.__id))
             saver.save(sess, filepath)
         sess.close()
         architecture_file = open('{}.struct'.format(filepath), 'wb')
-        pickle.dump(self.__layers, architecture_file)
+        dump(self.__layers, architecture_file)
         architecture_file.close()
 
     def load(self, filepath):
@@ -209,10 +216,10 @@ class MultilayerPerceptron:
         '''
 
         architecture_file = open('{}.struct'.format(filepath), 'rb')
-        self.__layers = pickle.load(architecture_file)
+        self.__layers = load(architecture_file)
         self.connect_layers()
-        with tf.Session() as sess:
-            saver = tf.train.Saver()
+        with Session() as sess:
+            saver = train.Saver()
             saver.restore(sess, filepath)
             saver.save(sess, './tmp/_m{}/_ckpt'.format(self.__id))
         sess.close()
@@ -226,7 +233,7 @@ class MultilayerPerceptron:
         output = x
         for idx, layer in enumerate(self.__layers[1:]):
             output = layer.act_fn(
-                tf.add(tf.matmul(
+                add(matmul(
                     output,
                     self.__weights[idx]
                 ), self.__biases[idx])
@@ -240,6 +247,6 @@ class MultilayerPerceptron:
         '''
 
         try:
-            return(np.sqrt(((y_hat - y)**2).mean()))
+            return(nsqrt(((y_hat - y)**2).mean()))
         except:
-            return(np.sqrt(((np.asarray(y_hat) - np.asarray(y))**2).mean()))
+            return(nsqrt(((asarray(y_hat) - asarray(y))**2).mean()))

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/data_utils.py
-# v.1.5.3
+# v.1.6.0
 # Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "DataFrame" class, and functions for processing/importing/
@@ -10,18 +10,21 @@
 # server.py.
 #
 
-import csv
-import numpy as np
-import random as rm
+# Stdlib imports
+from csv import reader, writer, QUOTE_ALL
+from random import sample
+
+# 3rd party imports
+from numpy import asarray
 
 
 class DataPoint:
-    '''
-    DataPoint class: contains all information for each data entry found in
-    ECNet formatted CSV database
-    '''
 
     def __init__(self):
+        '''
+        DataPoint object: houses row in CSV database, containing ID, set
+        assignment, strings, groups, targets and inputs
+        '''
 
         self.id = None
         self.assignment = None
@@ -32,13 +35,12 @@ class DataPoint:
 
 
 class PackagedData:
-    '''
-    Private object: contains lists (converted to numpy arrays by
-    package_sets when returned) with target (y) and input (x) values, also
-    filled by package_sets
-    '''
 
     def __init__(self):
+        '''
+        PackagedData object: contains lists of input and target data for data
+        set assignments
+        '''
 
         self.learn_x = []
         self.learn_y = []
@@ -49,22 +51,21 @@ class PackagedData:
 
 
 class DataFrame:
-    '''
-    DataFrame class: handles importing data from ECNet formatted CSV database,
-    determining learning, validation and training sets, and packages sets as
-    Numpy arrays for hand-off to models
-    '''
 
     def __init__(self, filename):
         '''
-        *filename*  - ECNet formatted database file
+        DataFrame object: handles data importing, set splitting, shuffling,
+        packaging
+
+        Args:
+            filename (str): path to ECNet-formatted CSV database
         '''
 
         if '.csv' not in filename:
             filename += '.csv'
         try:
             with open(filename, newline='') as file:
-                data_raw = list(csv.reader(file))
+                data_raw = list(reader(file))
         except FileNotFoundError:
             raise Exception('CSV database not found: {}'.format(filename))
 
@@ -112,13 +113,14 @@ class DataFrame:
 
         return len(self.data_points)
 
-    def create_sets(self, random, split=None):
+    def create_sets(self, random=False, split=[0.65, 0.25, 0.1]):
         '''
         Creates learning, validation and test sets
 
-        *random*    - True == random assignments, False = explicit (database
-                      ASSIGNMENT column) assignments
-        *split*     - If random == True, [learn%, valid%, test%]
+        Args:
+            random (bool): if True, use random assignments for learn, validate,
+                           test sets
+            split (list): [learn%, valid%, test%] if random == True
         '''
 
         self.learn_set = []
@@ -126,9 +128,7 @@ class DataFrame:
         self.test_set = []
 
         if random:
-            if split is None:
-                raise ValueError('Need to specify split [l%, v%, t%]')
-            rand_index = rm.sample(range(len(self)), len(self))
+            rand_index = sample(range(len(self)), len(self))
             split_locs = [
                 int(len(rand_index) * split[0]),
                 int(len(rand_index) * (split[0] + split[1])),
@@ -155,13 +155,14 @@ class DataFrame:
                 elif point.assignment == 'T':
                     self.test_set.append(point)
 
-    def create_sorted_sets(self, sort_string, split):
+    def create_sorted_sets(self, sort_string, split=[0.65, 0.25, 0.1]):
         '''
-        Creates learning, validation and test sets containing specified
-        proportions of each unique item for a given database STRING
+        Creates random learn, validate and test sets, ensuring data points with
+        the supplied sort string are split proportionally between the sets
 
-        *sort_string*   - ECNet CSV database STRING column name
-        *split*         - [learn%, valid%, test%]
+        Args:
+            sort_string (str): database STRING value used to sort data points
+            split (list): [learn%, valid%, test%] for set assignments
         '''
         try:
             string_idx = self.string_names.index(sort_string)
@@ -198,12 +199,14 @@ class DataFrame:
                 point.assignment = 'T'
                 self.test_set.append(point)
 
-    def shuffle(self, *args, split):
+    def shuffle(self, *args, split=[0.65, 0.25, 0.1]):
         '''
-        Shuffles (new random assignments) sets specified by arguments
+        Shuffles (new random assignments) learn, validate, test sets
 
-        **args* - ('l', 'v' and 't') or ('l' and 'v')
-        split   - [learn%, valid%, test%]
+        Args:
+            *args (str): 'l', 'v', and/or 't', specifies whether to shuffle
+                         learn, validate and/or test sets
+            split (list): [learn%, valid%, test%] used for new assignments
         '''
 
         if 'l' and 'v' and 't' in args:
@@ -215,7 +218,7 @@ class DataFrame:
                 lv_set.append(point)
             for point in self.valid_set:
                 lv_set.append(point)
-            rand_index = rm.sample(
+            rand_index = sample(
                 range(len(self.learn_set) + len(self.valid_set)),
                 (len(self.learn_set) + len(self.valid_set))
             )
@@ -239,35 +242,43 @@ class DataFrame:
 
     def package_sets(self):
         '''
-        Creates and returns PackagedData object containing numpy arrays with
-        target (y) and input (x) values for learning, validation and testing
-        sets
+        Packages learn, validate and test sets for model hand-off
+
+        Returns:
+            PackagedData: object containing learn, validate and test inputs
+                          and targets
         '''
 
         pd = PackagedData()
         for point in self.learn_set:
-            pd.learn_x.append(np.asarray(point.inputs).astype('float32'))
-            pd.learn_y.append(np.asarray(point.targets).astype('float32'))
+            pd.learn_x.append(asarray(point.inputs).astype('float32'))
+            pd.learn_y.append(asarray(point.targets).astype('float32'))
         for point in self.valid_set:
-            pd.valid_x.append(np.asarray(point.inputs).astype('float32'))
-            pd.valid_y.append(np.asarray(point.targets).astype('float32'))
+            pd.valid_x.append(asarray(point.inputs).astype('float32'))
+            pd.valid_y.append(asarray(point.targets).astype('float32'))
         for point in self.test_set:
-            pd.test_x.append(np.asarray(point.inputs).astype('float32'))
-            pd.test_y.append(np.asarray(point.targets).astype('float32'))
+            pd.test_x.append(asarray(point.inputs).astype('float32'))
+            pd.test_y.append(asarray(point.targets).astype('float32'))
 
-        pd.learn_x = np.asarray(pd.learn_x)
-        pd.learn_y = np.asarray(pd.learn_y)
-        pd.valid_x = np.asarray(pd.valid_x)
-        pd.valid_y = np.asarray(pd.valid_y)
-        pd.test_x = np.asarray(pd.test_x)
-        pd.test_y = np.asarray(pd.test_y)
+        pd.learn_x = asarray(pd.learn_x)
+        pd.learn_y = asarray(pd.learn_y)
+        pd.valid_x = asarray(pd.valid_x)
+        pd.valid_y = asarray(pd.valid_y)
+        pd.test_x = asarray(pd.test_x)
+        pd.test_y = asarray(pd.test_y)
         return pd
 
 
 def save_results(results, DataFrame, filename):
     '''
-    Saves *results* to *filename*; uses *DataFrame for header formatting,
-    DataPoint data
+    Saves results obtained from ecnet.Server.use_model()
+
+    Args:
+        results (list): list of lists, where sublists are predicted data for
+                        each data point
+        DataFrame (DataFrame): data_utils.DataFrame object used for results
+                               file formatting
+        filename (str): path to save location for results
     '''
 
     if '.csv' not in filename:
@@ -353,6 +364,6 @@ def save_results(results, DataFrame, filename):
         rows.append(data_row)
 
     with open(filename, 'w') as file:
-        wr = csv.writer(file, quoting=csv.QUOTE_ALL, lineterminator='\n')
+        wr = writer(file, quoting=QUOTE_ALL, lineterminator='\n')
         for row in rows:
             wr.writerow(row)

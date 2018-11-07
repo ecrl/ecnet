@@ -17,5 +17,7 @@ if __name__ == '__main__':
     sv.limit_input_parameters(
         15,
         'my_data_limited_genetic.csv',
-        use_genetic=True
+        use_genetic=True,
+        population_size=50,
+        num_generations=20
     )

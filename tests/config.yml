@@ -1,0 +1,8 @@
+hidden_layers:
+- [4, relu]
+- [4, relu]
+input_activation: relu
+learning_rate: 0.1
+output_activation: linear
+train_epochs: 50
+validation_max_epochs: 100
