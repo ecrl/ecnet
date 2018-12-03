@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/error_utils.py
-# v.1.6.0
+# v.1.7.0
 # Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions necessary creating, training, saving, and reusing neural
@@ -14,6 +14,7 @@ import pickle
 from pickle import dump, load
 from functools import reduce
 from os import environ, mkdir, path
+from random import uniform
 
 # 3rd party imports
 import tensorflow as tf
@@ -41,11 +42,16 @@ ACTIVATION_FUNCTONS = {
 
 
 class Layer:
-    '''
-    Layer object: contains layer size (number of neurons), activation function
-    '''
 
     def __init__(self, size, act_fn):
+        '''
+        Layer object: contains layer size (number of neurons), activation
+        function
+
+        Args:
+            size (int): number of neurons in the layer
+            act_fn (str): 'relu', 'sigmoid', 'softmax', 'linear'
+        '''
 
         self.size = size
         if act_fn not in ACTIVATION_FUNCTONS.keys():
@@ -54,18 +60,20 @@ class Layer:
             )
         self.act_fn = ACTIVATION_FUNCTONS[act_fn]
 
+    def __len__(self):
+        '''
+        Layer length = number of neurons = layer.size
+        '''
+
+        return self.size
+
 
 class MultilayerPerceptron:
-    '''
-    Neural network (multilayer perceptron): contains methods for adding layers
-    with specified neuron counts and activation functions, training the model,
-    using the model on new data, saving the model for later use, and reusing a
-    previously trained model
-    '''
 
     def __init__(self, id=0):
         '''
-        Initialization of object
+        Neural network (multilayer perceptron) - contains methods for training,
+        using, saving and opening neural network models
         '''
 
         self.__layers = []
@@ -80,16 +88,17 @@ class MultilayerPerceptron:
         '''
         Add a layer to the model
 
-        *size*      - number of neurons in the layer
-        *act_fn*    - activation function for the layer:
+        Args:
+            size (int): number of neurons in the layer
+            act_fn (str): activation function of the layer:
+                - 'relu', 'sigmoid', 'softmax' or 'linear'
         '''
 
         self.__layers.append(Layer(size, act_fn))
 
     def connect_layers(self):
         '''
-        Connects the layers in self.layers, generating weights between layers
-        and biases for each layer
+        Fully connects each layer added using add_layer()
         '''
 
         for layer in range(len(self.__layers) - 1):
@@ -106,14 +115,18 @@ class MultilayerPerceptron:
                 ]), name='B_fc{}'.format(layer))
             )
 
-    def fit(self, x_l, y_l, learning_rate, train_epochs):
+    def fit(self, x_l, y_l, learning_rate=0.1, train_epochs=500,
+            keep_prob=None):
         '''
-        Fits the neural network model
+        Fits the neural network model using a set number of training iterations
 
-        *x_l*   - learning input data
-        *y_l*   - learning targets
-        *learning_rate* - learning rate
-        *train_epochs*  - number of training steps (epochs)
+        Args:
+            x_l (numpy array): training inputs
+            y_l (numpy array): training outputs
+            learning_rate (float): learning rate during training
+            train_epochs (int): number of training iterations
+            keep_prob (float): probability that a neuron is retained (not
+                               subjected to dropout)
         '''
 
         if len(y_l) is 0 or len(x_l) is 0:
@@ -122,7 +135,7 @@ class MultilayerPerceptron:
         x = placeholder('float', [None, self.__layers[0].size])
         y = placeholder('float', [None, self.__layers[-1].size])
 
-        pred = self.__feed_forward(x)
+        pred = self.__feed_forward(x, keep_prob=keep_prob)
         cost = square(y - pred)
         optimizer = train.AdamOptimizer(
             learning_rate=learning_rate
@@ -136,10 +149,21 @@ class MultilayerPerceptron:
             saver.save(sess, './tmp/_m{}/_ckpt'.format(self.__id))
         sess.close()
 
-    def fit_validation(self, x_l, y_l, x_v, y_v, learning_rate, max_epochs):
+    def fit_validation(self, x_l, y_l, x_v, y_v, learning_rate=0.1,
+                       max_epochs=1500, keep_prob=None):
         '''
-        Fits the neural network model, using periodic validation to determine
-        when to stop learning (when validation performance stops improving)
+        Fits the neural network model using periodic (every 250 epochs)
+        validation; if validation set performance worsens, training is complete
+
+        Args:
+            x_l (numpy array): training inputs
+            y_l (numpy array): training outputs
+            x_v (numpy array): validation inputs
+            y_v (numpy array): validation outputs
+            learning_rate (float): learning rate during training
+            max_epochs (int): maximum number of training iterations
+            keep_prob (float): probability that a neuron is retained (not
+                               subjected to dropout)
         '''
 
         if len(y_l) is 0 or len(x_l) is 0:
@@ -154,7 +178,7 @@ class MultilayerPerceptron:
         x = placeholder('float', [None, self.__layers[0].size])
         y = placeholder('float', [None, self.__layers[-1].size])
 
-        pred = self.__feed_forward(x)
+        pred = self.__feed_forward(x, keep_prob=keep_prob)
         cost = square(y - pred)
         optimizer = train.AdamOptimizer(
             learning_rate=learning_rate
@@ -186,7 +210,13 @@ class MultilayerPerceptron:
 
     def use(self, x):
         '''
-        Use the neural network on input data *x*, returns predicted values
+        Use the neural network on supplied input data
+
+        Args:
+            x (numpy array): supplied input data
+
+        Returns:
+            numpy array: predicted value for input data
         '''
 
         with Session() as sess:
@@ -198,7 +228,11 @@ class MultilayerPerceptron:
 
     def save(self, filepath):
         '''
-        Saves the neural network to *filepath* for later use
+        Save the neural network for later use; results in a .sess (tensorflow)
+        file and a .struct (neural network architecture) file
+
+        Args:
+            filepath (str): location to save the model
         '''
 
         with Session() as sess:
@@ -212,7 +246,10 @@ class MultilayerPerceptron:
 
     def load(self, filepath):
         '''
-        Loads a neural network model found at *filepath*
+        Load a previously saved neural network
+
+        Args:
+            filepath (str): location of the saved model
         '''
 
         architecture_file = open('{}.struct'.format(filepath), 'rb')
@@ -224,26 +261,41 @@ class MultilayerPerceptron:
             saver.save(sess, './tmp/_m{}/_ckpt'.format(self.__id))
         sess.close()
 
-    def __feed_forward(self, x):
+    def __feed_forward(self, x, keep_prob=1.0):
         '''
         Private method: feeds data through the neural network, returns output
         of final layer
+
+        Args:
+            x (1d numpy array): input data to feed through the network
+            keep_prob (float): probability that a neuron is retained (not
+                               subjected to dropout)
+
+        Returns:
+            1d numpy array: result of the final layer pass-through
         '''
 
         output = x
         for idx, layer in enumerate(self.__layers[1:]):
-            output = layer.act_fn(
+            output = nn.dropout(layer.act_fn(
                 add(matmul(
                     output,
                     self.__weights[idx]
                 ), self.__biases[idx])
-            )
+            ), keep_prob)
         return output
 
     def __calc_rmse(self, y_hat, y):
         '''
         Private method: calculates the RMSE of the validation set during
         validation training
+
+        Args:
+            y_hat (numpy array): predicted data
+            y (numpy array): known data
+
+        Returns:
+            float: root mean squared error of predicted data
         '''
 
         try:

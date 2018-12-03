@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/server.py
-# v.1.6.0
+# v.1.7.0
 # Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "Server" class, which handles ECNet project creation, neural
@@ -64,6 +64,7 @@ class Server:
                             ), use_color=False)
             config_dict = {
                 'learning_rate': 0.1,
+                'keep_prob': 1.0,
                 'hidden_layers': [
                     [10, 'relu'],
                     [10, 'relu']
@@ -202,8 +203,9 @@ class Server:
             num_employers (int): number of employer bees for the colony
 
         Returns:
-            tuple: (learning_rate, validation_max_epochs, neuron count)
-                   derived from running the colony (also set as current vals)
+            tuple: (learning_rate, validation_max_epochs, neuron count,
+                   keep_prob) derived from running the colony (also set as
+                   current vals)
 
         See https://github.com/ecrl/ecabc for ABC source code.
         '''
@@ -214,7 +216,8 @@ class Server:
             '''
             self.vars['learning_rate'] = values[0]
             self.vars['validation_max_epochs'] = values[1]
-            for idx, layer in enumerate(self.vars['hidden_layers'], 2):
+            self.vars['keep_prob'] = values[2]
+            for idx, layer in enumerate(self.vars['hidden_layers'], 3):
                 layer[0] = values[idx]
             self.train_model(validate=True)
             return self.calc_error(
@@ -224,7 +227,8 @@ class Server:
 
         hyperparameters = [
             ('float', (0.01, 0.2)),
-            ('int', (1000, 25000))
+            ('int', (1000, 25000)),
+            ('float', (0.0, 1.0))
         ]
         for _ in range(len(self.vars['hidden_layers'])):
             hyperparameters.append(('int', (8, 32)))
@@ -260,7 +264,8 @@ class Server:
 
         self.vars['learning_rate'] = new_hyperparameters[0]
         self.vars['validation_max_epochs'] = new_hyperparameters[1]
-        for idx, layer in enumerate(self.vars['hidden_layers'], 2):
+        self.vars['keep_prob'] = new_hyperparameters[2]
+        for idx, layer in enumerate(self.vars['hidden_layers'], 3):
             layer[0] = new_hyperparameters[idx]
 
         if self._log:
@@ -300,15 +305,17 @@ class Server:
                     self.__sets.learn_y,
                     self.__sets.valid_x,
                     self.__sets.valid_y,
-                    self.vars['learning_rate'],
-                    self.vars['validation_max_epochs']
+                    learning_rate=self.vars['learning_rate'],
+                    max_epochs=self.vars['validation_max_epochs'],
+                    keep_prob=self.vars['keep_prob']
                 )
             else:
                 model.fit(
                     self.__sets.learn_x,
                     self.__sets.learn_y,
-                    self.vars['learning_rate'],
-                    self.vars['train_epochs']
+                    learning_rate=self.vars['learning_rate'],
+                    train_epochs=self.vars['train_epochs'],
+                    keep_prob=self.vars['keep_prob']
                 )
             model.save('./tmp/model')
 
@@ -348,15 +355,17 @@ class Server:
                                 self.__sets.learn_y,
                                 self.__sets.valid_x,
                                 self.__sets.valid_y,
-                                self.vars['learning_rate'],
-                                self.vars['validation_max_epochs']
+                                learning_rate=self.vars['learning_rate'],
+                                max_epochs=self.vars['validation_max_epochs'],
+                                keep_prob=self.vars['keep_prob']
                             )
                         else:
                             model.fit(
                                 self.__sets.learn_x,
                                 self.__sets.learn_y,
-                                self.vars['learning_rate'],
-                                self.vars['train_epochs']
+                                learning_rate=self.vars['learning_rate'],
+                                train_epochs=self.vars['train_epochs'],
+                                keep_prob=self.vars['keep_prob']
                             )
                         model.save(path_t)
                         if shuffle == 'lv':
