@@ -203,9 +203,8 @@ class Server:
             num_employers (int): number of employer bees for the colony
 
         Returns:
-            tuple: (learning_rate, validation_max_epochs, neuron count,
-                   keep_prob) derived from running the colony (also set as
-                   current vals)
+            tuple: (learning_rate, validation_max_epochs, neuron count)
+                   derived from running the colony (also set as current vals)
 
         See https://github.com/ecrl/ecabc for ABC source code.
         '''
@@ -216,8 +215,7 @@ class Server:
             '''
             self.vars['learning_rate'] = values[0]
             self.vars['validation_max_epochs'] = values[1]
-            self.vars['keep_prob'] = values[2]
-            for idx, layer in enumerate(self.vars['hidden_layers'], 3):
+            for idx, layer in enumerate(self.vars['hidden_layers'], 2):
                 layer[0] = values[idx]
             self.train_model(validate=True)
             return self.calc_error(
@@ -227,45 +225,51 @@ class Server:
 
         hyperparameters = [
             ('float', (0.01, 0.2)),
-            ('int', (1000, 25000)),
-            ('float', (0.0, 1.0))
+            ('int', (1000, 25000))
         ]
         for _ in range(len(self.vars['hidden_layers'])):
             hyperparameters.append(('int', (8, 32)))
 
+        abc = ABC(
+            value_ranges=hyperparameters,
+            fitness_fxn=test_neural_network,
+        )
+        setattr(abc, 'num_employers', num_employers)
+
         if self._log:
+            setattr(abc._logger, 'stream_level', 'info')
             log('info', 'Tuning neural network hyperparameters with an ABC',
                 use_color=False)
-
-        if target_score is None:
-            abc = ABC(
-                iterationAmount=num_iterations,
-                fitnessFunction=test_neural_network,
-                valueRanges=hyperparameters,
-                amountOfEmployers=num_employers
-            )
         else:
-            abc = ABC(
-                endValue=target_score,
-                fitnessFunction=test_neural_network,
-                valueRanges=hyperparameters,
-                amountOfEmployers=num_employers
-            )
+            setattr(abc._logger, 'stream_level', 'disable')
+
+        abc.create_employers()
+        if target_score is None:
+            for _ in num_iterations:
+                abc.calc_average()
+                abc.calc_new_positions()
+                abc.check_positions()
+        else:
+            while True:
+                abc.calc_average()
+                if (getattr(abc, 'best_performer')[0] <= target_score):
+                    break
+                abc.calc_new_positions()
+                abc.check_positions()
+
+        new_hyperparameters = getattr(abc, 'best_performer')[1]
 
         use_proj = False
         if self.__using_project:
             use_proj = True
             self.__using_project = False
 
-        new_hyperparameters = abc.runABC()
-
         if use_proj:
             self.__using_project = True
 
         self.vars['learning_rate'] = new_hyperparameters[0]
         self.vars['validation_max_epochs'] = new_hyperparameters[1]
-        self.vars['keep_prob'] = new_hyperparameters[2]
-        for idx, layer in enumerate(self.vars['hidden_layers'], 3):
+        for idx, layer in enumerate(self.vars['hidden_layers'], 2):
             layer[0] = new_hyperparameters[idx]
 
         if self._log:
