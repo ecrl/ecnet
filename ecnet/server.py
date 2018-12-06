@@ -19,7 +19,7 @@ from pickle import dump as pdump, load as pload
 from yaml import dump, load
 from numpy import asarray
 from ecabc.abc import ABC
-from colorlogging import log
+from colorlogging import ColorLogger
 
 # ECNet imports
 import ecnet.data_utils
@@ -31,7 +31,7 @@ import ecnet.limit_parameters
 class Server:
 
     def __init__(self, config_filename='config.yml', project_file=None,
-                 log_progress=True):
+                 log=True, log_dir=None, num_processes=1):
         '''
         Server object: handles data importing, neural network creation, data
         to neural network hand-off, error calculations, project saving and
@@ -39,12 +39,21 @@ class Server:
 
         Args:
             config_filename (str): (optional) path of neural network
-                                   configuration file
+                configuration file
             project_file (str): (optional) path of pre-existing project
-            log_progress (bool): whether or not to use console and file logging
+            log (bool): whether or not to log process executions/progress to
+                the console
+            log_dir (None or str): directory to save logs; defaults to not
+                saving logs
+            num_processes (int): number of concurrent processes to run various
+                methods with, including training, input dimensionality
+                reduction, and hyperparameter tuning
         '''
 
-        self._log = log_progress
+        self._logger = ColorLogger()
+        self.log = log
+        self.log_dir = log_dir
+        self.num_processes = num_processes
 
         if project_file is not None:
             self.__open_project(project_file)
@@ -57,11 +66,13 @@ class Server:
             file = open(config_filename, 'r')
             self.vars.update(load(file))
         except:
-            if self._log:
-                log('warn', 'Supplied configuration file not found - '
-                            'generating default configuration for {}'.format(
-                                config_filename
-                            ), use_color=False)
+            self._logger.log('warn', 'Supplied configuration file not found')
+            self._logger.log(
+                'warn',
+                'Generating default configuration for {}'.format(
+                    config_filename
+                )
+            )
             config_dict = {
                 'learning_rate': 0.1,
                 'keep_prob': 1.0,
@@ -80,6 +91,52 @@ class Server:
 
         self.__config_filename = config_filename
         self.__using_project = False
+
+    @property
+    def log(self):
+        '''
+        Returns dict: {'stream_level', 'file_level'}
+        '''
+
+        return {
+            'stream_level': self._logger.stream_level,
+            'file_level': self._logger.file_level
+        }
+
+    @log.setter
+    def log(self, log):
+        '''
+        Args:
+            log (bool): toggle for stream logging (True == log, False == do
+            not log)
+        '''
+
+        if log is True:
+            self._logger.stream_level = 'info'
+        else:
+            self._logger.stream_level = 'disable'
+        self.__log = log
+
+    @property
+    def log_dir(self):
+        '''
+        Returns str or None: log directory, or None to disable file logging
+        '''
+
+        return self._logger.log_dir
+
+    @log_dir.setter
+    def log_dir(self, log_dir):
+        '''
+        Args:
+            log_dir (str): location for file logging
+        '''
+
+        if log_dir is None:
+            self._logger.file_level = 'disable'
+        else:
+            self._logger.log_dir = log_dir
+            self._logger.file_level = 'info'
 
     def create_project(self, project_name, num_builds=1, num_nodes=5,
                        num_candidates=10):
@@ -109,9 +166,7 @@ class Server:
                 if not path.exists(path_n):
                     makedirs(path_n)
         self.__using_project = True
-        if self._log:
-            log('info', 'Created project {}'.format(project_name),
-                use_color=False)
+        self._logger.log('info', 'Created project {}'.format(project_name))
 
     def import_data(self, data_filename, sort_type='random',
                     data_split=[0.65, 0.25, 0.1]):
@@ -132,16 +187,14 @@ class Server:
         else:
             raise ValueError('Unknown sort_type {}'.format(sort_type))
         self.__sets = self.DataFrame.package_sets()
-        if self._log:
-            log('info', 'Imported data from {}'.format(data_filename),
-                use_color=False)
+        self._logger.log('info', 'Imported data from {}'.format(data_filename))
 
     def limit_input_parameters(self, limit_num, output_filename,
                                use_genetic=False, population_size=500,
-                               num_generations=25, num_processes=0,
-                               shuffle=False, data_split=[0.65, 0.25, 0.1]):
+                               num_generations=25, shuffle=False,
+                               data_split=[0.65, 0.25, 0.1]):
         '''
-        Limits the input dimensionality of currently loaded DataFrame; default
+        Limits the input dimensionality of currently loaded data; default
         method is an iterative inclusion algorithm, options for using a genetic
         algorithm available.
 
@@ -149,45 +202,40 @@ class Server:
             limit_num (int): desired input dimensionality
             output_filename (str): path to resulting limited database
             use_genetic (bool): whether to use genetic algorithm instead of
-                                iterative inclusion algorithm
+                iterative inclusion algorithm
             population_size (int): if use_genetic, size of genetic population
             num_generations (int): number of generations to run the GA for
-            num_processes (int): number of concurrent processes for population
-                                 member generation/evaluation
             shuffle (bool): whether to shuffle the data splits for each
-                            population member
+                population member
             data_split (list): [learn%, valid%, test%] for splits if shuffle ==
-                               True
+                True
 
         See https://github.com/tjkessler/pygenetics for genetic algorithm
         source code.
         '''
 
         if use_genetic:
-            if self._log:
-                log(
-                    'info',
-                    'Limiting input parameters using a genetic algorithm',
-                    use_color=False
-                )
+            self._logger.log(
+                'info',
+                'Limiting input parameters using a genetic algorithm'
+            )
             params = ecnet.limit_parameters.limit_genetic(
                 self.DataFrame, limit_num, population_size, num_generations,
-                num_processes, shuffle=shuffle, log_progress=self._log
+                self.num_processes, shuffle=shuffle, logger=self._logger
             )
         else:
-            if self._log:
-                log(
-                    'info',
-                    'Limiting input parameters using iterative inclusion',
-                    use_color=False
-                )
+            self._logger.log(
+                'info',
+                'Limiting input parameters using iterative inclusion'
+            )
             params = ecnet.limit_parameters.limit_iterative_include(
-                self.DataFrame, limit_num, log_progress=self._log
+                self.DataFrame, limit_num, logger=self._logger
             )
         ecnet.limit_parameters.output(self.DataFrame, params, output_filename)
-        if self._log:
-            log('info', 'Saved limited database to {}'.format(output_filename),
-                use_color=False)
+        self._logger.log(
+            'info',
+            'Saved limited database to {}'.format(output_filename)
+        )
 
     def tune_hyperparameters(self, target_score=None, num_iterations=50,
                              num_employers=50):
@@ -199,12 +247,12 @@ class Server:
         Args:
             target_score (float): fitness required to stop the colony
             num_iterations (int): if !target_score, number of iterations to
-                                  run the colony
+                run the colony
             num_employers (int): number of employer bees for the colony
 
         Returns:
             tuple: (learning_rate, validation_max_epochs, neuron count)
-                   derived from running the colony (also set as current vals)
+                derived from running the colony (also set as current vals)
 
         See https://github.com/ecrl/ecabc for ABC source code.
         '''
@@ -215,7 +263,8 @@ class Server:
             '''
             self.vars['learning_rate'] = values[0]
             self.vars['validation_max_epochs'] = values[1]
-            for idx, layer in enumerate(self.vars['hidden_layers'], 2):
+            self.vars['keep_prob'] = values[2]
+            for idx, layer in enumerate(self.vars['hidden_layers'], 3):
                 layer[0] = values[idx]
             self.train_model(validate=True)
             return self.calc_error(
@@ -225,7 +274,8 @@ class Server:
 
         hyperparameters = [
             ('float', (0.01, 0.2)),
-            ('int', (1000, 25000))
+            ('int', (1000, 25000)),
+            ('float', (0.0, 1.0))
         ]
         for _ in range(len(self.vars['hidden_layers'])):
             hyperparameters.append(('int', (8, 32)))
@@ -233,15 +283,21 @@ class Server:
         abc = ABC(
             value_ranges=hyperparameters,
             fitness_fxn=test_neural_network,
+            print_level=self.log['stream_level'],
+            file_level=self.log['file_level'],
+            processes=self.num_processes
         )
-        setattr(abc, 'num_employers', num_employers)
+        abc.num_employers = num_employers
 
-        if self._log:
-            setattr(abc._logger, 'stream_level', 'info')
-            log('info', 'Tuning neural network hyperparameters with an ABC',
-                use_color=False)
-        else:
-            setattr(abc._logger, 'stream_level', 'disable')
+        self._logger.log(
+            'info',
+            'Tuning neural network hyperparameters with an ABC'
+        )
+
+        use_proj = False
+        if self.__using_project:
+            use_proj = True
+            self.__using_project = False
 
         abc.create_employers()
         if target_score is None:
@@ -259,11 +315,6 @@ class Server:
 
         new_hyperparameters = getattr(abc, 'best_performer')[1]
 
-        use_proj = False
-        if self.__using_project:
-            use_proj = True
-            self.__using_project = False
-
         if use_proj:
             self.__using_project = True
 
@@ -272,17 +323,21 @@ class Server:
         for idx, layer in enumerate(self.vars['hidden_layers'], 2):
             layer[0] = new_hyperparameters[idx]
 
-        if self._log:
-            log('info', 'Tuned learning rate: {}'.format(
-                new_hyperparameters[0]), use_color=False)
-            log('info', 'Tuned max validation epochs: {}'.format(
-                new_hyperparameters[1]), use_color=False)
-            for idx, layer in enumerate(self.vars['hidden_layers'], 2):
-                log(
-                    'info',
-                    'Tuned number of neurons in hidden layer {}: {}'.format(
-                        idx - 1, new_hyperparameters[idx]
-                    ), use_color=False)
+        self._logger.log(
+            'info',
+            'Tuned learning rate: {}'.format(new_hyperparameters[0])
+        )
+        self._logger.log(
+            'info',
+            'Tuned max validation epochs: {}'.format(new_hyperparameters[1])
+        )
+        for idx, layer in enumerate(self.vars['hidden_layers'], 2):
+            self._logger.log(
+                'info',
+                'Tuned number of neurons in hidden layer {}: {}'.format(
+                    idx - 1, new_hyperparameters[idx]
+                )
+            )
 
         return new_hyperparameters
 
@@ -294,14 +349,13 @@ class Server:
 
         Args:
             validate (bool): whether to use periodic validation to determine
-                             learning cutoff
+                learning cutoff
             shuffle (bool): whether to shuffle the data sets for each candidate
             data_split (list): [learn%, valid%, test%] if shuffle == True
         '''
 
         if not self.__using_project:
-            if self._log:
-                log('info', 'Training single model', use_color=False)
+            self._logger.log('info', 'Training single model')
             model = self.__create_model()
             if validate:
                 model.fit_validation(
@@ -324,14 +378,14 @@ class Server:
             model.save('./tmp/model')
 
         else:
-            if self._log:
-                log(
-                    'info',
-                    'Generating {} x {} x {} neural networks'.format(
-                        self._num_builds, self._num_nodes,
-                        self._num_candidates
-                    ),
-                    use_color=False)
+            self._logger.log(
+                'info',
+                'Generating {} x {} x {} neural networks'.format(
+                    self._num_builds, self._num_nodes,
+                    self._num_candidates
+                )
+            )
+            # TODO: Add multiprocessing :)
             for build in range(self._num_builds):
                 path_b = path.join(
                     self._project_name, 'build_{}'.format(build + 1)
@@ -341,14 +395,12 @@ class Server:
                         path_b, 'node_{}'.format(node + 1)
                     )
                     for candidate in range(self._num_candidates):
-                        if self._log:
-                            log(
-                                'info',
-                                'Build {}, Node {}, candidate {}'.format(
-                                    build + 1, node + 1, candidate + 1
-                                ),
-                                use_color=False
+                        self._logger.log(
+                            'info',
+                            'Build {}, Node {}, candidate {}'.format(
+                                build + 1, node + 1, candidate + 1
                             )
+                        )
                         path_t = path.join(
                             path_n, 'candidate_{}'.format(candidate + 1)
                         )
@@ -399,28 +451,26 @@ class Server:
                 can choose 'learn', 'valid', 'test', 'train' (learning and
                 validation) or None (uses all data sets)
             error_fn (str): which error function to use when measuring model
-                            performance
-                can choose 'mean_abs_error', 'med_abs_error', 'rmse'
+                performance; 'mean_abs_error', 'med_abs_error', 'rmse'
         '''
 
         if not self.__using_project:
             raise Exception('Project has not been created! (create_project())')
         if not path.exists(
-            path.join(
-                self._project_name,
-                path.join('build_1', path.join(
+            path.join(self._project_name, path.join('build_1', path.join(
                         'node_1',
                         'candidate_1.meta'
-                    )
-                )
-            )
+            )))
         ):
             raise Exception('Models must be trained first! (train_model())')
-        if self._log:
-            log('info', 'Selecting best models from each mode for each build',
-                use_color=False)
+        self._logger.log(
+            'info',
+            'Selecting best models from each mode for each build'
+        )
         x_vals = self.__determine_x_vals(dset)
         y_vals = self.__determine_y_vals(dset)
+
+        # TODO: Add multiprocessing :)
         for build in range(self._num_builds):
             path_b = path.join(
                 self._project_name, 'build_{}'.format(build + 1)
@@ -467,12 +517,10 @@ class Server:
 
         Returns:
             list: list of lists, where each sublist is a specific item's
-                  prediction with a length of the number of DB targets
+                prediction with a length of the number of DB targets
         '''
 
-        if self._log:
-            log('info', 'Predicting values for {} set'.format(dset),
-                use_color=False)
+        self._logger.log('info', 'Predicting values for {} set'.format(dset))
         x_vals = self.__determine_x_vals(dset)
         if not self.__using_project:
             model = ecnet.model.MultilayerPerceptron()
@@ -531,10 +579,11 @@ class Server:
             dictionary: dictionary of supplied error functions and their values
         '''
 
-        if self._log:
-            for arg in args:
-                log('info', 'Calculating {} for {} set'.format(arg, dset),
-                    use_color=False)
+        for arg in args:
+            self._logger.log(
+                'info',
+                'Calculating {} for {} set'.format(arg, dset)
+            )
         error_dict = {}
         y_hat = self.use_model(dset)
         y = self.__determine_y_vals(dset)
@@ -558,9 +607,7 @@ class Server:
         '''
 
         ecnet.data_utils.save_results(results, self.DataFrame, filename)
-        if self._log:
-            log('info', 'Results saved to {}'.format(filename),
-                use_color=False)
+        self._logger.log('info', 'Results saved to {}'.format(filename))
 
     def save_project(self, clean_up=True):
         '''
@@ -569,7 +616,7 @@ class Server:
 
         Args:
             clean_up (bool): whether to remove the project's folder structure
-                             after it is zipped up
+                after it is zipped up
         '''
 
         if not self.__using_project:
@@ -618,10 +665,10 @@ class Server:
             for file in files:
                 zip_file.write(path.join(root, file))
         zip_file.close()
-        if self._log:
-            log('info', 'Project saved to {}.project'.format(
-                    self._project_name
-                ), use_color=False)
+        self._logger.log(
+            'info',
+            'Project saved to {}.project'.format(self._project_name)
+        )
 
     def __open_project(self, project_name):
         '''
@@ -677,9 +724,7 @@ class Server:
 
         self.__sets = self.DataFrame.package_sets()
         self.__using_project = True
-        if self._log:
-            log('info', 'Opened project {}.project'.format(project_name),
-                use_color=False)
+        self._logger.log('info', 'Opened project {}'.format(project_name))
 
     def __determine_x_vals(self, dset):
         '''
