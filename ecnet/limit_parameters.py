@@ -24,6 +24,7 @@ from pygenetics.selection_functions import minimize_best_n
 # ECNet imports
 import ecnet.model
 import ecnet.error_utils
+from ecnet.fitness_functions import limit_inputs
 
 
 def limit_iterative_include(DataFrame, limit_num, logger=None):
@@ -172,7 +173,7 @@ def limit_genetic(DataFrame, limit_num, population_size, num_generations,
 
     population = Population(
         size=population_size,
-        cost_fn=ecnet_limit_inputs,
+        cost_fn=limit_inputs,
         cost_fn_args=cost_fn_args,
         num_processes=num_processes,
         select_fn=minimize_best_n

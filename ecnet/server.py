@@ -26,6 +26,7 @@ import ecnet.data_utils
 import ecnet.error_utils
 import ecnet.model
 import ecnet.limit_parameters
+from ecnet.fitness_functions import tune_hyperparameters
 
 
 class Server:
@@ -257,21 +258,6 @@ class Server:
         See https://github.com/ecrl/ecabc for ABC source code.
         '''
 
-        def test_neural_network(values):
-            '''
-            Fitness function used by artificial bee colony
-            '''
-            self.vars['learning_rate'] = values[0]
-            self.vars['validation_max_epochs'] = values[1]
-            self.vars['keep_prob'] = values[2]
-            for idx, layer in enumerate(self.vars['hidden_layers'], 3):
-                layer[0] = values[idx]
-            self.train_model(validate=True)
-            return self.calc_error(
-                'mean_abs_error',
-                dset='test'
-            )['mean_abs_error']
-
         hyperparameters = [
             ('float', (0.01, 0.2)),
             ('int', (1000, 25000)),
@@ -282,7 +268,7 @@ class Server:
 
         abc = ABC(
             value_ranges=hyperparameters,
-            fitness_fxn=test_neural_network,
+            fitness_fxn=tune_hyperparameters,
             print_level=self.log['stream_level'],
             file_level=self.log['file_level'],
             processes=self.num_processes
@@ -294,11 +280,6 @@ class Server:
             'Tuning neural network hyperparameters with an ABC'
         )
 
-        use_proj = False
-        if self.__using_project:
-            use_proj = True
-            self.__using_project = False
-
         abc.create_employers()
         if target_score is None:
             for _ in num_iterations:
@@ -308,19 +289,17 @@ class Server:
         else:
             while True:
                 abc.calc_average()
-                if (getattr(abc, 'best_performer')[0] <= target_score):
+                if (abc.best_performer[0] <= target_score):
                     break
                 abc.calc_new_positions()
                 abc.check_positions()
 
-        new_hyperparameters = getattr(abc, 'best_performer')[1]
-
-        if use_proj:
-            self.__using_project = True
+        new_hyperparameters = abc.best_performer[1]
 
         self.vars['learning_rate'] = new_hyperparameters[0]
         self.vars['validation_max_epochs'] = new_hyperparameters[1]
-        for idx, layer in enumerate(self.vars['hidden_layers'], 2):
+        self.vars['keep_prob'] = new_hyperparameters[2]
+        for idx, layer in enumerate(self.vars['hidden_layers'], 3):
             layer[0] = new_hyperparameters[idx]
 
         self._logger.log(
@@ -331,11 +310,15 @@ class Server:
             'info',
             'Tuned max validation epochs: {}'.format(new_hyperparameters[1])
         )
-        for idx, layer in enumerate(self.vars['hidden_layers'], 2):
+        self._logger.log(
+            'info',
+            'Tuned neuron keep probability: {}'.format(new_hyperparameters[2])
+        )
+        for idx, layer in enumerate(self.vars['hidden_layers'], 3):
             self._logger.log(
                 'info',
                 'Tuned number of neurons in hidden layer {}: {}'.format(
-                    idx - 1, new_hyperparameters[idx]
+                    idx - 2, new_hyperparameters[idx]
                 )
             )
 
