@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/data_utils.py
-# v.1.6.0
+# v.1.7.0
 # Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "DataFrame" class, and functions for processing/importing/
@@ -119,7 +119,7 @@ class DataFrame:
 
         Args:
             random (bool): if True, use random assignments for learn, validate,
-                           test sets
+                test sets
             split (list): [learn%, valid%, test%] if random == True
         '''
 
@@ -205,7 +205,7 @@ class DataFrame:
 
         Args:
             *args (str): 'l', 'v', and/or 't', specifies whether to shuffle
-                         learn, validate and/or test sets
+                learn, validate and/or test sets
             split (list): [learn%, valid%, test%] used for new assignments
         '''
 
@@ -246,7 +246,7 @@ class DataFrame:
 
         Returns:
             PackagedData: object containing learn, validate and test inputs
-                          and targets
+                and targets
         '''
 
         pd = PackagedData()
@@ -275,9 +275,9 @@ def save_results(results, DataFrame, filename):
 
     Args:
         results (list): list of lists, where sublists are predicted data for
-                        each data point
+            each data point
         DataFrame (DataFrame): data_utils.DataFrame object used for results
-                               file formatting
+            file formatting
         filename (str): path to save location for results
     '''
 
