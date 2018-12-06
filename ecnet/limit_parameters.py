@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/limit_parameters.py
-# v.1.6.0
+# v.1.7.0
 # Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the functions necessary for reducing the input dimensionality of a
@@ -17,7 +17,7 @@ from copy import deepcopy
 from multiprocessing import current_process
 
 # 3rd party imports
-from colorlogging import log
+from colorlogging import ColorLogger
 from pygenetics.ga_core import Population
 from pygenetics.selection_functions import minimize_best_n
 
@@ -26,7 +26,7 @@ import ecnet.model
 import ecnet.error_utils
 
 
-def limit_iterative_include(DataFrame, limit_num, log_progress=True):
+def limit_iterative_include(DataFrame, limit_num, logger=None):
     '''
     Limits the dimensionality of input data using an iterative inclusion
     algorithm (best parameter is found, retained, paired with all others, best
@@ -35,7 +35,7 @@ def limit_iterative_include(DataFrame, limit_num, log_progress=True):
     Args:
         DataFrame (DataFrame): ECNet DataFrame object to limit
         limit_num (int): desired input dimensionality
-        log_progress (bool): whether or not to log progress to console and file
+        logger (ColorLogger): ColorLogger object; if not supplied, does not log
 
     Returns:
         list: list of resulting input parameter names
@@ -129,17 +129,19 @@ def limit_iterative_include(DataFrame, limit_num, log_progress=True):
                 test_input_retained[idx].append(param[0])
 
         retained_input_list.append(DataFrame.input_names[rmse_idx])
-        if log_progress:
-            log('info', 'Currently retained: {}'.format(retained_input_list),
-                use_color=False)
-            log('info', 'Current RMSE: {}'.format(rmse_val), use_color=False)
+        if logger is not None:
+            logger.log(
+                'info',
+                'Currently retained: {}'.format(retained_input_list)
+            )
+            logger.log('info', 'Current RMSE: {}'.format(rmse_val))
 
     return retained_input_list
 
 
 def limit_genetic(DataFrame, limit_num, population_size, num_generations,
                   num_processes, shuffle=False, data_split=[0.65, 0.25, 0.1],
-                  log_progress=True):
+                  logger=None):
     '''
     Limits the dimensionality of input data using a genetic algorithm
 
@@ -150,9 +152,9 @@ def limit_genetic(DataFrame, limit_num, population_size, num_generations,
         num_generations (int): number of generations to run the GA for
         num_processes (int): number of concurrent processes used by the GA
         shuffle (bool): whether to shuffle the data sets for each population
-                        member
+            member
         data_split (list): [learn%, valid%, test%] if shuffle == True
-        log_progress (bool): whether or not to log progress to console and file
+        logger (ColorLogger): ColorLogger object; if not supplied, does not log
 
     Returns:
         list: list of resulting input parameter names
@@ -180,20 +182,23 @@ def limit_genetic(DataFrame, limit_num, population_size, num_generations,
         population.add_parameter(i, 0, DataFrame.num_inputs - 1)
 
     population.generate_population()
-    if log_progress:
-        log('info', 'Generation: 0 - Population fitness: {}'.format(
+    if logger is not None:
+        logger.log('info', 'Generation: 0 - Population fitness: {}'.format(
             sum(p.fitness_score for p in population.members) / len(population)
-        ), use_color=False)
+        ))
 
     for gen in range(num_generations):
         population.next_generation()
-        if log_progress:
-            log('info', 'Generation: {} - Population fitness: {}'.format(
-                gen + 1,
-                sum(
-                    p.fitness_score for p in population.members
-                ) / len(population)
-            ), use_color=False)
+        if logger is not None:
+            logger.log(
+                'info',
+                'Generation: {} - Population fitness: {}'.format(
+                    gen + 1,
+                    sum(
+                        p.fitness_score for p in population.members
+                    ) / len(population)
+                )
+            )
 
     min_idx = 0
     for new_idx, member in enumerate(population.members):
@@ -204,12 +209,11 @@ def limit_genetic(DataFrame, limit_num, population_size, num_generations,
     for val in population.members[min_idx].parameters.values():
         input_list.append(DataFrame.input_names[val])
 
-    if log_progress:
-        log('info', 'Best member fitness score: {}'.format(
+    if logger is not None:
+        logger.log('info', 'Best member fitness score: {}'.format(
             population.members[min_idx].fitness_score
-        ), use_color=False)
-        log('info', 'Best member parameters: {}'.format(input_list),
-            use_color=False)
+        ))
+        logger.log('info', 'Best member parameters: {}'.format(input_list))
 
     return input_list
 
