@@ -116,7 +116,7 @@ class MultilayerPerceptron:
             )
 
     def fit(self, x_l, y_l, learning_rate=0.1, train_epochs=500,
-            keep_prob=None):
+            keep_prob=1.0):
         '''
         Fits the neural network model using a set number of training iterations
 
@@ -126,7 +126,7 @@ class MultilayerPerceptron:
             learning_rate (float): learning rate during training
             train_epochs (int): number of training iterations
             keep_prob (float): probability that a neuron is retained (not
-                               subjected to dropout)
+                subjected to dropout)
         '''
 
         if len(y_l) is 0 or len(x_l) is 0:
@@ -150,7 +150,7 @@ class MultilayerPerceptron:
         sess.close()
 
     def fit_validation(self, x_l, y_l, x_v, y_v, learning_rate=0.1,
-                       max_epochs=1500, keep_prob=None):
+                       max_epochs=1500, keep_prob=1.0):
         '''
         Fits the neural network model using periodic (every 250 epochs)
         validation; if validation set performance worsens, training is complete
@@ -163,7 +163,7 @@ class MultilayerPerceptron:
             learning_rate (float): learning rate during training
             max_epochs (int): maximum number of training iterations
             keep_prob (float): probability that a neuron is retained (not
-                               subjected to dropout)
+                subjected to dropout)
         '''
 
         if len(y_l) is 0 or len(x_l) is 0:
@@ -269,7 +269,7 @@ class MultilayerPerceptron:
         Args:
             x (1d numpy array): input data to feed through the network
             keep_prob (float): probability that a neuron is retained (not
-                               subjected to dropout)
+                subjected to dropout)
 
         Returns:
             1d numpy array: result of the final layer pass-through
