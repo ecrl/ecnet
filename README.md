@@ -52,6 +52,7 @@ Here is a configuration .yml file we use for cetane number predictions:
 ```yml
 ---
 learning_rate: 0.1
+keep_prob: 1.0
 hidden_layers:
 - - 32
   - relu
@@ -65,6 +66,7 @@ validation_max_epochs: 10000
 
 Here are brief explanations of each of these variables:
 - **learning_rate**: value passed to the AdamOptimizer to use as its learning rate during training
+- **keep_prob**: probability that a neuron in the hidden layers is not subjected to dropout
 - **hidden_layers**: *[[num_neurons_0, layer_type_0],...,[num_neurons_n, layer_type_n]]*: the architecture of the neural network between input and output layers
 	- Rectified linear unit (**'relu'**), **'sigmoid'**, **'softmax'** and **'linear'** *layer_type*s are currently supported
 - **input_activation**: the layer type of the input layer: number of nodes is determined by input data dimensionality
@@ -85,9 +87,27 @@ from ecnet import Server
 # generated if the file does not already exist)
 sv = Server(config_filename='my_model_configuration.yml')
 
-# By default, the Server will log build/selection progress to the console and a log file in a local
-# "Logs" directory. To turn off logging, specify it in the Server initialization
-sv = Server(config_filename='my_model_configuration.yml', log_progress=False)
+# By default, the Server will log build/selection progress to the console. To disable logging, set
+#   the "log" argument to False:
+sv = Server(config_filename='my_model_configuration.yml', log=False)
+
+# You can toggle logging with:
+sv.log = True
+sv.log = False
+
+# If file logging is desired, you can specify a directory to save your logs:
+sv = Server(config_filename='my_model_configuration.yml', log_dir='path/to/my/log/directory')
+
+# You can disable file logging with:
+sv.log_dir = None
+
+# Or change the directory:
+sv.log_dir = 'path/to/my/new/log/directory'
+
+# You can utilize parallel processing (multiprocessing) for model construction (soon), input
+#   parameter tuning and hyperparameter optimization:
+sv = Server(config_filename='my_model_configuration.yml', num_processes=4)
+sv.num_processes = 8
 
 # Create a project 'my_project', with 10 builds, 5 nodes/build, 75 candidates/node
 # If a project is not created, only one neural network will be created when train_model() is called
@@ -99,21 +119,22 @@ sv.create_project(
 )
 
 # Import an ECNet-formatted CSV database, randomly assign data set assignments (proportions of 70%
-# learn, 20% validation, 10% test)
+#   learn, 20% validation, 10% test)
 sv.import_data(
     'my_data.csv',
     sort_type='random',
     data_split=[0.7, 0.2, 0.1]
 )
 
-# To use data set assignments specified in the input database, set the sort_type argument to 'explicit'
+# To use data set assignments specified in the input database, set the sort_type argument to
+#   'explicit'
 sv.import_data(
     'my_data.csv',
     sort_type='explicit'
 )
 
-# Trains neural network candidates for all nodes using periodic validation, shuffling learn and validate sets for
-# each candidate
+# Trains neural network candidates for all nodes using periodic validation, shuffling learn and
+#   validate sets for each candidate
 sv.train_model(
     validate=True,
     shuffle='lv',
@@ -123,13 +144,13 @@ sv.train_model(
 # To avoid shuffling for each candidate, omit the shuffle variable (defaults to None)
 sv.train_model(validate=True)
 
-# If periodic validation (determines when to stop training) is not required, omit the validate variable (defaults
-# to False)
+# If periodic validation (determines when to stop training) is not required, omit the validate
+#   variable (defaults to False)
 sv.train_model()
 
-# Select best neural network from each build's nodes (based on test set performance) to predict for the node
-# Models can be selected based on 'test', 'learn', 'valid' and 'train' (learning and validation) sets,
-# or None (selects based on performance of all sets)
+# Select best neural network from each build's nodes (based on test set performance) to predict
+#   for the node Models can be selected based on 'test', 'learn', 'valid' and 'train' (learning
+#   and validation) sets, or None (selects based on performance of all sets)
 sv.select_best(dset='test')
 
 # Predict values for the test data set
@@ -140,11 +161,13 @@ test_results = sv.use_model(dset='test')
 # Output results to specified file
 sv.save_results(results=test_results, filename='my_results.csv')	
 
-# Calculates errors for the test set (any combination of these error functions can be supplied as arguments)
+# Calculates errors for the test set (any combination of these error functions can be supplied as
+#   arguments)
 test_errors = sv.calc_error('rmse','r2','mean_abs_error','med_abs_error', dset='test')
 print(test_errors)
 
-# Save the project to a .project file, removing candidate neural networks not selected via select_best()
+# Save the project to a .project file, removing candidate neural networks not selected via
+#   select_best()
 sv.save_project()
 
 # To retain candidate neural networks, set the clean_up argument to False
@@ -161,6 +184,7 @@ sv = Server(config_filename='my_model_configuration.yml')
 
 # Configuration variables are found in the server's 'vars' dictionary
 sv.vars['learning_rate'] = 0.05
+sv.vars['keep_prob'] = 0.75
 sv.vars['hidden_layers'] = [[32, 'relu'], [32, 'relu']]
 sv.vars['validation_max_epochs'] = 10000
 ```
