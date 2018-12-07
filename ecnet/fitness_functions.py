@@ -110,9 +110,6 @@ def tune_hyperparameters(values):
         float: mean absolute error
     '''
 
-    learning_rate = values[0]
-    validation_max_epochs = values[1]
-    keep_prob = values[2]
-    hidden_layers = values[3:]
+    return sum(values)
 
     # Old method is depricated, new neural network creation method is required
