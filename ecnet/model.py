@@ -27,8 +27,7 @@ environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
 def __linear_fn(n):
-    '''
-    Linear definition for activation function dictionary
+    '''Linear definition for activation function dictionary
     '''
     return n
 
@@ -44,8 +43,7 @@ ACTIVATION_FUNCTONS = {
 class Layer:
 
     def __init__(self, size, act_fn):
-        '''
-        Layer object: contains layer size (number of neurons), activation
+        '''Layer object: contains layer size (number of neurons), activation
         function
 
         Args:
@@ -71,8 +69,7 @@ class Layer:
 class MultilayerPerceptron:
 
     def __init__(self, id=0):
-        '''
-        Neural network (multilayer perceptron) - contains methods for training,
+        '''Neural network (multilayer perceptron) - contains methods for training,
         using, saving and opening neural network models
         '''
 
@@ -97,8 +94,7 @@ class MultilayerPerceptron:
         self.__layers.append(Layer(size, act_fn))
 
     def connect_layers(self):
-        '''
-        Fully connects each layer added using add_layer()
+        '''Fully connects each layer added using add_layer()
         '''
 
         for layer in range(len(self.__layers) - 1):
@@ -117,8 +113,7 @@ class MultilayerPerceptron:
 
     def fit(self, x_l, y_l, learning_rate=0.1, train_epochs=500,
             keep_prob=1.0):
-        '''
-        Fits the neural network model using a set number of training iterations
+        '''Fits the neural network model using a set number of training iterations
 
         Args:
             x_l (numpy array): training inputs
@@ -151,8 +146,7 @@ class MultilayerPerceptron:
 
     def fit_validation(self, x_l, y_l, x_v, y_v, learning_rate=0.1,
                        max_epochs=1500, keep_prob=1.0):
-        '''
-        Fits the neural network model using periodic (every 250 epochs)
+        '''Fits the neural network model using periodic (every 250 epochs)
         validation; if validation set performance worsens, training is complete
 
         Args:
@@ -209,8 +203,7 @@ class MultilayerPerceptron:
         sess.close()
 
     def use(self, x):
-        '''
-        Use the neural network on supplied input data
+        '''Use the neural network on supplied input data
 
         Args:
             x (numpy array): supplied input data
@@ -227,8 +220,7 @@ class MultilayerPerceptron:
         return results
 
     def save(self, filepath):
-        '''
-        Save the neural network for later use; results in a .sess (tensorflow)
+        '''Save the neural network for later use; results in a .sess (tensorflow)
         file and a .struct (neural network architecture) file
 
         Args:
@@ -245,8 +237,7 @@ class MultilayerPerceptron:
         architecture_file.close()
 
     def load(self, filepath):
-        '''
-        Load a previously saved neural network
+        '''Load a previously saved neural network
 
         Args:
             filepath (str): location of the saved model
@@ -262,8 +253,7 @@ class MultilayerPerceptron:
         sess.close()
 
     def __feed_forward(self, x, keep_prob=1.0):
-        '''
-        Private method: feeds data through the neural network, returns output
+        '''Private method: feeds data through the neural network, returns output
         of final layer
 
         Args:
@@ -286,8 +276,7 @@ class MultilayerPerceptron:
         return output
 
     def __calc_rmse(self, y_hat, y):
-        '''
-        Private method: calculates the RMSE of the validation set during
+        '''Private method: calculates the RMSE of the validation set during
         validation training
 
         Args:

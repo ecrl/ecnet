@@ -21,8 +21,7 @@ from numpy import asarray
 class DataPoint:
 
     def __init__(self):
-        '''
-        DataPoint object: houses row in CSV database, containing ID, set
+        '''DataPoint object: houses row in CSV database, containing ID, set
         assignment, strings, groups, targets and inputs
         '''
 
@@ -37,8 +36,7 @@ class DataPoint:
 class PackagedData:
 
     def __init__(self):
-        '''
-        PackagedData object: contains lists of input and target data for data
+        '''PackagedData object: contains lists of input and target data for data
         set assignments
         '''
 
@@ -53,8 +51,7 @@ class PackagedData:
 class DataFrame:
 
     def __init__(self, filename):
-        '''
-        DataFrame object: handles data importing, set splitting, shuffling,
+        '''DataFrame object: handles data importing, set splitting, shuffling,
         packaging
 
         Args:
@@ -107,15 +104,13 @@ class DataFrame:
         self.num_inputs = len(self.input_names)
 
     def __len__(self):
-        '''
-        DataFrame length == number of DataPoints
+        '''DataFrame length == number of DataPoints
         '''
 
         return len(self.data_points)
 
     def create_sets(self, random=False, split=[0.65, 0.25, 0.1]):
-        '''
-        Creates learning, validation and test sets
+        '''Creates learning, validation and test sets
 
         Args:
             random (bool): if True, use random assignments for learn, validate,
@@ -156,8 +151,7 @@ class DataFrame:
                     self.test_set.append(point)
 
     def create_sorted_sets(self, sort_string, split=[0.65, 0.25, 0.1]):
-        '''
-        Creates random learn, validate and test sets, ensuring data points with
+        '''Creates random learn, validate and test sets, ensuring data points with
         the supplied sort string are split proportionally between the sets
 
         Args:
@@ -200,8 +194,7 @@ class DataFrame:
                 self.test_set.append(point)
 
     def shuffle(self, *args, split=[0.65, 0.25, 0.1]):
-        '''
-        Shuffles (new random assignments) learn, validate, test sets
+        '''Shuffles (new random assignments) learn, validate, test sets
 
         Args:
             *args (str): 'l', 'v', and/or 't', specifies whether to shuffle
@@ -241,8 +234,7 @@ class DataFrame:
             raise Exception('Shuffle arguments must be *l, v, t* or *l, v')
 
     def package_sets(self):
-        '''
-        Packages learn, validate and test sets for model hand-off
+        '''Packages learn, validate and test sets for model hand-off
 
         Returns:
             PackagedData: object containing learn, validate and test inputs
@@ -270,8 +262,7 @@ class DataFrame:
 
 
 def save_results(results, DataFrame, filename):
-    '''
-    Saves results obtained from ecnet.Server.use_model()
+    '''Saves results obtained from ecnet.Server.use_model()
 
     Args:
         results (list): list of lists, where sublists are predicted data for
