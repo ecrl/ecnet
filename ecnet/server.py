@@ -14,6 +14,7 @@
 from os import listdir, makedirs, path, remove, walk
 from zipfile import ZipFile, ZIP_DEFLATED
 from pickle import dump as pdump, load as pload
+from multiprocessing import Pool
 
 # 3rd party imports
 from yaml import dump, load
@@ -389,7 +390,10 @@ class Server:
                 ),
                 call_loc={'call_loc': 'TRAIN'}
             )
-            # TODO: Add multiprocessing :)
+
+            if self.num_processes > 1:
+                train_pool = Pool(processes=self.num_processes)
+
             for build in range(self._num_builds):
                 path_b = path.join(
                     self._project_name, 'build_{}'.format(build + 1)
@@ -399,36 +403,33 @@ class Server:
                         path_b, 'node_{}'.format(node + 1)
                     )
                     for candidate in range(self._num_candidates):
-                        self._logger.log(
-                            'info',
-                            'Build {}, Node {}, candidate {}'.format(
-                                build + 1, node + 1, candidate + 1
-                            ),
-                            call_loc={'call_loc': 'TRAIN'}
-                        )
                         path_t = path.join(
                             path_n, 'candidate_{}'.format(candidate + 1)
                         )
-                        model = self.__create_model()
-                        if validate:
-                            model.fit_validation(
-                                self.__sets.learn_x,
-                                self.__sets.learn_y,
-                                self.__sets.valid_x,
-                                self.__sets.valid_y,
-                                learning_rate=self.vars['learning_rate'],
-                                max_epochs=self.vars['validation_max_epochs'],
-                                keep_prob=self.vars['keep_prob']
+                        if self.num_processes > 1:
+                            train_pool.apply_async(
+                                ecnet.model.train_model,
+                                [
+                                    validate,
+                                    self.__sets,
+                                    self.vars,
+                                    path_t
+                                ]
                             )
                         else:
-                            model.fit(
-                                self.__sets.learn_x,
-                                self.__sets.learn_y,
-                                learning_rate=self.vars['learning_rate'],
-                                train_epochs=self.vars['train_epochs'],
-                                keep_prob=self.vars['keep_prob']
+                            self._logger.log(
+                                'info',
+                                'Build {}, Node {}, candidate {}'.format(
+                                    build + 1, node + 1, candidate + 1
+                                ),
+                                call_loc={'call_loc': 'TRAIN'}
                             )
-                        model.save(path_t)
+                            ecnet.model.train_model(
+                                validate,
+                                self.__sets,
+                                self.vars,
+                                path_t
+                            )
                         if shuffle == 'lv':
                             self.DataFrame.shuffle(
                                 'l', 'v', split=data_split
@@ -445,6 +446,10 @@ class Server:
                             raise ValueError(
                                 'Unknown shuffle arg {}'.format(shuffle)
                             )
+
+            if self.num_processes > 1:
+                train_pool.close()
+                train_pool.join()
 
     def select_best(self, dset=None, error_fn='mean_abs_error'):
         '''Selects the best performing neural network candidate from each node for
@@ -475,7 +480,6 @@ class Server:
         x_vals = self.__determine_x_vals(dset)
         y_vals = self.__determine_y_vals(dset)
 
-        # TODO: Add multiprocessing :)
         for build in range(self._num_builds):
             path_b = path.join(
                 self._project_name, 'build_{}'.format(build + 1)
