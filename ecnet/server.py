@@ -66,7 +66,11 @@ class Server:
             file = open(config_filename, 'r')
             self.vars.update(load(file))
         except:
-            self._logger.log('warn', 'Supplied configuration file not found')
+            self._logger.log(
+                'warn',
+                'Supplied configuration file not found',
+                call_loc={'call_loc': 'INIT'}
+            )
             self._logger.log(
                 'warn',
                 'Generating default configuration for {}'.format(
@@ -227,8 +231,9 @@ class Server:
                 call_loc={'call_loc': 'LIMIT'}
             )
             params = ecnet.limit_parameters.limit_genetic(
-                self.DataFrame, limit_num, population_size, num_generations,
-                self.num_processes, shuffle=shuffle, logger=self._logger
+                self.DataFrame, limit_num, self.vars, population_size,
+                num_generations, self.num_processes, shuffle=shuffle,
+                data_split=data_split, logger=self._logger
             )
         else:
             self._logger.log(
@@ -237,7 +242,7 @@ class Server:
                 call_loc={'call_loc': 'LIMIT'}
             )
             params = ecnet.limit_parameters.limit_iterative_include(
-                self.DataFrame, limit_num, logger=self._logger
+                self.DataFrame, limit_num, self.vars, logger=self._logger
             )
         ecnet.limit_parameters.output(self.DataFrame, params, output_filename)
         self._logger.log(
@@ -248,8 +253,7 @@ class Server:
 
     def tune_hyperparameters(self, target_score=None, num_iterations=50,
                              num_employers=50):
-        '''
-        Tunes the neural network learning hyperparameters (learning_rate,
+        '''Tunes the neural network learning hyperparameters (learning_rate,
         validation_max_epochs, keep_prob, neuron counts for each hidden layer)
         using an artificial bee colony search algorithm
 

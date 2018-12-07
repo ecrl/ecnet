@@ -27,15 +27,16 @@ import ecnet.error_utils
 from ecnet.fitness_functions import limit_inputs
 
 
-def limit_iterative_include(DataFrame, limit_num, logger=None):
-    '''
-    Limits the dimensionality of input data using an iterative inclusion
+def limit_iterative_include(DataFrame, limit_num, vars, logger=None):
+    '''Limits the dimensionality of input data using an iterative inclusion
     algorithm (best parameter is found, retained, paired with all others, best
-    pair retained, continues until desired dimensionality is reached)
+    pair retained, continues until desired dimensionality is reached); best
+    used with explicit sorting
 
     Args:
         DataFrame (DataFrame): ECNet DataFrame object to limit
         limit_num (int): desired input dimensionality
+        vars (dict): dictionary of ECNet Server model variables
         logger (ColorLogger): ColorLogger object; if not supplied, does not log
 
     Returns:
@@ -82,10 +83,13 @@ def limit_iterative_include(DataFrame, limit_num, logger=None):
                     test_input[idx_add].append(param_add[0])
 
             model = ecnet.model.MultilayerPerceptron()
-            model.add_layer(len(learn_input[0]), 'relu')
-            model.add_layer(16, 'relu')
-            model.add_layer(16, 'relu')
-            model.add_layer(len(packaged_data.learn_y[0]), 'linear')
+            model.add_layer(len(learn_input[0]), vars['input_activation'])
+            for layer in vars['hidden_layers']:
+                model.add_layer(layer[0], layer[1])
+            model.add_layer(
+                len(packaged_data.learn_y[0]),
+                vars['output_activation']
+            )
             model.connect_layers()
 
             model.fit_validation(
@@ -93,8 +97,9 @@ def limit_iterative_include(DataFrame, limit_num, logger=None):
                 packaged_data.learn_y,
                 valid_input,
                 packaged_data.valid_y,
-                learning_rate=0.1,
-                max_epochs=5000
+                learning_rate=vars['learning_rate'],
+                keep_prob=vars['keep_prob'],
+                max_epochs=vars['validation_max_epochs']
             )
 
             retained_rmse_list.append(ecnet.error_utils.calc_rmse(
@@ -133,22 +138,27 @@ def limit_iterative_include(DataFrame, limit_num, logger=None):
         if logger is not None:
             logger.log(
                 'info',
-                'Currently retained: {}'.format(retained_input_list)
+                'Currently retained: {}'.format(retained_input_list),
+                call_loc={'call_loc': 'LIMIT'}
             )
-            logger.log('info', 'Current RMSE: {}'.format(rmse_val))
+            logger.log(
+                'info',
+                'Current RMSE: {}'.format(rmse_val),
+                call_loc={'call_loc': 'LIMIT'}
+            )
 
     return retained_input_list
 
 
-def limit_genetic(DataFrame, limit_num, population_size, num_generations,
+def limit_genetic(DataFrame, limit_num, vars, population_size, num_generations,
                   num_processes, shuffle=False, data_split=[0.65, 0.25, 0.1],
                   logger=None):
-    '''
-    Limits the dimensionality of input data using a genetic algorithm
+    '''Limits the dimensionality of input data using a genetic algorithm
 
     Args:
         DataFrame (DataFrame): ECNet DataFrame object to limit
         limit_num (int): desired input dimensionality
+        vars (dict): dictionary of ECNet Server model variables
         population_size (int): size of genetic algorithm population
         num_generations (int): number of generations to run the GA for
         num_processes (int): number of concurrent processes used by the GA
@@ -168,7 +178,13 @@ def limit_genetic(DataFrame, limit_num, population_size, num_generations,
         'packaged_data': packaged_data,
         'shuffle': shuffle,
         'data_split': data_split,
-        'num_processes': num_processes
+        'num_processes': num_processes,
+        'learning_rate': vars['learning_rate'],
+        'keep_prob': vars['keep_prob'],
+        'hidden_layers': vars['hidden_layers'],
+        'input_activation': vars['input_activation'],
+        'output_activation': vars['output_activation'],
+        'validation_max_epochs': vars['validation_max_epochs']
     }
 
     population = Population(
@@ -185,7 +201,8 @@ def limit_genetic(DataFrame, limit_num, population_size, num_generations,
     population.generate_population()
     if logger is not None:
         logger.log('info', 'Generation: 0 - Population fitness: {}'.format(
-            sum(p.fitness_score for p in population.members) / len(population)
+            sum(p.fitness_score for p in population.members) / len(population),
+            call_loc={'call_loc': 'LIMIT'}
         ))
 
     for gen in range(num_generations):
@@ -198,7 +215,8 @@ def limit_genetic(DataFrame, limit_num, population_size, num_generations,
                     sum(
                         p.fitness_score for p in population.members
                     ) / len(population)
-                )
+                ),
+                call_loc={'call_loc': 'LIMIT'}
             )
 
     min_idx = 0
@@ -211,17 +229,24 @@ def limit_genetic(DataFrame, limit_num, population_size, num_generations,
         input_list.append(DataFrame.input_names[val])
 
     if logger is not None:
-        logger.log('info', 'Best member fitness score: {}'.format(
-            population.members[min_idx].fitness_score
-        ))
-        logger.log('info', 'Best member parameters: {}'.format(input_list))
+        logger.log(
+            'info',
+            'Best member fitness score: {}'.format(
+                population.members[min_idx].fitness_score
+            ),
+            call_loc={'call_loc': 'LIMIT'}
+        )
+        logger.log(
+            'info',
+            'Best member parameters: {}'.format(input_list),
+            call_loc={'call_loc': 'LIMIT'}
+        )
 
     return input_list
 
 
 def ecnet_limit_inputs(parameters, cost_fn_args):
-    '''
-    Genetic algorithm cost function, supplied to the genetic algorithm
+    '''Genetic algorithm cost function, supplied to the genetic algorithm
 
     Args:
         parameters (dictionary): dictionary of parameter names and values
@@ -303,8 +328,7 @@ def ecnet_limit_inputs(parameters, cost_fn_args):
 
 
 def output(DataFrame, param_list, filename):
-    '''
-    Saves an ECNet formatted database with the specified parameters
+    '''Saves an ECNet formatted database with the specified parameters
 
     Args:
         DataFrame (DataFrame): ECNet DataFrame object used for DB formatting
