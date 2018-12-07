@@ -15,6 +15,7 @@ from pickle import dump, load
 from functools import reduce
 from os import environ, mkdir, path
 from random import uniform
+from multiprocessing import current_process
 
 # 3rd party imports
 import tensorflow as tf
@@ -293,7 +294,7 @@ class MultilayerPerceptron:
             return(nsqrt(((asarray(y_hat) - asarray(y))**2).mean()))
 
 
-def train_model(validate, sets, vars, save_path):
+def train_model(validate, sets, vars, save_path, total_num_processes):
     '''Starts a process to train a neural network
 
     Args:
@@ -301,9 +302,12 @@ def train_model(validate, sets, vars, save_path):
         sets (PackagedData): object housing learning, validation, test data
         vars (dict): Server model configuration variables
         save_path (str): path to where model is saved
+        total_num_processes (int): number of concurrent processes running
     '''
 
-    model = MultilayerPerceptron()
+    model = MultilayerPerceptron(
+        id=current_process()._identity[0] % total_num_processes
+    )
     model.add_layer(len(sets.learn_x[0]), vars['input_activation'])
     for layer in vars['hidden_layers']:
         model.add_layer(layer[0], layer[1])

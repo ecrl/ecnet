@@ -407,13 +407,14 @@ class Server:
                             path_n, 'candidate_{}'.format(candidate + 1)
                         )
                         if self.num_processes > 1:
-                            train_pool.apply_async(
+                            train_pool.apply(
                                 ecnet.model.train_model,
                                 [
                                     validate,
                                     self.__sets,
                                     self.vars,
-                                    path_t
+                                    path_t,
+                                    self.num_processes
                                 ]
                             )
                         else:
@@ -428,7 +429,8 @@ class Server:
                                 validate,
                                 self.__sets,
                                 self.vars,
-                                path_t
+                                path_t,
+                                self.num_processes
                             )
                         if shuffle == 'lv':
                             self.DataFrame.shuffle(
