@@ -291,3 +291,40 @@ class MultilayerPerceptron:
             return(nsqrt(((y_hat - y)**2).mean()))
         except:
             return(nsqrt(((asarray(y_hat) - asarray(y))**2).mean()))
+
+
+def train_model(validate, sets, vars, save_path):
+    '''Starts a process to train a neural network
+
+    Args:
+        validate (bool): whether to use periodic validation or not
+        sets (PackagedData): object housing learning, validation, test data
+        vars (dict): Server model configuration variables
+        save_path (str): path to where model is saved
+    '''
+
+    model = MultilayerPerceptron()
+    model.add_layer(len(sets.learn_x[0]), vars['input_activation'])
+    for layer in vars['hidden_layers']:
+        model.add_layer(layer[0], layer[1])
+    model.add_layer(len(sets.learn_y[0]), vars['output_activation'])
+    model.connect_layers()
+    if validate:
+        model.fit_validation(
+            sets.learn_x,
+            sets.learn_y,
+            sets.valid_x,
+            sets.valid_y,
+            learning_rate=vars['learning_rate'],
+            max_epochs=vars['validation_max_epochs'],
+            keep_prob=vars['keep_prob']
+        )
+    else:
+        model.fit(
+            sets.learn_x,
+            sets.learn_y,
+            learning_rate=vars['learning_rate'],
+            train_epochs=vars['train_epochs'],
+            keep_prob=vars['keep_prob']
+        )
+    model.save(save_path)
