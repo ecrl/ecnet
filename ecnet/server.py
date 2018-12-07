@@ -33,8 +33,7 @@ class Server:
 
     def __init__(self, config_filename='config.yml', project_file=None,
                  log=True, log_dir=None, num_processes=1):
-        '''
-        Server object: handles data importing, neural network creation, data
+        '''Server object: handles data importing, neural network creation, data
         to neural network hand-off, error calculations, project saving and
         loading
 
@@ -72,7 +71,8 @@ class Server:
                 'warn',
                 'Generating default configuration for {}'.format(
                     config_filename
-                )
+                ),
+                call_loc={'call_loc': 'INIT'}
             )
             config_dict = {
                 'learning_rate': 0.1,
@@ -141,8 +141,7 @@ class Server:
 
     def create_project(self, project_name, num_builds=1, num_nodes=5,
                        num_candidates=10):
-        '''
-        Creates the folder structure for a project
+        '''Creates the folder structure for a project
 
         Args:
             project_name (str): name of the project
@@ -167,12 +166,15 @@ class Server:
                 if not path.exists(path_n):
                     makedirs(path_n)
         self.__using_project = True
-        self._logger.log('info', 'Created project {}'.format(project_name))
+        self._logger.log(
+            'info',
+            'Created project {}'.format(project_name),
+            call_loc={'call_loc': 'PROJECT'}
+        )
 
     def import_data(self, data_filename, sort_type='random',
                     data_split=[0.65, 0.25, 0.1]):
-        '''
-        Imports data from ECNet formatted CSV database
+        '''Imports data from ECNet formatted CSV database
 
         Args:
             data_filename (str): path to CSV database
@@ -188,14 +190,17 @@ class Server:
         else:
             raise ValueError('Unknown sort_type {}'.format(sort_type))
         self.__sets = self.DataFrame.package_sets()
-        self._logger.log('info', 'Imported data from {}'.format(data_filename))
+        self._logger.log(
+            'info',
+            'Imported data from {}'.format(data_filename),
+            call_loc={'call_loc': 'IMPORT'}
+        )
 
     def limit_input_parameters(self, limit_num, output_filename,
                                use_genetic=False, population_size=500,
                                num_generations=25, shuffle=False,
                                data_split=[0.65, 0.25, 0.1]):
-        '''
-        Limits the input dimensionality of currently loaded data; default
+        '''Limits the input dimensionality of currently loaded data; default
         method is an iterative inclusion algorithm, options for using a genetic
         algorithm available.
 
@@ -218,7 +223,8 @@ class Server:
         if use_genetic:
             self._logger.log(
                 'info',
-                'Limiting input parameters using a genetic algorithm'
+                'Limiting input parameters using a genetic algorithm',
+                call_loc={'call_loc': 'LIMIT'}
             )
             params = ecnet.limit_parameters.limit_genetic(
                 self.DataFrame, limit_num, population_size, num_generations,
@@ -227,7 +233,8 @@ class Server:
         else:
             self._logger.log(
                 'info',
-                'Limiting input parameters using iterative inclusion'
+                'Limiting input parameters using iterative inclusion',
+                call_loc={'call_loc': 'LIMIT'}
             )
             params = ecnet.limit_parameters.limit_iterative_include(
                 self.DataFrame, limit_num, logger=self._logger
@@ -235,18 +242,19 @@ class Server:
         ecnet.limit_parameters.output(self.DataFrame, params, output_filename)
         self._logger.log(
             'info',
-            'Saved limited database to {}'.format(output_filename)
+            'Saved limited database to {}'.format(output_filename),
+            call_loc={'call_loc': 'LIMIT'}
         )
 
     def tune_hyperparameters(self, target_score=None, num_iterations=50,
                              num_employers=50):
         '''
         Tunes the neural network learning hyperparameters (learning_rate,
-        validation_max_epochs, neuron counts for each hidden layer) using an
-        artificial bee colony searching algorithm.
+        validation_max_epochs, keep_prob, neuron counts for each hidden layer)
+        using an artificial bee colony search algorithm
 
         Args:
-            target_score (float): fitness required to stop the colony
+            target_score (float or None): fitness required to stop the colony
             num_iterations (int): if !target_score, number of iterations to
                 run the colony
             num_employers (int): number of employer bees for the colony
@@ -270,19 +278,20 @@ class Server:
             value_ranges=hyperparameters,
             fitness_fxn=tune_hyperparameters,
             print_level=self.log['stream_level'],
-            file_level=self.log['file_level'],
+            file_logging=self.log['file_level'],
             processes=self.num_processes
         )
         abc.num_employers = num_employers
 
         self._logger.log(
             'info',
-            'Tuning neural network hyperparameters with an ABC'
+            'Tuning neural network hyperparameters with an ABC',
+            call_loc={'call_loc': 'TUNE'}
         )
 
         abc.create_employers()
         if target_score is None:
-            for _ in num_iterations:
+            for _ in range(num_iterations):
                 abc.calc_average()
                 abc.calc_new_positions()
                 abc.check_positions()
@@ -304,30 +313,33 @@ class Server:
 
         self._logger.log(
             'info',
-            'Tuned learning rate: {}'.format(new_hyperparameters[0])
+            'Tuned learning rate: {}'.format(new_hyperparameters[0]),
+            call_loc={'call_loc': 'TUNE'}
         )
         self._logger.log(
             'info',
-            'Tuned max validation epochs: {}'.format(new_hyperparameters[1])
+            'Tuned max validation epochs: {}'.format(new_hyperparameters[1]),
+            call_loc={'call_loc': 'TUNE'}
         )
         self._logger.log(
             'info',
-            'Tuned neuron keep probability: {}'.format(new_hyperparameters[2])
+            'Tuned neuron keep probability: {}'.format(new_hyperparameters[2]),
+            call_loc={'call_loc': 'TUNE'}
         )
         for idx, layer in enumerate(self.vars['hidden_layers'], 3):
             self._logger.log(
                 'info',
                 'Tuned number of neurons in hidden layer {}: {}'.format(
                     idx - 2, new_hyperparameters[idx]
-                )
+                ),
+                call_loc={'call_loc': 'TUNE'}
             )
 
         return new_hyperparameters
 
     def train_model(self, validate=False, shuffle=None,
                     data_split=[0.65, 0.25, 0.1]):
-        '''
-        Trains neural networks (fills project if create_project() called,
+        '''Trains neural networks (populates project if create_project() called,
         otherwise creates one neural network)
 
         Args:
@@ -338,7 +350,11 @@ class Server:
         '''
 
         if not self.__using_project:
-            self._logger.log('info', 'Training single model')
+            self._logger.log(
+                'info',
+                'Training single model',
+                call_loc={'call_loc': 'TRAIN'}
+            )
             model = self.__create_model()
             if validate:
                 model.fit_validation(
@@ -366,7 +382,8 @@ class Server:
                 'Generating {} x {} x {} neural networks'.format(
                     self._num_builds, self._num_nodes,
                     self._num_candidates
-                )
+                ),
+                call_loc={'call_loc': 'TRAIN'}
             )
             # TODO: Add multiprocessing :)
             for build in range(self._num_builds):
@@ -382,7 +399,8 @@ class Server:
                             'info',
                             'Build {}, Node {}, candidate {}'.format(
                                 build + 1, node + 1, candidate + 1
-                            )
+                            ),
+                            call_loc={'call_loc': 'TRAIN'}
                         )
                         path_t = path.join(
                             path_n, 'candidate_{}'.format(candidate + 1)
@@ -425,8 +443,7 @@ class Server:
                             )
 
     def select_best(self, dset=None, error_fn='mean_abs_error'):
-        '''
-        Selects the best performing neural network candidate from each node for
+        '''Selects the best performing neural network candidate from each node for
         each build (requires create_project())
 
         Args:
@@ -448,7 +465,8 @@ class Server:
             raise Exception('Models must be trained first! (train_model())')
         self._logger.log(
             'info',
-            'Selecting best models from each mode for each build'
+            'Selecting best models from each mode for each build',
+            call_loc={'call_loc': 'SELECTION'}
         )
         x_vals = self.__determine_x_vals(dset)
         y_vals = self.__determine_y_vals(dset)
@@ -489,9 +507,8 @@ class Server:
                 model.save(path_best)
 
     def use_model(self, dset=None):
-        '''
-        Uses model(s) to predict for a data set; if using a project, models
-        must be selected first
+        '''Uses model(s) to predict for a data set; if using a project, models
+        must be selected first with select_best()
 
         Args:
             dset (str): which data set performance to use when selecting models
@@ -503,7 +520,11 @@ class Server:
                 prediction with a length of the number of DB targets
         '''
 
-        self._logger.log('info', 'Predicting values for {} set'.format(dset))
+        self._logger.log(
+            'info',
+            'Predicting values for {} set'.format(dset),
+            call_loc={'call_loc': 'USE'}
+        )
         x_vals = self.__determine_x_vals(dset)
         if not self.__using_project:
             model = ecnet.model.MultilayerPerceptron()
@@ -547,8 +568,7 @@ class Server:
             return preds
 
     def calc_error(self, *args, dset=None):
-        '''
-        Calculates errors for data sets
+        '''Calculates errors for data sets
 
         Args:
             *args (str): any number of error functions
@@ -565,7 +585,8 @@ class Server:
         for arg in args:
             self._logger.log(
                 'info',
-                'Calculating {} for {} set'.format(arg, dset)
+                'Calculating {} for {} set'.format(arg, dset),
+                call_loc={'call_loc': 'METRICS'}
             )
         error_dict = {}
         y_hat = self.use_model(dset)
@@ -581,8 +602,7 @@ class Server:
         return error_dict
 
     def save_results(self, results, filename):
-        '''
-        Saves results obtained from use_model()
+        '''Saves results obtained from use_model()
 
         Args:
             results (list): list of results obtained with use_model()
@@ -590,12 +610,15 @@ class Server:
         '''
 
         ecnet.data_utils.save_results(results, self.DataFrame, filename)
-        self._logger.log('info', 'Results saved to {}'.format(filename))
+        self._logger.log(
+            'info',
+            'Results saved to {}'.format(filename),
+            call_loc={'call_loc': 'EXPORT'}
+        )
 
     def save_project(self, clean_up=True):
-        '''
-        Saves the current state of the Server (loaded data, model
-        configuration) and all created models to a zipped ".project" file
+        '''Saves the current state of the Server (loaded data, model
+        configuration) and all models built to a zipped ".project" file
 
         Args:
             clean_up (bool): whether to remove the project's folder structure
@@ -650,12 +673,12 @@ class Server:
         zip_file.close()
         self._logger.log(
             'info',
-            'Project saved to {}.project'.format(self._project_name)
+            'Project saved to {}.project'.format(self._project_name),
+            call_loc={'call_loc': 'PROJECT'}
         )
 
     def __open_project(self, project_name):
-        '''
-        Private method: Opens a .project file, imports saved data and model
+        '''Private method: Opens a .project file, imports saved data and model
         configuration, and unpacks the folder structure containing models
 
         Args:
@@ -707,12 +730,15 @@ class Server:
 
         self.__sets = self.DataFrame.package_sets()
         self.__using_project = True
-        self._logger.log('info', 'Opened project {}'.format(project_name))
+        self._logger.log(
+            'info',
+            'Opened project {}'.format(project_name),
+            call_loc={'call_loc': 'PROJECT'}
+        )
 
     def __determine_x_vals(self, dset):
-        '''
-        Private method: Helper function for determining which data set input
-        data will be passed to functions
+        '''Private method: Helper function for determining which data set will
+        be passed to functions
         '''
 
         if dset == 'test':
@@ -741,8 +767,7 @@ class Server:
             raise ValueError('Unknown dset argument {}'.format(dset))
 
     def __determine_y_vals(self, dset):
-        '''
-        Private method: Helper function for determining which data set target
+        '''Private method: Helper function for determining which data set target
         data will be passed to functions
         '''
 
@@ -772,8 +797,7 @@ class Server:
             raise ValueError('Unknown dset argument {}'.format(dset))
 
     def __create_model(self):
-        '''
-        Private method: Helper function for creating a neural network
+        '''Private method: Helper function for creating a neural network
         '''
 
         model = ecnet.model.MultilayerPerceptron()
@@ -794,8 +818,7 @@ class Server:
         return model
 
     def __error_fn(self, arg, y_hat, y):
-        '''
-        Private method: Parses error argument, calculates corresponding error
+        '''Private method: Parses error argument, calculates corresponding error
         and returns it
         '''
 
