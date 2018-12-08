@@ -201,7 +201,7 @@ class Server:
             call_loc={'call_loc': 'IMPORT'}
         )
 
-    def limit_input_parameters(self, limit_num, output_filename,
+    def limit_input_parameters(self, limit_num, output_filename=None,
                                use_genetic=False, population_size=500,
                                num_generations=25, shuffle=False,
                                data_split=[0.65, 0.25, 0.1]):
@@ -245,12 +245,16 @@ class Server:
             params = ecnet.limit_parameters.limit_iterative_include(
                 self.DataFrame, limit_num, self.vars, logger=self._logger
             )
-        ecnet.limit_parameters.output(self.DataFrame, params, output_filename)
-        self._logger.log(
-            'info',
-            'Saved limited database to {}'.format(output_filename),
-            call_loc={'call_loc': 'LIMIT'}
-        )
+        if output_filename is not None:
+            ecnet.limit_parameters.output(
+                self.DataFrame, params, output_filename
+            )
+            self._logger.log(
+                'info',
+                'Saved limited database to {}'.format(output_filename),
+                call_loc={'call_loc': 'LIMIT'}
+            )
+        return params
 
     def tune_hyperparameters(self, target_score=None, num_iterations=50,
                              num_employers=50):
