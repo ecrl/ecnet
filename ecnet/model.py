@@ -305,9 +305,12 @@ def train_model(validate, sets, vars, save_path, total_num_processes):
         total_num_processes (int): number of concurrent processes running
     '''
 
-    model = MultilayerPerceptron(
-        id=current_process()._identity[0] % total_num_processes
-    )
+    if total_num_processes > 1:
+        model = MultilayerPerceptron(
+            id=current_process()._identity[0] % total_num_processes
+        )
+    else:
+        model = MultilayerPerceptron()
     model.add_layer(len(sets.learn_x[0]), vars['input_activation'])
     for layer in vars['hidden_layers']:
         model.add_layer(layer[0], layer[1])
