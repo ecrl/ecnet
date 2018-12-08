@@ -260,6 +260,67 @@ class DataFrame:
         pd.test_y = asarray(pd.test_y)
         return pd
 
+    def set_inputs(self, inputs):
+        '''Removes all input variables except those supplied
+
+        Args:
+            inputs (list): input variable names, str
+        '''
+
+        idxs = []
+        for input in inputs:
+            for cidx, current_input in enumerate(self.input_names):
+                if input == current_input:
+                    idxs.append(cidx)
+        for point in self.data_points:
+            new_inputs = []
+            for i in idxs:
+                new_inputs.append(point.inputs[i])
+            point.inputs = new_inputs
+        self.input_names = inputs
+        self.num_inputs = len(inputs)
+        self.create_sets()
+
+    def save(self, filename):
+        '''Saves the current state of the DataFrame to a new CSV database
+
+        Args:
+            filename (str): path to location where database is saved
+        '''
+
+        if '.csv' not in filename:
+            filename += '.csv'
+
+        rows = []
+        type_row = ['DATAID', 'ASSIGNMENT']
+        type_row.extend(['STRING' for _ in range(self.num_strings)])
+        type_row.extend(['GROUP' for _ in range(self.num_groups)])
+        type_row.extend(['TARGET' for _ in range(self.num_targets)])
+        type_row.extend(['INPUT' for _ in range(self.num_inputs)])
+        rows.append(type_row)
+
+        title_row = ['DATAID', 'ASSIGNMENT']
+        title_row.extend(self.string_names)
+        title_row.extend(self.group_names)
+        title_row.extend(self.target_names)
+        title_row.extend(self.input_names)
+        rows.append(title_row)
+
+        data_rows = []
+        for point in self.data_points:
+            data_row = [point.id, point.assignment]
+            data_row.extend(point.strings)
+            data_row.extend(point.groups)
+            data_row.extend(point.targets)
+            data_row.extend(point.inputs)
+            data_rows.append(data_row)
+        rows.extend(sorted(data_rows, key=lambda x: x[0]))
+
+        with open(filename, 'w') as csv_file:
+            wr = writer(csv_file, quoting=QUOTE_ALL, lineterminator='\n')
+            for row in rows:
+                wr.writerow(row)
+
 
 def save_results(results, DataFrame, filename):
     '''Saves results obtained from ecnet.Server.use_model()
@@ -276,31 +337,18 @@ def save_results(results, DataFrame, filename):
         filename += '.csv'
 
     rows = []
-
-    type_row = []
-    type_row.append('DATAID')
-    type_row.append('ASSIGNMENT')
-    for string in range(DataFrame.num_strings):
-        type_row.append('STRING')
-    for group in range(DataFrame.num_groups):
-        type_row.append('GROUP')
-    for target in range(DataFrame.num_targets):
-        type_row.append('TARGET')
-    for result in results:
-        type_row.append('RESULT')
+    type_row = ['DATAID', 'ASSIGNMENT']
+    type_row.extend(['STRING' for _ in range(DataFrame.num_strings)])
+    type_row.extend(['GROUP' for _ in range(DataFrame.num_groups)])
+    type_row.extend(['TARGET' for _ in range(DataFrame.num_targets)])
+    type_row.extend(['RESULT' for _ in range(len(results))])
     rows.append(type_row)
 
-    title_row = []
-    title_row.append('DATAID')
-    title_row.append('ASSIGNMENT')
-    for string in DataFrame.string_names:
-        title_row.append(string)
-    for group in DataFrame.group_names:
-        title_row.append(group)
-    for target in DataFrame.target_names:
-        title_row.append(target)
-    for result in range(len(results)):
-        title_row.append(result)
+    title_row = ['DATAID', 'ASSIGNMENT']
+    title_row.extend(DataFrame.string_names)
+    title_row.extend(DataFrame.group_names)
+    title_row.extend(DataFrame.target_names)
+    title_row.extend([i + 1 for i in range(len(results))])
     rows.append(title_row)
 
     if len(results[0]) == len(DataFrame.learn_set):
@@ -316,45 +364,35 @@ def save_results(results, DataFrame, filename):
     else:
         dset = None
 
+    output_points = []
     if dset == 'train':
-        output_points = []
-        for point in DataFrame.learn_set:
-            output_points.append(point)
-        for point in DataFrame.valid_set:
-            output_points.append(point)
+        output_points.extend(DataFrame.learn_set)
+        output_points.extend(DataFrame.valid_set)
     elif dset == 'learn':
-        output_points = DataFrame.learn_set
+        output_points.extend(DataFrame.learn_set)
     elif dset == 'valid':
-        output_points = DataFrame.valid_set
+        output_points.extend(DataFrame.valid_set)
     elif dset == 'test':
-        output_points = DataFrame.test_set
+        output_points.extend(DataFrame.test_set)
     else:
-        output_points = []
-        for point in DataFrame.learn_set:
-            output_points.append(point)
-        for point in DataFrame.valid_set:
-            output_points.append(point)
-        for point in DataFrame.test_set:
-            output_points.append(point)
+        output_points.extend(DataFrame.learn_set)
+        output_points.extend(DataFrame.valid_set)
+        output_points.extend(DataFrame.test_set)
 
+    data_rows = []
     for idx, point in enumerate(output_points):
-        data_row = []
-        data_row.append(point.id)
-        data_row.append(point.assignment)
-        for string in point.strings:
-            data_row.append(string)
-        for group in point.groups:
-            data_row.append(group)
-        for target in point.targets:
-            data_row.append(target)
-        for result in results:
-            if DataFrame.num_targets == 1:
-                data_row.append(result[idx][0])
-            else:
-                data_row.append(result[idx])
-        rows.append(data_row)
+        data_row = [point.id, point.assignment]
+        data_row.extend(point.strings)
+        data_row.extend(point.groups)
+        data_row.extend(point.targets)
+        if DataFrame.num_targets == 1:
+            data_row.extend(r[idx][0] for r in results)
+        else:
+            data_row.extend(r[idx] for r in results)
+        data_rows.append(data_row)
+    rows.extend(sorted(data_rows, key=lambda x: x[0]))
 
-    with open(filename, 'w') as file:
-        wr = writer(file, quoting=QUOTE_ALL, lineterminator='\n')
+    with open(filename, 'w') as csv_file:
+        wr = writer(csv_file, quoting=QUOTE_ALL, lineterminator='\n')
         for row in rows:
             wr.writerow(row)
