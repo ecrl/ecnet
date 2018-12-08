@@ -18,6 +18,25 @@ def build(validate, shuffle, dset, sort_type):
     print(sv.calc_error('r2', 'rmse', 'mean_abs_error', 'med_abs_error'))
     sv.save_project()
 
+
+def build_mp():
+
+    sv = Server(num_processes=4)
+    sv.import_data('cn_model_v1.0.csv', sort_type='random')
+    sv.create_project(
+        'test_project_mp',
+        num_builds=1,
+        num_nodes=2,
+        num_candidates=2
+    )
+    sv.train_model(validate=True, shuffle='lv')
+    sv.select_best('test')
+    results = sv.use_model('test')
+    sv.save_results(results, 'test_mp_results.csv')
+    print(sv.calc_error('r2', 'rmse', 'mean_abs_error', 'med_abs_error'))
+    sv.save_project()
+
+
 if __name__ == '__main__':
 
     build(True, 'lv', 'test', 'random')
@@ -28,3 +47,4 @@ if __name__ == '__main__':
     build(True, 'lv', 'valid', 'random')
     build(True, 'lv', 'train', 'random')
     build(True, 'lv', None, 'random')
+    build_mp()
