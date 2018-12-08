@@ -245,10 +245,10 @@ class Server:
             params = ecnet.limit_parameters.limit_iterative_include(
                 self.DataFrame, limit_num, self.vars, logger=self._logger
             )
+        self.DataFrame.set_inputs(params)
+        self.__sets = self.DataFrame.package_sets()
         if output_filename is not None:
-            ecnet.limit_parameters.output(
-                self.DataFrame, params, output_filename
-            )
+            self.DataFrame.save(output_filename)
             self._logger.log(
                 'info',
                 'Saved limited database to {}'.format(output_filename),
@@ -284,8 +284,8 @@ class Server:
             hyperparameters.append(('int', (8, 32)))
 
         abc = ABC(
-            value_ranges=hyperparameters,
-            fitness_fxn=tune_hyperparameters,
+            hyperparameters,
+            tune_hyperparameters,
             print_level=self.log['stream_level'],
             file_logging=self.log['file_level'],
             processes=self.num_processes
