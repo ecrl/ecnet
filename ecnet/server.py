@@ -364,26 +364,13 @@ class Server:
                 'Training single model',
                 call_loc={'call_loc': 'TRAIN'}
             )
-            model = self.__create_model()
-            if validate:
-                model.fit_validation(
-                    self.__sets.learn_x,
-                    self.__sets.learn_y,
-                    self.__sets.valid_x,
-                    self.__sets.valid_y,
-                    learning_rate=self.vars['learning_rate'],
-                    max_epochs=self.vars['validation_max_epochs'],
-                    keep_prob=self.vars['keep_prob']
-                )
-            else:
-                model.fit(
-                    self.__sets.learn_x,
-                    self.__sets.learn_y,
-                    learning_rate=self.vars['learning_rate'],
-                    train_epochs=self.vars['train_epochs'],
-                    keep_prob=self.vars['keep_prob']
-                )
-            model.save('./tmp/model')
+            ecnet.model.train_model(
+                validate,
+                self.__sets,
+                self.vars,
+                './tmp/model',
+                1
+            )
 
         else:
             self._logger.log(
@@ -434,7 +421,7 @@ class Server:
                                 self.__sets,
                                 self.vars,
                                 path_t,
-                                self.num_processes
+                                1
                             )
                         if shuffle == 'lv':
                             self.DataFrame.shuffle(
@@ -478,6 +465,11 @@ class Server:
             )))
         ):
             raise Exception('Models must be trained first! (train_model())')
+        if error_fn != 'mean_abs_error' and error_fn != 'med_abs_error' \
+           and error_fn != 'rmse':
+            raise ValueError(
+                '{} is not a valid error function'.format(error_fn)
+            )
         self._logger.log(
             'info',
             'Selecting best models from each mode for each build',
@@ -494,31 +486,25 @@ class Server:
                 path_n = path.join(
                     path_b, 'node_{}'.format(node + 1)
                 )
-                error_list = []
+                min_error = None
+                best_candidate = None
                 for candidate in range(self._num_candidates):
                     path_t = path.join(
                         path_n, 'candidate_{}'.format(candidate + 1)
                     )
                     model = ecnet.model.MultilayerPerceptron()
                     model.load(path_t)
-                    error_list.append(
-                        self.__error_fn(
-                            error_fn, model.use(x_vals), y_vals
-                        )
+                    error = self.__error_fn(
+                        error_fn,
+                        model.use(x_vals),
+                        y_vals
                     )
-                current_min_idx = 0
-                for idx, error in enumerate(error_list):
-                    if error < error_list[current_min_idx]:
-                        current_min_idx = idx
+                    if min_error is None or error < min_error:
+                        min_error = error
+                        best_candidate = path_t
                 model = ecnet.model.MultilayerPerceptron()
-                path_t_best = path.join(
-                    path_n, 'candidate_{}'.format(current_min_idx + 1)
-                )
-                path_best = path.join(
-                    path_n, 'model'
-                )
-                model.load(path_t_best)
-                model.save(path_best)
+                model.load(best_candidate)
+                model.save(path.join(path_n, 'model'))
 
     def use_model(self, dset=None):
         '''Uses model(s) to predict for a data set; if using a project, models
