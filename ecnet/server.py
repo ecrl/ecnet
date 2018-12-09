@@ -11,10 +11,11 @@
 #
 
 # Stdlib imports
-from os import listdir, makedirs, path, remove, walk
+from os import listdir, makedirs, path, walk
 from zipfile import ZipFile, ZIP_DEFLATED
 from pickle import dump as pdump, load as pload
 from multiprocessing import Pool
+from shutil import rmtree
 
 # 3rd party imports
 from yaml import dump, load
@@ -33,7 +34,7 @@ from ecnet.fitness_functions import tune_hyperparameters
 class Server:
 
     def __init__(self, config_filename='config.yml', project_file=None,
-                 log=True, log_dir=None, num_processes=1):
+                 log_level='info', log_dir=None, num_processes=1):
         '''Server object: handles data importing, neural network creation, data
         to neural network hand-off, error calculations, project saving and
         loading
@@ -51,9 +52,9 @@ class Server:
                 reduction, and hyperparameter tuning
         '''
 
-        self._logger = ColorLogger()
-        self.log = log
-        self.log_dir = log_dir
+        self._logger = ColorLogger(stream_level=log_level)
+        self.__log_level = log_level
+        self.__log_dir = log_dir
         self.num_processes = num_processes
 
         if project_file is not None:
@@ -99,29 +100,24 @@ class Server:
         self.__using_project = False
 
     @property
-    def log(self):
+    def log_level(self):
         '''
-        Returns dict: {'stream_level', 'file_level'}
+        Returns tuple: (stream log level, file log level)
         '''
 
-        return {
-            'stream_level': self._logger.stream_level,
-            'file_level': self._logger.file_level
-        }
+        return (self._logger.stream_level, self._logger.file_level)
 
-    @log.setter
-    def log(self, log):
+    @log_level.setter
+    def log_level(self, level):
         '''
         Args:
             log (bool): toggle for stream logging (True == log, False == do
             not log)
         '''
 
-        if log is True:
-            self._logger.stream_level = 'info'
-        else:
-            self._logger.stream_level = 'disable'
-        self.__log = log
+        self._logger.stream_level = level
+        self._logger.file_level = level
+        self.__log_level = level
 
     @property
     def log_dir(self):
@@ -142,7 +138,17 @@ class Server:
             self._logger.file_level = 'disable'
         else:
             self._logger.log_dir = log_dir
-            self._logger.file_level = 'info'
+            self._logger.file_level = self.__log_level[0]
+
+    @property
+    def size(self):
+        '''(# builds, # nodes, # candidates) if using project, else None
+        '''
+
+        if self.__using_project:
+            return (self.__num_builds, self.__num_nodes, self.__num_candidates)
+        else:
+            return None
 
     def create_project(self, project_name, num_builds=1, num_nodes=5,
                        num_candidates=10):
@@ -152,21 +158,21 @@ class Server:
             project_name (str): name of the project
             num_builds (int): number of builds in the project
             num_nodes (int): number of nodes for each build
-            num_candidates (int): number of candidates per node
+            num_candidates (int): number of candidate neural networks per node
         '''
 
-        self._project_name = project_name
-        self._num_builds = num_builds
-        self._num_nodes = num_nodes
-        self._num_candidates = num_candidates
-        if not path.exists(self._project_name):
-            makedirs(self._project_name)
-        for build in range(self._num_builds):
-            path_b = path.join(self._project_name, 'build_{}'
+        self.__project_name = project_name
+        self.__num_builds = num_builds
+        self.__num_nodes = num_nodes
+        self.__num_candidates = num_candidates
+        if not path.exists(self.__project_name):
+            makedirs(self.__project_name)
+        for build in range(self.__num_builds):
+            path_b = path.join(self.__project_name, 'build_{}'
                                .format(build + 1))
             if not path.exists(path_b):
                 makedirs(path_b)
-            for node in range(self._num_nodes):
+            for node in range(self.__num_nodes):
                 path_n = path.join(path_b, 'node_{}'.format(node + 1))
                 if not path.exists(path_n):
                     makedirs(path_n)
@@ -286,8 +292,8 @@ class Server:
         abc = ABC(
             hyperparameters,
             tune_hyperparameters,
-            print_level=self.log['stream_level'],
-            file_logging=self.log['file_level'],
+            print_level=self.log_level[0],
+            file_logging=self.log_level[1],
             processes=self.num_processes
         )
         abc.num_employers = num_employers
@@ -321,23 +327,23 @@ class Server:
             layer[0] = new_hyperparameters[idx]
 
         self._logger.log(
-            'info',
+            'debug',
             'Tuned learning rate: {}'.format(new_hyperparameters[0]),
             call_loc={'call_loc': 'TUNE'}
         )
         self._logger.log(
-            'info',
+            'debug',
             'Tuned max validation epochs: {}'.format(new_hyperparameters[1]),
             call_loc={'call_loc': 'TUNE'}
         )
         self._logger.log(
-            'info',
+            'debug',
             'Tuned neuron keep probability: {}'.format(new_hyperparameters[2]),
             call_loc={'call_loc': 'TUNE'}
         )
         for idx, layer in enumerate(self.vars['hidden_layers'], 3):
             self._logger.log(
-                'info',
+                'debug',
                 'Tuned number of neurons in hidden layer {}: {}'.format(
                     idx - 2, new_hyperparameters[idx]
                 ),
@@ -348,13 +354,14 @@ class Server:
 
     def train_model(self, validate=False, shuffle=None,
                     data_split=[0.65, 0.25, 0.1]):
-        '''Trains neural networks (populates project if create_project() called,
-        otherwise creates one neural network)
+        '''Trains neural network(s): if a project was created, trains
+        (builds * nodes * candidates) neural networks, else 1
 
         Args:
             validate (bool): whether to use periodic validation to determine
                 learning cutoff
-            shuffle (bool): whether to shuffle the data sets for each candidate
+            shuffle (str): 'train' to shuffle learning and validation sets,
+                'all' to shuffle learning, validation and test sets
             data_split (list): [learn%, valid%, test%] if shuffle == True
         '''
 
@@ -376,8 +383,8 @@ class Server:
             self._logger.log(
                 'info',
                 'Generating {} x {} x {} neural networks'.format(
-                    self._num_builds, self._num_nodes,
-                    self._num_candidates
+                    self.__num_builds, self.__num_nodes,
+                    self.__num_candidates
                 ),
                 call_loc={'call_loc': 'TRAIN'}
             )
@@ -385,17 +392,14 @@ class Server:
             if self.num_processes > 1:
                 train_pool = Pool(processes=self.num_processes)
 
-            for build in range(self._num_builds):
-                path_b = path.join(
-                    self._project_name, 'build_{}'.format(build + 1)
-                )
-                for node in range(self._num_nodes):
-                    path_n = path.join(
-                        path_b, 'node_{}'.format(node + 1)
-                    )
-                    for candidate in range(self._num_candidates):
-                        path_t = path.join(
-                            path_n, 'candidate_{}'.format(candidate + 1)
+            for build in range(self.__num_builds):
+                for node in range(self.__num_nodes):
+                    for candidate in range(self.__num_candidates):
+                        model_path = path.join(
+                            self.__project_name,
+                            'build_{}'.format(build + 1),
+                            'node_{}'.format(node + 1),
+                            'candidate_{}'.format(candidate + 1)
                         )
                         if self.num_processes > 1:
                             train_pool.apply(
@@ -404,13 +408,13 @@ class Server:
                                     validate,
                                     self.__sets,
                                     self.vars,
-                                    path_t,
+                                    model_path,
                                     self.num_processes
                                 ]
                             )
                         else:
                             self._logger.log(
-                                'info',
+                                'debug',
                                 'Build {}, Node {}, candidate {}'.format(
                                     build + 1, node + 1, candidate + 1
                                 ),
@@ -420,24 +424,12 @@ class Server:
                                 validate,
                                 self.__sets,
                                 self.vars,
-                                path_t,
+                                model_path,
                                 1
                             )
-                        if shuffle == 'lv':
+                        if shuffle is not None:
                             self.DataFrame.shuffle(
-                                'l', 'v', split=data_split
-                            )
-                            self.__sets = self.DataFrame.package_sets()
-                        elif shuffle == 'lvt':
-                            self.DataFrame.create_sets(
-                                split=data_split
-                            )
-                            self.__sets = self.DataFrame.package_sets()
-                        elif shuffle is None:
-                            continue
-                        else:
-                            raise ValueError(
-                                'Unknown shuffle arg {}'.format(shuffle)
+                                shuffle, split=data_split
                             )
 
             if self.num_processes > 1:
@@ -459,7 +451,7 @@ class Server:
         if not self.__using_project:
             raise Exception('Project has not been created! (create_project())')
         if not path.exists(
-            path.join(self._project_name, path.join('build_1', path.join(
+            path.join(self.__project_name, path.join('build_1', path.join(
                         'node_1',
                         'candidate_1.meta'
             )))
@@ -478,17 +470,17 @@ class Server:
         x_vals = self.__determine_x_vals(dset)
         y_vals = self.__determine_y_vals(dset)
 
-        for build in range(self._num_builds):
+        for build in range(self.__num_builds):
             path_b = path.join(
-                self._project_name, 'build_{}'.format(build + 1)
+                self.__project_name, 'build_{}'.format(build + 1)
             )
-            for node in range(self._num_nodes):
+            for node in range(self.__num_nodes):
                 path_n = path.join(
                     path_b, 'node_{}'.format(node + 1)
                 )
                 min_error = None
                 best_candidate = None
-                for candidate in range(self._num_candidates):
+                for candidate in range(self.__num_candidates):
                     path_t = path.join(
                         path_n, 'candidate_{}'.format(candidate + 1)
                     )
@@ -506,7 +498,7 @@ class Server:
                 model.load(best_candidate)
                 model.save(path.join(path_n, 'model'))
 
-    def use_model(self, dset=None):
+    def use_model(self, dset=None, output_filename=None):
         '''Uses model(s) to predict for a data set; if using a project, models
         must be selected first with select_best()
 
@@ -514,58 +506,34 @@ class Server:
             dset (str): which data set performance to use when selecting models
                 can choose 'learn', 'valid', 'test', 'train' (learning and
                 validation) or None (uses all data sets)
+            output_filename (str): path to save results, if not None
 
         Returns:
             list: list of lists, where each sublist is a specific item's
                 prediction with a length of the number of DB targets
         '''
 
-        self._logger.log(
-            'info',
-            'Predicting values for {} set'.format(dset),
-            call_loc={'call_loc': 'USE'}
-        )
-        x_vals = self.__determine_x_vals(dset)
-        if not self.__using_project:
-            model = ecnet.model.MultilayerPerceptron()
-            model.load('./tmp/model')
-            return [model.use(x_vals)]
+        if dset is None:
+            self._logger.log(
+                'info',
+                'Predicting values for all data',
+                call_loc={'call_loc': 'USE'}
+            )
         else:
-            if not path.exists(
-                path.join(
-                    self._project_name,
-                    path.join('build_1', path.join(
-                            'node_1',
-                            'model.meta'
-                        )
-                    )
-                )
-            ):
-                raise Exception('Select best performers using select_best()')
-            preds = []
-            for build in range(self._num_builds):
-                path_b = path.join(
-                    self._project_name, 'build_{}'.format(build + 1)
-                )
-                build_preds = []
-                for node in range(self._num_nodes):
-                    path_n = path.join(
-                        path_b, 'node_{}'.format(node + 1)
-                    )
-                    path_best = path.join(
-                        path_n, 'model'
-                    )
-                    model = ecnet.model.MultilayerPerceptron()
-                    model.load(path_best)
-                    build_preds.append(model.use(x_vals))
-                ave_build_preds = []
-                for pred in range(len(build_preds[0])):
-                    node_preds = []
-                    for node in range(len(build_preds)):
-                        node_preds.append(build_preds[node][pred])
-                    ave_build_preds.append(sum(node_preds)/len(node_preds))
-                preds.append(list(ave_build_preds))
-            return preds
+            self._logger.log(
+                'info',
+                'Predicting values for {} set'.format(dset),
+                call_loc={'call_loc': 'USE'}
+            )
+        results = self.__use(dset)
+        if output_filename is not None:
+            ecnet.data_utils.save_results(
+                results,
+                dset,
+                self.DataFrame,
+                output_filename
+            )
+        return results
 
     def calc_error(self, *args, dset=None):
         '''Calculates errors for data sets
@@ -583,13 +551,20 @@ class Server:
         '''
 
         for arg in args:
-            self._logger.log(
-                'info',
-                'Calculating {} for {} set'.format(arg, dset),
-                call_loc={'call_loc': 'METRICS'}
-            )
+            if dset is None:
+                self._logger.log(
+                    'info',
+                    'Calculating {} for all data'.format(arg),
+                    call_loc={'call_loc': 'METRICS'}
+                )
+            else:
+                self._logger.log(
+                    'info',
+                    'Calculating {} for {} set'.format(arg, dset),
+                    call_loc={'call_loc': 'METRICS'}
+                )
         error_dict = {}
-        y_hat = self.use_model(dset)
+        y_hat = self.__use(dset)
         y = self.__determine_y_vals(dset)
         for arg in args:
             if self.__using_project:
@@ -599,52 +574,31 @@ class Server:
                 error_dict[arg] = error_list
             else:
                 error_dict[arg] = self.__error_fn(arg, y_hat, y)
+            self._logger.log(
+                'debug',
+                '{} : {}'.format(arg, error_dict[arg]),
+                call_loc={'call_loc': 'METRICS'}
+            )
         return error_dict
 
-    def save_results(self, results, filename):
-        '''Saves results obtained from use_model()
-
-        Args:
-            results (list): list of results obtained with use_model()
-            filename (string): path to location to save results CSV
-        '''
-
-        ecnet.data_utils.save_results(results, self.DataFrame, filename)
-        self._logger.log(
-            'info',
-            'Results saved to {}'.format(filename),
-            call_loc={'call_loc': 'EXPORT'}
-        )
-
-    def save_project(self, clean_up=True):
+    def save_project(self, filename=None, clean_up=True):
         '''Saves the current state of the Server (loaded data, model
-        configuration) and all models built to a zipped ".project" file
+        configuration) and all models built to a ".prj"
 
         Args:
+            filename (str): path to .prj file location; if None, saves to
+                %PROJECT_NAME%.prj in the current working directory
             clean_up (bool): whether to remove the project's folder structure
                 after it is zipped up
         '''
 
         if not self.__using_project:
-            raise Exception('Project has not been created! (create_project())')
-
-        if clean_up:
-            for build in range(self._num_builds):
-                path_b = path.join(
-                    self._project_name, 'build_{}'.format(build + 1)
-                )
-                for node in range(self._num_nodes):
-                    path_n = path.join(
-                        path_b, 'node_{}'.format(node + 1)
-                    )
-                    candidate_files = [
-                        file for file in listdir(path_n) if 'candidate' in file
-                    ]
-                    for file in candidate_files:
-                        remove(path.join(path_n, file))
+            raise FileExistsError(
+                'Project has not been created with create_project()'
+            )
 
         with open(
-            path.join(self._project_name, self.__config_filename),
+            path.join(self.__project_name, self.__config_filename),
             'w'
         ) as config_save:
             dump(
@@ -656,65 +610,72 @@ class Server:
         config_save.close()
 
         with open(
-            path.join(self._project_name, 'data.d'),
+            path.join(self.__project_name, 'data.d'),
             'wb'
         ) as data_save:
             pdump(self.DataFrame, data_save)
         data_save.close()
 
-        zip_file = ZipFile(
-            '{}.project'.format(self._project_name),
-            'w',
-            ZIP_DEFLATED
-        )
-        for root, dirs, files in walk(self._project_name):
+        if filename is not None:
+            if '.prj' not in filename:
+                filename += '.prj'
+            save_file = filename
+        else:
+            save_file = '{}.prj'.format(self.__project_name)
+        zip_file = ZipFile(save_file, 'w', ZIP_DEFLATED)
+        for root, _, files in walk(self.__project_name):
             for file in files:
                 zip_file.write(path.join(root, file))
         zip_file.close()
+
+        if clean_up:
+            rmtree(self.__project_name)
+            rmtree('./tmp/')
+
         self._logger.log(
             'info',
-            'Project saved to {}.project'.format(self._project_name),
+            'Project saved to {}'.format(save_file),
             call_loc={'call_loc': 'PROJECT'}
         )
 
     def __open_project(self, project_name):
-        '''Private method: Opens a .project file, imports saved data and model
-        configuration, and unpacks the folder structure containing models
+        '''Private method: Opens a .prj file, imports data and model
+        configuration, and populates project folder with saved models
 
         Args:
-            project_name (string): path to .project file
+            project_name (string): path to .prj file
         '''
 
-        self._project_name = project_name.replace('.project', '')
-        if '.project' not in project_name:
-            project_name += '.project'
+        self.__project_name = project_name.replace('.prj', '')
+        if '.prj' not in project_name:
+            project_name += '.prj'
 
         zip_file = ZipFile(project_name, 'r')
-        zip_file.extractall(self._project_name + '\\..\\')
+        zip_file.extractall(self.__project_name + '\\..\\')
         zip_file.close()
 
-        self._num_builds = len(
+        self.__num_builds = len(
             [build for build in listdir(
-                self._project_name
-            ) if path.isdir(path.join(self._project_name, build))]
+                self.__project_name
+            ) if path.isdir(path.join(self.__project_name, build))]
         )
-        self._num_nodes = len(
+        self.__num_nodes = len(
             [node for node in listdir(
-                path.join(self._project_name, 'build_1')
+                path.join(self.__project_name, 'build_1')
             ) if path.isdir(path.join(
-                self._project_name,
+                self.__project_name,
                 path.join('build_1', node))
             )]
         )
 
-        for root, dirs, files in walk(self._project_name):
+        for _, _, files in walk(self.__project_name):
             for file in files:
                 if '.yml' in file:
                     self.__config_filename = file
                     break
 
         with open(
-            path.join(self._project_name, self.__config_filename),
+            path.join(self.__project_name, self.__config_filename),
             'r'
         ) as config_file:
             self.vars = {}
@@ -722,7 +683,7 @@ class Server:
         config_file.close()
 
         with open(
-            path.join(self._project_name, 'data.d'),
+            path.join(self.__project_name, 'data.d'),
             'rb'
         ) as data_file:
             self.DataFrame = pload(data_file)
@@ -796,30 +757,54 @@ class Server:
         else:
             raise ValueError('Unknown dset argument {}'.format(dset))
 
-    def __create_model(self):
-        '''Private method: Helper function for creating a neural network
+    def __use(self, dset):
+        '''Private method: used to obtain predictions for a set in loaded data
+
+        Args:
+            dset (str): 'learn', 'valid', 'train', 'test', None
+
+        Returns list: results for each set element, each being a list of
+            length equal to number of targets (size of neural network output
+            layer)
         '''
 
-        model = ecnet.model.MultilayerPerceptron()
-        model.add_layer(
-            self.DataFrame.num_inputs,
-            self.vars['input_activation']
-        )
-        for layer in self.vars['hidden_layers']:
-            model.add_layer(
-                layer[0],
-                layer[1]
-            )
-        model.add_layer(
-            self.DataFrame.num_targets,
-            self.vars['output_activation']
-        )
-        model.connect_layers()
-        return model
+        x_vals = self.__determine_x_vals(dset)
+        if not self.__using_project:
+            model = ecnet.model.MultilayerPerceptron()
+            model.load('./tmp/model')
+            return [model.use(x_vals)]
+        else:
+            if not path.exists(path.join(
+               self.__project_name, 'build_1', 'node_1', 'model.meta')):
+                raise FileNotFoundError(
+                    'Select best performers using select_best()'
+                )
+            preds = []
+            for build in range(self.__num_builds):
+                build_preds = []
+                for node in range(self.__num_nodes):
+                    model_path = path.join(
+                        self.__project_name,
+                        'build_{}'.format(build + 1),
+                        'node_{}'.format(node + 1),
+                        'model'
+                    )
+                    model = ecnet.model.MultilayerPerceptron()
+                    model.load(model_path)
+                    build_preds.append(model.use(x_vals))
+                ave_build_preds = []
+                for pred in range(len(build_preds[0])):
+                    node_preds = []
+                    for node in range(len(build_preds)):
+                        node_preds.append(build_preds[node][pred])
+                    ave_build_preds.append(sum(node_preds)/len(node_preds))
+                preds.append(list(ave_build_preds))
+            return preds
 
-    def __error_fn(self, arg, y_hat, y):
-        '''Private method: Parses error argument, calculates corresponding error
-        and returns it
+    @staticmethod
+    def __error_fn(arg, y_hat, y):
+        '''Private, static method: Parses error argument, calculates
+        corresponding error and returns it
         '''
 
         if arg == 'rmse':
