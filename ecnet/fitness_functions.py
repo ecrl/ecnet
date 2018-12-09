@@ -34,7 +34,7 @@ def limit_inputs(parameters, args):
 
     if args['shuffle']:
         args['DataFrame'].shuffle(
-            'l', 'v', 't',
+            'all',
             split=args['data_split']
         )
         packaged_data_cf = args['DataFrame'].package_sets()
