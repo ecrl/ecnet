@@ -137,15 +137,21 @@ def limit_iterative_include(DataFrame, limit_num, vars, logger=None):
         retained_input_list.append(DataFrame.input_names[rmse_idx])
         if logger is not None:
             logger.log(
-                'info',
+                'debug',
                 'Currently retained: {}'.format(retained_input_list),
                 call_loc={'call_loc': 'LIMIT'}
             )
             logger.log(
-                'info',
+                'debug',
                 'Current RMSE: {}'.format(rmse_val),
                 call_loc={'call_loc': 'LIMIT'}
             )
+
+    logger.log(
+        'debug',
+        'Limited inputs: {}'.format(retained_input_list),
+        call_loc={'call_loc', 'LIMIT'}
+    )
 
     return retained_input_list
 
@@ -200,7 +206,7 @@ def limit_genetic(DataFrame, limit_num, vars, population_size, num_generations,
 
     population.generate_population()
     if logger is not None:
-        logger.log('info', 'Generation: 0 - Population fitness: {}'.format(
+        logger.log('debug', 'Generation: 0 - Population fitness: {}'.format(
             sum(p.fitness_score for p in population.members) / len(population),
         ), call_loc={'call_loc': 'LIMIT'})
 
@@ -208,7 +214,7 @@ def limit_genetic(DataFrame, limit_num, vars, population_size, num_generations,
         population.next_generation()
         if logger is not None:
             logger.log(
-                'info',
+                'debug',
                 'Generation: {} - Population fitness: {}'.format(
                     gen + 1,
                     sum(
@@ -229,14 +235,14 @@ def limit_genetic(DataFrame, limit_num, vars, population_size, num_generations,
 
     if logger is not None:
         logger.log(
-            'info',
+            'debug',
             'Best member fitness score: {}'.format(
                 population.members[min_idx].fitness_score
             ),
             call_loc={'call_loc': 'LIMIT'}
         )
         logger.log(
-            'info',
+            'debug',
             'Best member parameters: {}'.format(input_list),
             call_loc={'call_loc': 'LIMIT'}
         )
