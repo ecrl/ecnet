@@ -43,8 +43,8 @@ class Server:
             config_filename (str): (optional) path of neural network
                 configuration file
             project_file (str): (optional) path of pre-existing project
-            log (bool): whether or not to log process executions/progress to
-                the console
+            log_level (str): 'disable', 'debug', 'info', 'warn', 'error',
+                'crit'
             log_dir (None or str): directory to save logs; defaults to not
                 saving logs
             num_processes (int): number of concurrent processes to run various
@@ -101,18 +101,15 @@ class Server:
 
     @property
     def log_level(self):
-        '''
-        Returns tuple: (stream log level, file log level)
+        '''tuple: (stream log level, file log level)
         '''
 
         return (self._logger.stream_level, self._logger.file_level)
 
     @log_level.setter
     def log_level(self, level):
-        '''
-        Args:
-            log (bool): toggle for stream logging (True == log, False == do
-            not log)
+        '''Args:
+            level (str): 'disable', 'debug', 'info', 'warn', 'error', 'crit'
         '''
 
         self._logger.stream_level = level
@@ -121,17 +118,16 @@ class Server:
 
     @property
     def log_dir(self):
-        '''
-        Returns str or None: log directory, or None to disable file logging
+        '''str or None: log directory, or None to disable file logging
         '''
 
         return self._logger.log_dir
 
     @log_dir.setter
     def log_dir(self, log_dir):
-        '''
-        Args:
-            log_dir (str): location for file logging
+        '''Args:
+            log_dir (str or None): location for file logging; if None, turns
+                off file logging
         '''
 
         if log_dir is None:
@@ -700,6 +696,12 @@ class Server:
     def __determine_x_vals(self, dset):
         '''Private method: Helper function for determining which data set will
         be passed to functions
+
+        Args:
+            dset (str): 'learn', 'valid', 'train', 'test', None (all)
+
+        Returns:
+            numpy array: all data points from the specified set
         '''
 
         if dset == 'test':
@@ -730,6 +732,12 @@ class Server:
     def __determine_y_vals(self, dset):
         '''Private method: Helper function for determining which data set target
         data will be passed to functions
+
+        Args:
+            dset (str): 'learn', 'valid', 'train', 'test', None (all)
+
+        Returns:
+            numpy array: all data points from the specified set
         '''
 
         if dset == 'test':
@@ -802,18 +810,24 @@ class Server:
             return preds
 
     @staticmethod
-    def __error_fn(arg, y_hat, y):
+    def __error_fn(fn, y_hat, y):
         '''Private, static method: Parses error argument, calculates
         corresponding error and returns it
+
+        Args:
+            fn (str): 'rmse', 'mean_abs_error', 'med_abs_error', 'r2'
+
+        Returns:
+            float: calculated error
         '''
 
-        if arg == 'rmse':
+        if fn == 'rmse':
             return ecnet.error_utils.calc_rmse(y_hat, y)
-        elif arg == 'r2':
+        elif fn == 'r2':
             return ecnet.error_utils.calc_r2(y_hat, y)
-        elif arg == 'mean_abs_error':
+        elif fn == 'mean_abs_error':
             return ecnet.error_utils.calc_mean_abs_error(y_hat, y)
-        elif arg == 'med_abs_error':
+        elif fn == 'med_abs_error':
             return ecnet.error_utils.calc_med_abs_error(y_hat, y)
         else:
-            raise ValueError('Unknown error function {}'.format(arg))
+            raise ValueError('Unknown error function {}'.format(fn))
