@@ -193,45 +193,33 @@ class DataFrame:
                 point.assignment = 'T'
                 self.test_set.append(point)
 
-    def shuffle(self, *args, split=[0.65, 0.25, 0.1]):
-        '''Shuffles (new random assignments) learn, validate, test sets
+    def shuffle(self, sets='all', split=[0.65, 0.25, 0.1]):
+        '''Shuffles learning, validation and test sets or learning and
+        validation sets
 
         Args:
-            *args (str): 'l', 'v', and/or 't', specifies whether to shuffle
-                learn, validate and/or test sets
+            sets (str): 'all' or 'train' (learning + validation)
             split (list): [learn%, valid%, test%] used for new assignments
         '''
 
-        if 'l' and 'v' and 't' in args:
+        if sets == 'all':
             self.create_sets(random=True, split=split)
-
-        elif 'l' and 'v' in args:
+        elif sets == 'train':
             lv_set = []
-            for point in self.learn_set:
-                lv_set.append(point)
-            for point in self.valid_set:
-                lv_set.append(point)
+            lv_set.extend([p for p in self.learn_set])
+            lv_set.extend([p for p in self.valid_set])
             rand_index = sample(
                 range(len(self.learn_set) + len(self.valid_set)),
                 (len(self.learn_set) + len(self.valid_set))
             )
-            learn_index = rand_index[
+            self.learn_set = lv_set[
                 0: int(len(rand_index) * (split[0] / (1 - split[2]))) + 1
             ]
-            valid_index = rand_index[
+            self.valid_set = lv_set[
                 int(len(rand_index) * (split[0] / (1 - split[2]))) + 1:
             ]
-
-            self.learn_set = []
-            self.valid_set = []
-
-            for idx in learn_index:
-                self.learn_set.append(lv_set[idx])
-            for idx in valid_index:
-                self.valid_set.append(lv_set[idx])
-
         else:
-            raise Exception('Shuffle arguments must be *l, v, t* or *l, v')
+            raise ValueError('Unknown sets argument: {}'.format(sets))
 
     def package_sets(self):
         '''Packages learn, validate and test sets for model hand-off
@@ -322,12 +310,13 @@ class DataFrame:
                 wr.writerow(row)
 
 
-def save_results(results, DataFrame, filename):
+def save_results(results, dset, DataFrame, filename):
     '''Saves results obtained from ecnet.Server.use_model()
 
     Args:
         results (list): list of lists, where sublists are predicted data for
             each data point
+        dset (str): 'learn', 'valid', 'train', 'test', None (all)
         DataFrame (DataFrame): data_utils.DataFrame object used for results
             file formatting
         filename (str): path to save location for results
@@ -350,19 +339,6 @@ def save_results(results, DataFrame, filename):
     title_row.extend(DataFrame.target_names)
     title_row.extend([i + 1 for i in range(len(results))])
     rows.append(title_row)
-
-    if len(results[0]) == len(DataFrame.learn_set):
-        dset = 'learn'
-    elif len(results[0]) == len(DataFrame.valid_set):
-        dset = 'valid'
-    elif len(results[0]) == len(DataFrame.test_set):
-        dset = 'test'
-    elif len(results[0]) == (
-        len(DataFrame.learn_set) + len(DataFrame.valid_set)
-    ):
-        dset = 'train'
-    else:
-        dset = None
 
     output_points = []
     if dset == 'train':
