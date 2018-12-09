@@ -3,7 +3,7 @@ from ecnet import Server
 
 def no_logging():
 
-    sv = Server(log=False)
+    sv = Server(log_level='disable')
     sv.import_data('cn_model_v1.0.csv')
 
 if __name__ == '__main__':
