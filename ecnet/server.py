@@ -621,7 +621,7 @@ class Server:
             )
         return error_dict
 
-    def save_project(self, filename=None, clean_up=True):
+    def save_project(self, filename=None, clean_up=False):
         '''Saves the current state of the Server (loaded data, model
         configuration) and all models built to a ".prj"
 
