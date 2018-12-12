@@ -52,6 +52,11 @@ class Layer:
             act_fn (str): 'relu', 'sigmoid', 'softmax', 'linear'
         '''
 
+        assert type(size) is int, \
+            'Invalid size type: {}'.format(type(size))
+        assert act_fn in list(ACTIVATION_FUNCTONS.keys()), \
+            'Invalid activation function: {}'.format(act_fn)
+
         self.size = size
         if act_fn not in ACTIVATION_FUNCTONS.keys():
             raise ValueError(
@@ -73,6 +78,8 @@ class MultilayerPerceptron:
         '''Neural network (multilayer perceptron) - contains methods for training,
         using, saving and opening neural network models
         '''
+
+        assert type(id) is int, 'Invalid id type: {}'.format(id)
 
         self.__layers = []
         self.__weights = []
@@ -125,6 +132,13 @@ class MultilayerPerceptron:
                 subjected to dropout)
         '''
 
+        assert type(learning_rate) is float, \
+            'Invalid learning_rate type: {}'.format(type(learning_rate))
+        assert type(train_epochs) is int, \
+            'Invalid train_epochs type: {}'.format(type(train_epochs))
+        assert 0.0 <= keep_prob <= 1.0, \
+            'Invalid keep_prob value: {}'.format(keep_prob)
+
         if len(y_l) is 0 or len(x_l) is 0:
             raise ValueError('Learning set cannot be empty - check data split')
 
@@ -146,9 +160,10 @@ class MultilayerPerceptron:
         sess.close()
 
     def fit_validation(self, x_l, y_l, x_v, y_v, learning_rate=0.1,
-                       max_epochs=1500, keep_prob=1.0):
+                       max_epochs=10000, keep_prob=1.0):
         '''Fits the neural network model using periodic (every 250 epochs)
-        validation; if validation set performance worsens, training is complete
+        validation; if validation set performance does not improve, training
+        stops
 
         Args:
             x_l (numpy array): training inputs
@@ -160,6 +175,13 @@ class MultilayerPerceptron:
             keep_prob (float): probability that a neuron is retained (not
                 subjected to dropout)
         '''
+
+        assert type(learning_rate) is float, \
+            'Invalid learning_rate type: {}'.format(type(learning_rate))
+        assert type(max_epochs) is int, \
+            'Invalid train_epochs type: {}'.format(type(train_epochs))
+        assert 0.0 <= keep_prob <= 1.0, \
+            'Invalid keep_prob value: {}'.format(keep_prob)
 
         if len(y_l) is 0 or len(x_l) is 0:
             raise ValueError(
@@ -228,6 +250,9 @@ class MultilayerPerceptron:
             filepath (str): location to save the model
         '''
 
+        assert type(filepath) is str, \
+            'Invalid filepath type: {}'.format(filepath)
+
         with Session() as sess:
             saver = train.Saver()
             saver.restore(sess, './tmp/_m{}/_ckpt'.format(self.__id))
@@ -243,6 +268,9 @@ class MultilayerPerceptron:
         Args:
             filepath (str): location of the saved model
         '''
+
+        assert type(filepath) is str, \
+            'Invalid filepath type: {}'.format(filepath)
 
         architecture_file = open('{}.struct'.format(filepath), 'rb')
         self.__layers = load(architecture_file)

@@ -118,6 +118,9 @@ class DataFrame:
             split (list): [learn%, valid%, test%] if random == True
         '''
 
+        assert type(split) is list and len(split) == 3 and sum(split) == 1.0, \
+            'Invalid split proportions: {}'.format(split)
+
         self.learn_set = []
         self.valid_set = []
         self.test_set = []
@@ -158,6 +161,10 @@ class DataFrame:
             sort_string (str): database STRING value used to sort data points
             split (list): [learn%, valid%, test%] for set assignments
         '''
+
+        assert type(split) is list and len(split) == 3 and sum(split) == 1.0, \
+            'Invalid split proportions: {}'.format(split)
+
         try:
             string_idx = self.string_names.index(sort_string)
         except ValueError:
@@ -202,6 +209,9 @@ class DataFrame:
             split (list): [learn%, valid%, test%] used for new assignments
         '''
 
+        assert type(split) is list and len(split) == 3 and sum(split) == 1.0, \
+            'Invalid split proportions: {}'.format(split)
+
         if sets == 'all':
             self.create_sets(random=True, split=split)
         elif sets == 'train':
@@ -219,7 +229,7 @@ class DataFrame:
                 int(len(rand_index) * (split[0] / (1 - split[2]))) + 1:
             ]
         else:
-            raise ValueError('Unknown sets argument: {}'.format(sets))
+            raise ValueError('Invalid sets argument: {}'.format(sets))
 
     def package_sets(self):
         '''Packages learn, validate and test sets for model hand-off
@@ -255,6 +265,9 @@ class DataFrame:
             inputs (list): input variable names, str
         '''
 
+        assert type(inputs) is list, \
+            'Invalid inputs argument: {}'.format(inputs)
+
         idxs = []
         for input in inputs:
             for cidx, current_input in enumerate(self.input_names):
@@ -275,6 +288,9 @@ class DataFrame:
         Args:
             filename (str): path to location where database is saved
         '''
+
+        assert type(filename) is str, \
+            'Invalid filename type: {}'.format(filename)
 
         if '.csv' not in filename:
             filename += '.csv'
@@ -310,50 +326,57 @@ class DataFrame:
                 wr.writerow(row)
 
 
-def save_results(results, dset, DataFrame, filename):
+def save_results(results, dset, df, filename):
     '''Saves results obtained from ecnet.Server.use_model()
 
     Args:
         results (list): list of lists, where sublists are predicted data for
             each data point
         dset (str): 'learn', 'valid', 'train', 'test', None (all)
-        DataFrame (DataFrame): data_utils.DataFrame object used for results
-            file formatting
+        df (DataFrame): data_utils.DataFrame object used for results file
+            formatting
         filename (str): path to save location for results
     '''
+
+    assert dset in ['learn', 'valid', 'train', 'test', None], \
+        'Invalid dset argument: {}'.format(dset)
+    assert type(df) is DataFrame, \
+        'Invalid df type: {}'.format(type(df))
+    assert type(filename) is str, \
+        'Invalid filename type: {}'.format(type(filename))
 
     if '.csv' not in filename:
         filename += '.csv'
 
     rows = []
     type_row = ['DATAID', 'ASSIGNMENT']
-    type_row.extend(['STRING' for _ in range(DataFrame.num_strings)])
-    type_row.extend(['GROUP' for _ in range(DataFrame.num_groups)])
-    type_row.extend(['TARGET' for _ in range(DataFrame.num_targets)])
+    type_row.extend(['STRING' for _ in range(df.num_strings)])
+    type_row.extend(['GROUP' for _ in range(df.num_groups)])
+    type_row.extend(['TARGET' for _ in range(df.num_targets)])
     type_row.extend(['RESULT' for _ in range(len(results))])
     rows.append(type_row)
 
     title_row = ['DATAID', 'ASSIGNMENT']
-    title_row.extend(DataFrame.string_names)
-    title_row.extend(DataFrame.group_names)
-    title_row.extend(DataFrame.target_names)
+    title_row.extend(df.string_names)
+    title_row.extend(df.group_names)
+    title_row.extend(df.target_names)
     title_row.extend([i + 1 for i in range(len(results))])
     rows.append(title_row)
 
     output_points = []
     if dset == 'train':
-        output_points.extend(DataFrame.learn_set)
-        output_points.extend(DataFrame.valid_set)
+        output_points.extend(df.learn_set)
+        output_points.extend(df.valid_set)
     elif dset == 'learn':
-        output_points.extend(DataFrame.learn_set)
+        output_points.extend(df.learn_set)
     elif dset == 'valid':
-        output_points.extend(DataFrame.valid_set)
+        output_points.extend(df.valid_set)
     elif dset == 'test':
-        output_points.extend(DataFrame.test_set)
+        output_points.extend(df.test_set)
     else:
-        output_points.extend(DataFrame.learn_set)
-        output_points.extend(DataFrame.valid_set)
-        output_points.extend(DataFrame.test_set)
+        output_points.extend(df.learn_set)
+        output_points.extend(df.valid_set)
+        output_points.extend(df.test_set)
 
     data_rows = []
     for idx, point in enumerate(output_points):
@@ -361,7 +384,7 @@ def save_results(results, dset, DataFrame, filename):
         data_row.extend(point.strings)
         data_row.extend(point.groups)
         data_row.extend(point.targets)
-        if DataFrame.num_targets == 1:
+        if df.num_targets == 1:
             data_row.extend(r[idx][0] for r in results)
         else:
             data_row.extend(r[idx] for r in results)

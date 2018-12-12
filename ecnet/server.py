@@ -53,8 +53,8 @@ class Server:
         '''
 
         self._logger = ColorLogger(stream_level=log_level)
-        self.__log_level = log_level
-        self.__log_dir = log_dir
+        self.log_level = log_level
+        self.log_dir = log_dir
         self.num_processes = num_processes
 
         if project_file is not None:
@@ -134,7 +134,26 @@ class Server:
             self._logger.file_level = 'disable'
         else:
             self._logger.log_dir = log_dir
-            self._logger.file_level = self.__log_level[0]
+            self._logger.file_level = self.log_level[0]
+
+    @property
+    def num_processes(self):
+        '''Returns int: number of processors Server will utilize for training,
+            tuning, and input dim reduction
+        '''
+
+        return self.__num_processes
+
+    @num_processes.setter
+    def num_processes(self, num):
+        '''Args:
+            num (int): number of processes to utilize for training, tuning,
+                and input dim reduction
+        '''
+
+        assert type(num) is int, \
+            'Invalid process number type: {}'.format(type(num))
+        self.__num_processes = num
 
     @property
     def size(self):
@@ -157,6 +176,13 @@ class Server:
             num_candidates (int): number of candidate neural networks per node
         '''
 
+        assert type(project_name) is str, \
+            'Invalid project_name type: {}'.format(type(project_name))
+        assert type(num_builds) is int and type(num_nodes) is int \
+            and type(num_candidates) is int, \
+            'Invalid project structure: {}*{}*{}'.format(
+                num_builds, num_nodes, num_candidates
+            )
         self.__project_name = project_name
         self.__num_builds = num_builds
         self.__num_nodes = num_nodes
@@ -195,7 +221,7 @@ class Server:
         elif sort_type == 'explicit':
             self.DataFrame.create_sets(random=False)
         else:
-            raise ValueError('Unknown sort_type {}'.format(sort_type))
+            raise ValueError('Invalid sort_type {}'.format(sort_type))
         self.__sets = self.DataFrame.package_sets()
         self._logger.log(
             'info',
@@ -227,6 +253,16 @@ class Server:
         source code.
         '''
 
+        assert type(limit_num) is int, \
+            'Invalid limit_num type: {}'.format(type(limit_num))
+        assert type(use_genetic) is bool, \
+            'Invalid use_genetic type: {}'.format(type(use_genetic))
+        assert type(shuffle) is bool, \
+            'Invalid shuffle type: {}'.format(type(shuffle))
+        assert type(data_split) is list and len(data_split) == 3 and \
+            sum(data_split) == 1.0, \
+            'Invalid split proportions: {}'.format(data_split)
+
         if use_genetic:
             self._logger.log(
                 'info',
@@ -235,7 +271,7 @@ class Server:
             )
             params = ecnet.limit_parameters.limit_genetic(
                 self.DataFrame, limit_num, self.vars, population_size,
-                num_generations, self.num_processes, shuffle=shuffle,
+                num_generations, self.__num_processes, shuffle=shuffle,
                 data_split=data_split, logger=self._logger
             )
         else:
@@ -277,6 +313,11 @@ class Server:
         See https://github.com/ecrl/ecabc for ABC source code.
         '''
 
+        assert type(target_score) is (int or float) or target_score is None, \
+            'Invalid target_score type: {}'.format(target_score)
+        assert type(num_iterations) is int, \
+            'Invalid num_iterations type: {}'.format(num_iterations)
+
         hyperparameters = [
             ('float', (0.01, 0.2)),
             ('int', (1000, 25000)),
@@ -290,7 +331,7 @@ class Server:
             tune_hyperparameters,
             print_level=self.log_level[0],
             file_logging=self.log_level[1],
-            processes=self.num_processes
+            processes=self.__num_processes
         )
         abc.num_employers = num_employers
 
@@ -361,6 +402,9 @@ class Server:
             data_split (list): [learn%, valid%, test%] if shuffle == True
         '''
 
+        assert type(validate) is bool, \
+            'Invalid validate type: {}'.type(validate)
+
         if not self.__using_project:
             self._logger.log(
                 'info',
@@ -385,8 +429,8 @@ class Server:
                 call_loc={'call_loc': 'TRAIN'}
             )
 
-            if self.num_processes > 1:
-                train_pool = Pool(processes=self.num_processes)
+            if self.__num_processes > 1:
+                train_pool = Pool(processes=self.__num_processes)
 
             for build in range(self.__num_builds):
                 for node in range(self.__num_nodes):
@@ -397,7 +441,7 @@ class Server:
                             'node_{}'.format(node + 1),
                             'candidate_{}'.format(candidate + 1)
                         )
-                        if self.num_processes > 1:
+                        if self.__num_processes > 1:
                             train_pool.apply(
                                 ecnet.model.train_model,
                                 [
@@ -405,7 +449,7 @@ class Server:
                                     self.__sets,
                                     self.vars,
                                     model_path,
-                                    self.num_processes
+                                    self.__num_processes
                                 ]
                             )
                         else:
@@ -428,7 +472,7 @@ class Server:
                                 shuffle, split=data_split
                             )
 
-            if self.num_processes > 1:
+            if self.__num_processes > 1:
                 train_pool.close()
                 train_pool.join()
 
@@ -704,6 +748,9 @@ class Server:
             numpy array: all data points from the specified set
         '''
 
+        assert dset in ['learn', 'valid', 'train', 'test', None], \
+            'Invalid dset argument: {}'.format(dset)
+
         if dset == 'test':
             return self.__sets.test_x
         elif dset == 'valid':
@@ -739,6 +786,9 @@ class Server:
         Returns:
             numpy array: all data points from the specified set
         '''
+
+        assert dset in ['learn', 'valid', 'train', 'test', None], \
+            'Invalid dset argument: {}'.format(dset)
 
         if dset == 'test':
             return self.__sets.test_y
@@ -820,6 +870,9 @@ class Server:
         Returns:
             float: calculated error
         '''
+
+        assert fn in ['rmse', 'mean_abs_error', 'med_abs_error', 'r2'], \
+            'Invalid error function: {}'.format(fn)
 
         if fn == 'rmse':
             return ecnet.error_utils.calc_rmse(y_hat, y)
