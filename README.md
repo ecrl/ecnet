@@ -126,7 +126,20 @@ sv.import_data(
     'my_data.csv',
     sort_type='explicit'
 )
+```
 
+You can change all the model configuration variables from your Python script, without having to edit and reopen your configuration .yml file:
+
+```python
+from ecnet.server import Server
+
+sv = Server(config_filename='my_model_configuration.yml')
+
+# Configuration variables are found in the server's 'vars' dictionary
+sv.vars['learning_rate'] = 0.05
+sv.vars['keep_prob'] = 0.75
+sv.vars['hidden_layers'] = [[32, 'relu'], [32, 'relu']]
+sv.vars['validation_max_epochs'] = 10000
 ```
 
 Optimal input dimensionality, i.e. finding a balance between runtime and precision/accuracy, is often beneficial. ECNet has a few tools to help out with this. To limit input dimensionality to a specified number of input parameters, ECNet utilizes an iterative inclusion (add, pair and retain) method and a genetic algorithm:
@@ -160,7 +173,7 @@ sv.limit_input_parameters(
 ```
 
 Optimal hyperparameters are essential for mapping inputs to outputs during neural network
-training. ECNet utilizes an artificial bee colony, ECabc, to optimize hyperparameters such as
+training. ECNet utilizes an artificial bee colony, [ECabc](https://github.com/ecrl/ecabc), to optimize hyperparameters such as
 learning rate, dropout rate, maximum number of epochs during validation training, and the size
 (number of neurons) of each hidden layer.
 
@@ -235,20 +248,6 @@ sv.use_model(dset='test', output_filename='my/test/results.csv')
 #   arguments, and any dset listed above)
 test_errors = sv.calc_error('rmse','r2','mean_abs_error','med_abs_error', dset='test')
 print(test_errors)
-```
-
-You can change all the model configuration variables from your Python script, without having to edit and reopen your configuration .yml file:
-
-```python
-from ecnet.server import Server
-
-sv = Server(config_filename='my_model_configuration.yml')
-
-# Configuration variables are found in the server's 'vars' dictionary
-sv.vars['learning_rate'] = 0.05
-sv.vars['keep_prob'] = 0.75
-sv.vars['hidden_layers'] = [[32, 'relu'], [32, 'relu']]
-sv.vars['validation_max_epochs'] = 10000
 ```
 
 Once you save a project, the .project file can be used at a later time:
