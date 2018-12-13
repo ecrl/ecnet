@@ -200,23 +200,6 @@ class Server:
                     )
                     if not path.exists(folder):
                         makedirs(folder)
-        # if not path.exists(self.__project_name):
-        #     makedirs(self.__project_name)
-        # for build in range(self.__num_builds):
-        #     path_b = path.join(self.__project_name, 'build_{}'
-        #                        .format(build + 1))
-        #     if not path.exists(path_b):
-        #         makedirs(path_b)
-        #     for node in range(self.__num_nodes):
-        #         path_n = path.join(path_b, 'node_{}'.format(node + 1))
-        #         if not path.exists(path_n):
-        #             makedirs(path_n)
-        #         for candidate in range(self.__num_candidates):
-        #             path_c = path.join(
-        #                 path_n, 'candidate_{}'.format(candidate + 1)
-        #             )
-        #             if not exists(path_c):
-        #                 makedirs(path_c)
         self.__using_project = True
         self._logger.log(
             'info',
@@ -251,7 +234,7 @@ class Server:
     def limit_input_parameters(self, limit_num, output_filename=None,
                                use_genetic=False, population_size=500,
                                num_generations=25, shuffle=False,
-                               data_split=[0.65, 0.25, 0.1]):
+                               data_split=None):
         '''Limits the input dimensionality of currently loaded data; default
         method is an iterative inclusion algorithm, options for using a genetic
         algorithm available.
@@ -278,9 +261,10 @@ class Server:
             'Invalid use_genetic type: {}'.format(type(use_genetic))
         assert type(shuffle) is bool, \
             'Invalid shuffle type: {}'.format(type(shuffle))
-        assert type(data_split) is list and len(data_split) == 3 and \
-            sum(data_split) == 1.0, \
-            'Invalid split proportions: {}'.format(data_split)
+        if shuffle:
+            assert type(data_split) is list and len(data_split) == 3 and \
+                sum(data_split) == 1.0, \
+                'Invalid split proportions: {}'.format(data_split)
 
         if use_genetic:
             self._logger.log(
@@ -314,7 +298,7 @@ class Server:
         return params
 
     def tune_hyperparameters(self, target_score=None, num_iterations=50,
-                             num_employers=50):
+                             num_employers=50, shuffle=False, data_split=None):
         '''Tunes the neural network learning hyperparameters (learning_rate,
         validation_max_epochs, dropout_rate, neuron counts for each hidden
         layer) using an artificial bee colony search algorithm
@@ -324,6 +308,9 @@ class Server:
             num_iterations (int): if !target_score, number of iterations to
                 run the colony
             num_employers (int): number of employer bees for the colony
+            shuffle (bool): True == shuffle all data for each bee
+            data_split (list): [learn%, valid%, test%] for splits if shuffle ==
+                True
 
         Returns:
             tuple: (learning_rate, validation_max_epochs, neuron counts)
@@ -336,6 +323,12 @@ class Server:
             'Invalid target_score type: {}'.format(target_score)
         assert type(num_iterations) is int, \
             'Invalid num_iterations type: {}'.format(num_iterations)
+        assert type(shuffle) is bool, \
+            'Invalid shuffle type: {}'.format(type(shuffle))
+        if shuffle:
+            assert type(data_split) is list and len(data_split) == 3 and \
+                sum(data_split) == 1.0, \
+                'Invalid split proportions: {}'.format(data_split)
 
         hyperparameters = [
             ('float', (0.01, 0.2)),
@@ -345,12 +338,27 @@ class Server:
         for _ in range(len(self.vars['hidden_layers'])):
             hyperparameters.append(('int', (8, 32)))
 
+        cost_fn_args = {
+            'DataFrame': self.DataFrame,
+            'packaged_data': self.__sets,
+            'shuffle': shuffle,
+            'data_split': data_split,
+            'num_processes': self.__num_processes,
+            'learning_rate': self.vars['learning_rate'],
+            'dropout_rate': self.vars['dropout_rate'],
+            'hidden_layers': self.vars['hidden_layers'],
+            'input_activation': self.vars['input_activation'],
+            'output_activation': self.vars['output_activation'],
+            'validation_max_epochs': self.vars['validation_max_epochs']
+        }
+
         abc = ABC(
             hyperparameters,
             tune_hyperparameters,
             print_level=self.log_level[0],
             file_logging=self.log_level[1],
-            processes=self.__num_processes
+            processes=self.__num_processes,
+            args=cost_fn_args
         )
         abc.num_employers = num_employers
 
