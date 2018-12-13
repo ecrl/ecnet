@@ -103,19 +103,65 @@ def limit_inputs(parameters, args):
     )
 
 
-# Can I pass data to this? I don't want to have to re-import if I've already
-#   sorted/split
-def tune_hyperparameters(values):
+def tune_hyperparameters(values, args):
     '''Fitness function used by artificial bee colony
 
     Args:
         values (tuple): (learning_rate, validation_max_epochs, dropout_rate,
             hidden_layers)
+        args (dict): various Server variables
 
     Returns:
-        float: mean absolute error
+        float: RMSE
     '''
 
-    return sum(values)
+    learning_rate = values[0]
+    valid_max_epochs = values[1]
+    dropout_rate = values[2]
+    hidden_counts = [h for h in values[3:]]
 
-    # Old method is depricated, new neural network creation method is required
+    if args['shuffle']:
+        args['DataFrame'].shuffle(
+            'all',
+            split=args['data_split']
+        )
+        packaged_data_cf = args['DataFrame'].package_sets()
+    else:
+        packaged_data_cf = args['packaged_data']
+
+    if args['num_processes'] > 1:
+        model = ecnet.model.MultilayerPerceptron(
+            id=current_process()._identity[0] % args[
+                'num_processes'
+            ]
+        )
+    else:
+        model = ecnet.model.MultilayerPerceptron()
+    model.add_layer(
+        len(packaged_data_cf.learn_x[0]),
+        args['input_activation']
+    )
+    for i, h in enumerate(hidden_counts):
+        model.add_layer(
+            h, args['hidden_layers'][i][1]
+        )
+    model.add_layer(
+        len(packaged_data_cf.learn_y[0]),
+        args['output_activation']
+    )
+    model.connect_layers()
+
+    model.fit_validation(
+        learn_input,
+        packaged_data_cf.learn_y,
+        valid_input,
+        packaged_data_cf.valid_y,
+        learning_rate=learning_rate,
+        dropout_rate=dropout_rate,
+        max_epochs=valid_max_epochs
+    )
+
+    return ecnet.error_utils.calc_rmse(
+        model.use(test_input),
+        packaged_data_cf.test_y
+    )
