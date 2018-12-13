@@ -16,6 +16,7 @@ from functools import reduce
 from os import environ, mkdir, path
 from random import uniform
 from multiprocessing import current_process
+from copy import deepcopy
 
 # 3rd party imports
 import tensorflow as tf
@@ -74,19 +75,23 @@ class Layer:
 
 class MultilayerPerceptron:
 
-    def __init__(self, id=0):
+    def __init__(self, save_path=None, id=0):
         '''Neural network (multilayer perceptron) - contains methods for training,
         using, saving and opening neural network models
+
+        Args:
+            save_path (str): if not None, saves model to this path
         '''
 
         assert type(id) is int, 'Invalid id type: {}'.format(id)
 
-        self.__layers = []
         self.__weights = []
         self.__biases = []
-        self.__id = id
-        if not path.isdir('./tmp/'):
-            mkdir('./tmp/')
+        self._layers = []
+        self._id = id
+        if save_path is None:
+            save_path = './tmp/model_{}'.format(id)
+        self._filename = save_path
         reset_default_graph()
 
     def add_layer(self, size, act_fn):
@@ -99,28 +104,28 @@ class MultilayerPerceptron:
                 - 'relu', 'sigmoid', 'softmax' or 'linear'
         '''
 
-        self.__layers.append(Layer(size, act_fn))
+        self._layers.append(Layer(size, act_fn))
 
     def connect_layers(self):
         '''Fully connects each layer added using add_layer()
         '''
 
-        for layer in range(len(self.__layers) - 1):
+        for layer in range(len(self._layers) - 1):
             self.__weights.append(
                 Variable(random_normal([
-                    self.__layers[layer].size,
-                    self.__layers[layer + 1].size
+                    self._layers[layer].size,
+                    self._layers[layer + 1].size
                 ]), name='W_fc{}'.format(layer + 1))
             )
-        for layer in range(1, len(self.__layers)):
+        for layer in range(1, len(self._layers)):
             self.__biases.append(
                 Variable(random_normal([
-                    self.__layers[layer].size
+                    self._layers[layer].size
                 ]), name='B_fc{}'.format(layer))
             )
 
     def fit(self, x_l, y_l, learning_rate=0.1, train_epochs=500,
-            keep_prob=1.0):
+            dropout_rate=0.0):
         '''Fits the neural network model using a set number of training iterations
 
         Args:
@@ -128,24 +133,24 @@ class MultilayerPerceptron:
             y_l (numpy array): training outputs
             learning_rate (float): learning rate during training
             train_epochs (int): number of training iterations
-            keep_prob (float): probability that a neuron is retained (not
-                subjected to dropout)
+            dropout_rate (float): probability that a neuron is randomly
+                dropped from the model during training
         '''
 
         assert type(learning_rate) is float, \
             'Invalid learning_rate type: {}'.format(type(learning_rate))
         assert type(train_epochs) is int, \
             'Invalid train_epochs type: {}'.format(type(train_epochs))
-        assert 0.0 <= keep_prob <= 1.0, \
-            'Invalid keep_prob value: {}'.format(keep_prob)
+        assert 0.0 <= dropout_rate <= 1.0, \
+            'Invalid dropout_rate value: {}'.format(dropout_rate)
 
         if len(y_l) is 0 or len(x_l) is 0:
             raise ValueError('Learning set cannot be empty - check data split')
 
-        x = placeholder('float', [None, self.__layers[0].size])
-        y = placeholder('float', [None, self.__layers[-1].size])
+        x = placeholder('float', [None, self._layers[0].size])
+        y = placeholder('float', [None, self._layers[-1].size])
 
-        pred = self.__feed_forward(x, keep_prob=keep_prob)
+        pred = self.__feed_forward(x, keep_prob=(1.0 - dropout_rate))
         cost = square(y - pred)
         optimizer = train.AdamOptimizer(
             learning_rate=learning_rate
@@ -156,11 +161,11 @@ class MultilayerPerceptron:
             for _ in range(train_epochs):
                 sess.run(optimizer, feed_dict={x: x_l, y: y_l})
             saver = train.Saver()
-            saver.save(sess, './tmp/_m{}/_ckpt'.format(self.__id))
+            saver.save(sess, self._filename)
         sess.close()
 
     def fit_validation(self, x_l, y_l, x_v, y_v, learning_rate=0.1,
-                       max_epochs=10000, keep_prob=1.0):
+                       max_epochs=10000, dropout_rate=0.0):
         '''Fits the neural network model using periodic (every 250 epochs)
         validation; if validation set performance does not improve, training
         stops
@@ -172,16 +177,16 @@ class MultilayerPerceptron:
             y_v (numpy array): validation outputs
             learning_rate (float): learning rate during training
             max_epochs (int): maximum number of training iterations
-            keep_prob (float): probability that a neuron is retained (not
-                subjected to dropout)
+            dropout_rate (float): probability that a neuron is randomly
+                dropped from the model during training
         '''
 
         assert type(learning_rate) is float, \
             'Invalid learning_rate type: {}'.format(type(learning_rate))
         assert type(max_epochs) is int, \
             'Invalid train_epochs type: {}'.format(type(train_epochs))
-        assert 0.0 <= keep_prob <= 1.0, \
-            'Invalid keep_prob value: {}'.format(keep_prob)
+        assert 0.0 <= dropout_rate <= 1.0, \
+            'Invalid dropout_rate value: {}'.format(dropout_rate)
 
         if len(y_l) is 0 or len(x_l) is 0:
             raise ValueError(
@@ -192,10 +197,10 @@ class MultilayerPerceptron:
                 'Validation set cannot be empty - check data split'
             )
 
-        x = placeholder('float', [None, self.__layers[0].size])
-        y = placeholder('float', [None, self.__layers[-1].size])
+        x = placeholder('float', [None, self._layers[0].size])
+        y = placeholder('float', [None, self._layers[-1].size])
 
-        pred = self.__feed_forward(x, keep_prob=keep_prob)
+        pred = self.__feed_forward(x, keep_prob=(1.0 - dropout_rate))
         cost = square(y - pred)
         optimizer = train.AdamOptimizer(
             learning_rate=learning_rate
@@ -222,7 +227,7 @@ class MultilayerPerceptron:
                         break
 
             saver = train.Saver()
-            saver.save(sess, './tmp/_m{}/_ckpt'.format(self.__id))
+            saver.save(sess, self._filename)
         sess.close()
 
     def use(self, x):
@@ -237,12 +242,12 @@ class MultilayerPerceptron:
 
         with Session() as sess:
             saver = train.Saver()
-            saver.restore(sess, './tmp/_m{}/_ckpt'.format(self.__id))
+            saver.restore(sess, self._filename)
             results = self.__feed_forward(x).eval()
         sess.close()
         return results
 
-    def save(self, filepath):
+    def save(self, filepath=None):
         '''Save the neural network for later use; results in a .sess (tensorflow)
         file and a .struct (neural network architecture) file
 
@@ -250,19 +255,15 @@ class MultilayerPerceptron:
             filepath (str): location to save the model
         '''
 
-        assert type(filepath) is str, \
+        assert type(filepath) is (str or None), \
             'Invalid filepath type: {}'.format(filepath)
+        if filepath is None:
+            filepath = self._filename
+        with open('{}.struct'.format(filepath), 'wb') as arch_file:
+            dump(self._layers, arch_file)
+        self.__save_restore(self._filename, filepath)
 
-        with Session() as sess:
-            saver = train.Saver()
-            saver.restore(sess, './tmp/_m{}/_ckpt'.format(self.__id))
-            saver.save(sess, filepath)
-        sess.close()
-        architecture_file = open('{}.struct'.format(filepath), 'wb')
-        dump(self.__layers, architecture_file)
-        architecture_file.close()
-
-    def load(self, filepath):
+    def load(self, filepath, use_arch_file=True):
         '''Load a previously saved neural network
 
         Args:
@@ -271,15 +272,12 @@ class MultilayerPerceptron:
 
         assert type(filepath) is str, \
             'Invalid filepath type: {}'.format(filepath)
-
-        architecture_file = open('{}.struct'.format(filepath), 'rb')
-        self.__layers = load(architecture_file)
-        self.connect_layers()
-        with Session() as sess:
-            saver = train.Saver()
-            saver.restore(sess, filepath)
-            saver.save(sess, './tmp/_m{}/_ckpt'.format(self.__id))
-        sess.close()
+        self._filename = filepath
+        if use_arch_file:
+            with open('{}.struct'.format(self._filename), 'rb') as arch_file:
+                self._layers = load(arch_file)
+                self.connect_layers()
+        self.__save_restore(filepath, self._filename)
 
     def __feed_forward(self, x, keep_prob=1.0):
         '''Private method: feeds data through the neural network, returns output
@@ -295,7 +293,7 @@ class MultilayerPerceptron:
         '''
 
         output = x
-        for idx, layer in enumerate(self.__layers[1:]):
+        for idx, layer in enumerate(self._layers[1:]):
             output = nn.dropout(layer.act_fn(
                 add(matmul(
                     output,
@@ -303,6 +301,21 @@ class MultilayerPerceptron:
                 ), self.__biases[idx])
             ), keep_prob)
         return output
+
+    @staticmethod
+    def __save_restore(old, new):
+        '''Private, static method: resaves model file
+
+        Args:
+            old (str): path to old file
+            new (str): path to new file
+        '''
+
+        with Session() as sess:
+            saver = train.Saver()
+            saver.restore(sess, old)
+            saver.save(sess, new)
+        sess.close()
 
     def __calc_rmse(self, y_hat, y):
         '''Private method: calculates the RMSE of the validation set during
@@ -322,7 +335,7 @@ class MultilayerPerceptron:
             return(nsqrt(((asarray(y_hat) - asarray(y))**2).mean()))
 
 
-def train_model(validate, sets, vars, save_path, total_num_processes):
+def train_model(validate, sets, vars, save_path=None, id=None):
     '''Starts a process to train a neural network
 
     Args:
@@ -330,15 +343,12 @@ def train_model(validate, sets, vars, save_path, total_num_processes):
         sets (PackagedData): object housing learning, validation, test data
         vars (dict): Server model configuration variables
         save_path (str): path to where model is saved
-        total_num_processes (int): number of concurrent processes running
+        id (int): id for the model, optional
     '''
 
-    if total_num_processes > 1:
-        model = MultilayerPerceptron(
-            id=current_process()._identity[0] % total_num_processes
-        )
-    else:
-        model = MultilayerPerceptron()
+    model = MultilayerPerceptron(
+        save_path=save_path
+    )
     model.add_layer(len(sets.learn_x[0]), vars['input_activation'])
     for layer in vars['hidden_layers']:
         model.add_layer(layer[0], layer[1])
@@ -352,7 +362,7 @@ def train_model(validate, sets, vars, save_path, total_num_processes):
             sets.valid_y,
             learning_rate=vars['learning_rate'],
             max_epochs=vars['validation_max_epochs'],
-            keep_prob=vars['keep_prob']
+            dropout_rate=vars['dropout_rate']
         )
     else:
         model.fit(
@@ -360,6 +370,5 @@ def train_model(validate, sets, vars, save_path, total_num_processes):
             sets.learn_y,
             learning_rate=vars['learning_rate'],
             train_epochs=vars['train_epochs'],
-            keep_prob=vars['keep_prob']
+            dropout_rate=vars['dropout_rate']
         )
-    model.save(save_path)
