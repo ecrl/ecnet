@@ -53,8 +53,8 @@ class Server:
         '''
 
         self._logger = ColorLogger(stream_level=log_level)
-        self.log_level = log_level
         self.log_dir = log_dir
+        self.log_level = log_level
         self.num_processes = num_processes
 
         if project_file is not None:
@@ -82,7 +82,7 @@ class Server:
             )
             config_dict = {
                 'learning_rate': 0.1,
-                'keep_prob': 1.0,
+                'dropout_rate': 0.0,
                 'hidden_layers': [
                     [10, 'relu'],
                     [10, 'relu']
@@ -113,14 +113,16 @@ class Server:
         '''
 
         self._logger.stream_level = level
-        self._logger.file_level = level
-        self.__log_level = level
+        if self.log_dir is not None:
+            self._logger.file_level = level
 
     @property
     def log_dir(self):
         '''str or None: log directory, or None to disable file logging
         '''
 
+        if self._logger.file_level == 'disable':
+            return None
         return self._logger.log_dir
 
     @log_dir.setter
@@ -187,17 +189,34 @@ class Server:
         self.__num_builds = num_builds
         self.__num_nodes = num_nodes
         self.__num_candidates = num_candidates
-        if not path.exists(self.__project_name):
-            makedirs(self.__project_name)
         for build in range(self.__num_builds):
-            path_b = path.join(self.__project_name, 'build_{}'
-                               .format(build + 1))
-            if not path.exists(path_b):
-                makedirs(path_b)
             for node in range(self.__num_nodes):
-                path_n = path.join(path_b, 'node_{}'.format(node + 1))
-                if not path.exists(path_n):
-                    makedirs(path_n)
+                for candidate in range(self.__num_candidates):
+                    folder = path.join(
+                        self.__project_name,
+                        'build_{}'.format(build + 1),
+                        'node_{}'.format(node + 1),
+                        'candidate_{}'.format(candidate + 1)
+                    )
+                    if not path.exists(folder):
+                        makedirs(folder)
+        # if not path.exists(self.__project_name):
+        #     makedirs(self.__project_name)
+        # for build in range(self.__num_builds):
+        #     path_b = path.join(self.__project_name, 'build_{}'
+        #                        .format(build + 1))
+        #     if not path.exists(path_b):
+        #         makedirs(path_b)
+        #     for node in range(self.__num_nodes):
+        #         path_n = path.join(path_b, 'node_{}'.format(node + 1))
+        #         if not path.exists(path_n):
+        #             makedirs(path_n)
+        #         for candidate in range(self.__num_candidates):
+        #             path_c = path.join(
+        #                 path_n, 'candidate_{}'.format(candidate + 1)
+        #             )
+        #             if not exists(path_c):
+        #                 makedirs(path_c)
         self.__using_project = True
         self._logger.log(
             'info',
@@ -297,8 +316,8 @@ class Server:
     def tune_hyperparameters(self, target_score=None, num_iterations=50,
                              num_employers=50):
         '''Tunes the neural network learning hyperparameters (learning_rate,
-        validation_max_epochs, keep_prob, neuron counts for each hidden layer)
-        using an artificial bee colony search algorithm
+        validation_max_epochs, dropout_rate, neuron counts for each hidden
+        layer) using an artificial bee colony search algorithm
 
         Args:
             target_score (float or None): fitness required to stop the colony
@@ -307,7 +326,7 @@ class Server:
             num_employers (int): number of employer bees for the colony
 
         Returns:
-            tuple: (learning_rate, validation_max_epochs, neuron count)
+            tuple: (learning_rate, validation_max_epochs, neuron counts)
                 derived from running the colony (also set as current vals)
 
         See https://github.com/ecrl/ecabc for ABC source code.
@@ -359,7 +378,7 @@ class Server:
 
         self.vars['learning_rate'] = new_hyperparameters[0]
         self.vars['validation_max_epochs'] = new_hyperparameters[1]
-        self.vars['keep_prob'] = new_hyperparameters[2]
+        self.vars['dropout_rate'] = new_hyperparameters[2]
         for idx, layer in enumerate(self.vars['hidden_layers'], 3):
             layer[0] = new_hyperparameters[idx]
 
@@ -415,8 +434,7 @@ class Server:
                 validate,
                 self.__sets,
                 self.vars,
-                './tmp/model',
-                1
+                save_path='./tmp/model'
             )
 
         else:
@@ -439,17 +457,17 @@ class Server:
                             self.__project_name,
                             'build_{}'.format(build + 1),
                             'node_{}'.format(node + 1),
-                            'candidate_{}'.format(candidate + 1)
+                            'candidate_{}'.format(candidate + 1),
+                            'model'
                         )
                         if self.__num_processes > 1:
-                            train_pool.apply(
+                            train_pool.apply_async(
                                 ecnet.model.train_model,
                                 [
                                     validate,
                                     self.__sets,
                                     self.vars,
-                                    model_path,
-                                    self.__num_processes
+                                    model_path
                                 ]
                             )
                         else:
@@ -464,8 +482,7 @@ class Server:
                                 validate,
                                 self.__sets,
                                 self.vars,
-                                model_path,
-                                1
+                                save_path=model_path
                             )
                         if shuffle is not None:
                             self.DataFrame.shuffle(
@@ -493,7 +510,8 @@ class Server:
         if not path.exists(
             path.join(self.__project_name, path.join('build_1', path.join(
                         'node_1',
-                        'candidate_1.meta'
+                        'candidate_1',
+                        'model.meta'
             )))
         ):
             raise Exception('Models must be trained first! (train_model())')
@@ -511,21 +529,19 @@ class Server:
         y_vals = self.__determine_y_vals(dset)
 
         for build in range(self.__num_builds):
-            path_b = path.join(
-                self.__project_name, 'build_{}'.format(build + 1)
-            )
             for node in range(self.__num_nodes):
-                path_n = path.join(
-                    path_b, 'node_{}'.format(node + 1)
-                )
                 min_error = None
                 best_candidate = None
                 for candidate in range(self.__num_candidates):
-                    path_t = path.join(
-                        path_n, 'candidate_{}'.format(candidate + 1)
+                    model_path = path.join(
+                        self.__project_name,
+                        'build_{}'.format(build + 1),
+                        'node_{}'.format(node + 1),
+                        'candidate_{}'.format(candidate + 1),
+                        'model'
                     )
-                    model = ecnet.model.MultilayerPerceptron()
-                    model.load(path_t)
+                    model = self.__create_model()
+                    model.load(model_path, use_arch_file=False)
                     error = self.__error_fn(
                         error_fn,
                         model.use(x_vals),
@@ -533,10 +549,16 @@ class Server:
                     )
                     if min_error is None or error < min_error:
                         min_error = error
-                        best_candidate = path_t
-                model = ecnet.model.MultilayerPerceptron()
-                model.load(best_candidate)
-                model.save(path.join(path_n, 'model'))
+                        best_candidate = model_path
+                model = self.__create_model()
+                model.load(best_candidate, use_arch_file=False)
+                model_path = path.join(
+                    self.__project_name,
+                    'build_{}'.format(build + 1),
+                    'node_{}'.format(node + 1),
+                    'model'
+                )
+                model.save(model_path)
 
     def use_model(self, dset=None, output_filename=None):
         '''Uses model(s) to predict for a data set; if using a project, models
@@ -815,6 +837,27 @@ class Server:
         else:
             raise ValueError('Unknown dset argument {}'.format(dset))
 
+    def __create_model(self):
+        '''Private method: Helper function for creating a neural network
+        '''
+
+        model = ecnet.model.MultilayerPerceptron()
+        model.add_layer(
+            self.DataFrame.num_inputs,
+            self.vars['input_activation']
+        )
+        for layer in self.vars['hidden_layers']:
+            model.add_layer(
+                layer[0],
+                layer[1]
+            )
+        model.add_layer(
+            self.DataFrame.num_targets,
+            self.vars['output_activation']
+        )
+        model.connect_layers()
+        return model
+
     def __use(self, dset):
         '''Private method: used to obtain predictions for a set in loaded data
 
@@ -828,8 +871,8 @@ class Server:
 
         x_vals = self.__determine_x_vals(dset)
         if not self.__using_project:
-            model = ecnet.model.MultilayerPerceptron()
-            model.load('./tmp/model')
+            model = self.__create_model()
+            model.load('./tmp/model', use_arch_file=False)
             return [model.use(x_vals)]
         else:
             if not path.exists(path.join(
@@ -847,8 +890,8 @@ class Server:
                         'node_{}'.format(node + 1),
                         'model'
                     )
-                    model = ecnet.model.MultilayerPerceptron()
-                    model.load(model_path)
+                    model = self.__create_model()
+                    model.load(model_path, use_arch_file=False)
                     build_preds.append(model.use(x_vals))
                 ave_build_preds = []
                 for pred in range(len(build_preds[0])):
