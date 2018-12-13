@@ -1,5 +1,6 @@
 ---
 learning_rate: 0.1
+dropout_rate: 0.0
 hidden_layers:
 - - 32
   - relu

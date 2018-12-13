@@ -98,7 +98,7 @@ def limit_iterative_include(DataFrame, limit_num, vars, logger=None):
                 valid_input,
                 packaged_data.valid_y,
                 learning_rate=vars['learning_rate'],
-                keep_prob=vars['keep_prob'],
+                dropout_rate=vars['dropout_rate'],
                 max_epochs=vars['validation_max_epochs']
             )
 
@@ -186,7 +186,7 @@ def limit_genetic(DataFrame, limit_num, vars, population_size, num_generations,
         'data_split': data_split,
         'num_processes': num_processes,
         'learning_rate': vars['learning_rate'],
-        'keep_prob': vars['keep_prob'],
+        'dropout_rate': vars['dropout_rate'],
         'hidden_layers': vars['hidden_layers'],
         'input_activation': vars['input_activation'],
         'output_activation': vars['output_activation'],

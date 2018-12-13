@@ -93,7 +93,7 @@ def limit_inputs(parameters, args):
         valid_input,
         packaged_data_cf.valid_y,
         learning_rate=args['learning_rate'],
-        keep_prob=args['keep_prob'],
+        dropout_rate=args['dropout_rate'],
         max_epochs=args['validation_max_epochs']
     )
 
@@ -109,7 +109,7 @@ def tune_hyperparameters(values):
     '''Fitness function used by artificial bee colony
 
     Args:
-        values (tuple): (learning_rate, validation_max_epochs, keep_prob,
+        values (tuple): (learning_rate, validation_max_epochs, dropout_rate,
             hidden_layers)
 
     Returns:
