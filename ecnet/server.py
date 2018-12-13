@@ -371,16 +371,12 @@ class Server:
         abc.create_employers()
         if target_score is None:
             for _ in range(num_iterations):
-                abc.calc_average()
-                abc.calc_new_positions()
-                abc.check_positions()
+                abc.run_iteration()
         else:
             while True:
-                abc.calc_average()
+                abc.run_iteration()
                 if (abc.best_performer[0] <= target_score):
                     break
-                abc.calc_new_positions()
-                abc.check_positions()
 
         new_hyperparameters = abc.best_performer[1]
 
