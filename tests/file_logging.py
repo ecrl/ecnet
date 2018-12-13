@@ -16,7 +16,7 @@ def test_file_logging():
 
 
 def test_log_level(level):
-    sv = Server(log_level=level)
+    sv = Server(log_level=level, log_dir='./logs')
     sv.import_data('cn_model_v1.0.csv')
     sv.create_project(
         'log_level_test',
@@ -33,6 +33,7 @@ def test_level_setting():
     sv.import_data('cn_model_v1.0.csv')
     sv.tune_hyperparameters(num_iterations=2, num_employers=2)
     sv.log_level = 'debug'
+    sv.log_dir = './logs'
     sv.tune_hyperparameters(num_iterations=2, num_employers=2)
 
 
