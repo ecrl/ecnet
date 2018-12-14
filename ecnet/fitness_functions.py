@@ -103,13 +103,13 @@ def limit_inputs(parameters, args):
     )
 
 
-def tune_hyperparameters(values, args):
+def tune_hyperparameters(values, **kwargs):
     '''Fitness function used by artificial bee colony
 
     Args:
         values (tuple): (learning_rate, validation_max_epochs, dropout_rate,
             hidden_layers)
-        args (dict): various Server variables
+        **kwargs (dict): various Server variables
 
     Returns:
         float: RMSE
@@ -120,18 +120,18 @@ def tune_hyperparameters(values, args):
     dropout_rate = values[2]
     hidden_counts = [h for h in values[3:]]
 
-    if args['shuffle']:
-        args['DataFrame'].shuffle(
+    if kwargs['shuffle']:
+        kwargs['DataFrame'].shuffle(
             'all',
-            split=args['data_split']
+            split=kwargs['data_split']
         )
         packaged_data_cf = args['DataFrame'].package_sets()
     else:
-        packaged_data_cf = args['packaged_data']
+        packaged_data_cf = kwargs['packaged_data']
 
-    if args['num_processes'] > 1:
+    if kwargs['num_processes'] > 1:
         model = ecnet.model.MultilayerPerceptron(
-            id=current_process()._identity[0] % args[
+            id=current_process()._identity[0] % kwargs[
                 'num_processes'
             ]
         )
@@ -139,15 +139,15 @@ def tune_hyperparameters(values, args):
         model = ecnet.model.MultilayerPerceptron()
     model.add_layer(
         len(packaged_data_cf.learn_x[0]),
-        args['input_activation']
+        kwargs['input_activation']
     )
     for i, h in enumerate(hidden_counts):
         model.add_layer(
-            h, args['hidden_layers'][i][1]
+            h, kwargs['hidden_layers'][i][1]
         )
     model.add_layer(
         len(packaged_data_cf.learn_y[0]),
-        args['output_activation']
+        kwargs['output_activation']
     )
     model.connect_layers()
 
