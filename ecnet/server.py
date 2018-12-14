@@ -344,17 +344,14 @@ class Server:
             'shuffle': shuffle,
             'data_split': data_split,
             'num_processes': self.__num_processes,
-            'learning_rate': self.vars['learning_rate'],
-            'dropout_rate': self.vars['dropout_rate'],
             'hidden_layers': self.vars['hidden_layers'],
             'input_activation': self.vars['input_activation'],
-            'output_activation': self.vars['output_activation'],
-            'validation_max_epochs': self.vars['validation_max_epochs']
+            'output_activation': self.vars['output_activation']
         }
 
         abc = ABC(
-            hyperparameters,
             tune_hyperparameters,
+            hyperparameters,
             print_level=self.log_level[0],
             file_logging=self.log_level[1],
             processes=self.__num_processes,

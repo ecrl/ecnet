@@ -152,9 +152,9 @@ def tune_hyperparameters(values, args):
     model.connect_layers()
 
     model.fit_validation(
-        learn_input,
+        packaged_data_cf.learn_x,
         packaged_data_cf.learn_y,
-        valid_input,
+        packaged_data_cf.valid_x,
         packaged_data_cf.valid_y,
         learning_rate=learning_rate,
         dropout_rate=dropout_rate,
@@ -162,6 +162,6 @@ def tune_hyperparameters(values, args):
     )
 
     return ecnet.error_utils.calc_rmse(
-        model.use(test_input),
+        model.use(packaged_data_cf.test_x),
         packaged_data_cf.test_y
     )
