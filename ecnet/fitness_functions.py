@@ -11,6 +11,7 @@
 
 # Stdlib imports
 from multiprocessing import current_process
+from os import mkdir, path
 
 # ECNet imports
 import ecnet.model
@@ -71,10 +72,12 @@ def limit_inputs(parameters, args):
                 test_input[idx_add].append(param_add[0])
 
     if args['num_processes'] > 1:
+        if not path.exists('./tmp/'):
+            mkdir('./tmp/')
         model = ecnet.model.MultilayerPerceptron(
-            id=current_process()._identity[0] % args[
-                'num_processes'
-            ]
+            save_path='./tmp/model_{}/model'.format(
+                current_process()._identity[0] % args['num_processes']
+            )
         )
     else:
         model = ecnet.model.MultilayerPerceptron()
@@ -93,7 +96,7 @@ def limit_inputs(parameters, args):
         valid_input,
         packaged_data_cf.valid_y,
         learning_rate=args['learning_rate'],
-        dropout_rate=args['dropout_rate'],
+        keep_prob=args['keep_prob'],
         max_epochs=args['validation_max_epochs']
     )
 
@@ -107,7 +110,7 @@ def tune_hyperparameters(values, **kwargs):
     '''Fitness function used by artificial bee colony
 
     Args:
-        values (tuple): (learning_rate, validation_max_epochs, dropout_rate,
+        values (tuple): (learning_rate, validation_max_epochs, keep_prob,
             hidden_layers)
         **kwargs (dict): various Server variables
 
@@ -117,7 +120,7 @@ def tune_hyperparameters(values, **kwargs):
 
     learning_rate = values[0]
     valid_max_epochs = values[1]
-    dropout_rate = values[2]
+    keep_prob = values[2]
     hidden_counts = [h for h in values[3:]]
 
     if kwargs['shuffle']:
@@ -130,10 +133,12 @@ def tune_hyperparameters(values, **kwargs):
         packaged_data_cf = kwargs['packaged_data']
 
     if kwargs['num_processes'] > 1:
+        if not path.exists('./tmp/'):
+            mkdir('./tmp/')
         model = ecnet.model.MultilayerPerceptron(
-            id=current_process()._identity[0] % kwargs[
-                'num_processes'
-            ]
+            save_path='./tmp/model_{}/model'.format(
+                current_process()._identity[0] % kwargs['num_processes']
+            )
         )
     else:
         model = ecnet.model.MultilayerPerceptron()
@@ -157,7 +162,7 @@ def tune_hyperparameters(values, **kwargs):
         packaged_data_cf.valid_x,
         packaged_data_cf.valid_y,
         learning_rate=learning_rate,
-        dropout_rate=dropout_rate,
+        keep_prob=keep_prob,
         max_epochs=valid_max_epochs
     )
 
