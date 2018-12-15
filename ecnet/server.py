@@ -58,7 +58,7 @@ class Server:
         self.num_processes = num_processes
 
         if name != 'nt':
-            set_start_method('spawn')
+            set_start_method('spawn', force=True)
 
         if project_file is not None:
             self.__open_project(project_file)
