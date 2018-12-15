@@ -264,10 +264,6 @@ class Server:
             'Invalid use_genetic type: {}'.format(type(use_genetic))
         assert type(shuffle) is bool, \
             'Invalid shuffle type: {}'.format(type(shuffle))
-        if shuffle:
-            assert type(data_split) is list and len(data_split) == 3 and \
-                sum(data_split) == 1.0, \
-                'Invalid split proportions: {}'.format(data_split)
 
         if use_genetic:
             self._logger.log(
@@ -328,10 +324,6 @@ class Server:
             'Invalid num_iterations type: {}'.format(num_iterations)
         assert type(shuffle) is bool, \
             'Invalid shuffle type: {}'.format(type(shuffle))
-        if shuffle:
-            assert type(data_split) is list and len(data_split) == 3 and \
-                sum(data_split) == 1.0, \
-                'Invalid split proportions: {}'.format(data_split)
 
         hyperparameters = [
             ('float', (0.01, 0.2)),

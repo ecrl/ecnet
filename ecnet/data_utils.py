@@ -118,8 +118,14 @@ class DataFrame:
             split (list): [learn%, valid%, test%] if random == True
         '''
 
-        assert type(split) is list and len(split) == 3 and sum(split) == 1.0, \
-            'Invalid split proportions: {}'.format(split)
+        assert type(split) is list, \
+            'Invalid split type: {}'.format(type(split))
+        assert len(split) == 3, \
+            'Invalid split length: {}'.format(len(split))
+        assert int(round(sum(split))) == 1, \
+            'Invalid split proportions: {}, {}'.format(
+                split, int(round(sum(split)))
+            )
 
         self.learn_set = []
         self.valid_set = []
@@ -162,8 +168,14 @@ class DataFrame:
             split (list): [learn%, valid%, test%] for set assignments
         '''
 
-        assert type(split) is list and len(split) == 3 and sum(split) == 1.0, \
-            'Invalid split proportions: {}'.format(split)
+        assert type(split) is list, \
+            'Invalid split type: {}'.format(type(split))
+        assert len(split) == 3, \
+            'Invalid split length: {}'.format(len(split))
+        assert int(round(sum(split))) == 1, \
+            'Invalid split proportions: {}, {}'.format(
+                split, int(round(sum(split)))
+            )
 
         try:
             string_idx = self.string_names.index(sort_string)
@@ -209,8 +221,14 @@ class DataFrame:
             split (list): [learn%, valid%, test%] used for new assignments
         '''
 
-        assert type(split) is list and len(split) == 3 and sum(split) == 1.0, \
-            'Invalid split proportions: {}'.format(split)
+        assert type(split) is list, \
+            'Invalid split type: {}'.format(type(split))
+        assert len(split) == 3, \
+            'Invalid split length: {}'.format(len(split))
+        assert int(round(sum(split))) == 1, \
+            'Invalid split proportions: {}, {}'.format(
+                split, int(round(sum(split)))
+            )
 
         if sets == 'all':
             self.create_sets(random=True, split=split)
