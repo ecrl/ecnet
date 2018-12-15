@@ -2,7 +2,7 @@ hidden_layers:
 - [4, relu]
 - [4, relu]
 input_activation: relu
-dropout_rate: 0.0
+keep_prob: 1.0
 learning_rate: 0.1
 output_activation: linear
 train_epochs: 50

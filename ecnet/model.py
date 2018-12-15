@@ -95,8 +95,7 @@ class MultilayerPerceptron:
         reset_default_graph()
 
     def add_layer(self, size, act_fn):
-        '''
-        Add a layer to the model
+        '''Add a layer to the model
 
         Args:
             size (int): number of neurons in the layer
@@ -125,7 +124,7 @@ class MultilayerPerceptron:
             )
 
     def fit(self, x_l, y_l, learning_rate=0.1, train_epochs=500,
-            dropout_rate=0.0):
+            keep_prob=1.0):
         '''Fits the neural network model using a set number of training iterations
 
         Args:
@@ -133,16 +132,16 @@ class MultilayerPerceptron:
             y_l (numpy array): training outputs
             learning_rate (float): learning rate during training
             train_epochs (int): number of training iterations
-            dropout_rate (float): probability that a neuron is randomly
-                dropped from the model during training
+            keep_prob (float): probability that a neuron is not subject to
+                dropout
         '''
 
         assert type(learning_rate) is float, \
             'Invalid learning_rate type: {}'.format(type(learning_rate))
         assert type(train_epochs) is int, \
             'Invalid train_epochs type: {}'.format(type(train_epochs))
-        assert 0.0 <= dropout_rate <= 1.0, \
-            'Invalid dropout_rate value: {}'.format(dropout_rate)
+        assert 0.0 <= keep_prob <= 1.0, \
+            'Invalid keep_prob value: {}'.format(keep_prob)
 
         if len(y_l) is 0 or len(x_l) is 0:
             raise ValueError('Learning set cannot be empty - check data split')
@@ -150,7 +149,7 @@ class MultilayerPerceptron:
         x = placeholder('float', [None, self._layers[0].size])
         y = placeholder('float', [None, self._layers[-1].size])
 
-        pred = self.__feed_forward(x, keep_prob=(1.0 - dropout_rate))
+        pred = self.__feed_forward(x, keep_prob=keep_prob)
         cost = square(y - pred)
         optimizer = train.AdamOptimizer(
             learning_rate=learning_rate
@@ -165,7 +164,7 @@ class MultilayerPerceptron:
         sess.close()
 
     def fit_validation(self, x_l, y_l, x_v, y_v, learning_rate=0.1,
-                       max_epochs=10000, dropout_rate=0.0):
+                       max_epochs=10000, keep_prob=0.0):
         '''Fits the neural network model using periodic (every 250 epochs)
         validation; if validation set performance does not improve, training
         stops
@@ -177,16 +176,16 @@ class MultilayerPerceptron:
             y_v (numpy array): validation outputs
             learning_rate (float): learning rate during training
             max_epochs (int): maximum number of training iterations
-            dropout_rate (float): probability that a neuron is randomly
-                dropped from the model during training
+            keep_prob (float): probability that a neuron is not subject to
+                dropout
         '''
 
         assert type(learning_rate) is float, \
             'Invalid learning_rate type: {}'.format(type(learning_rate))
         assert type(max_epochs) is int, \
             'Invalid train_epochs type: {}'.format(type(train_epochs))
-        assert 0.0 <= dropout_rate <= 1.0, \
-            'Invalid dropout_rate value: {}'.format(dropout_rate)
+        assert 0.0 <= keep_prob <= 1.0, \
+            'Invalid keep_prob value: {}'.format(keep_prob)
 
         if len(y_l) is 0 or len(x_l) is 0:
             raise ValueError(
@@ -200,7 +199,7 @@ class MultilayerPerceptron:
         x = placeholder('float', [None, self._layers[0].size])
         y = placeholder('float', [None, self._layers[-1].size])
 
-        pred = self.__feed_forward(x, keep_prob=(1.0 - dropout_rate))
+        pred = self.__feed_forward(x, keep_prob=keep_prob)
         cost = square(y - pred)
         optimizer = train.AdamOptimizer(
             learning_rate=learning_rate
@@ -362,7 +361,7 @@ def train_model(validate, sets, vars, save_path=None, id=None):
             sets.valid_y,
             learning_rate=vars['learning_rate'],
             max_epochs=vars['validation_max_epochs'],
-            dropout_rate=vars['dropout_rate']
+            keep_prob=vars['keep_prob']
         )
     else:
         model.fit(
@@ -370,5 +369,5 @@ def train_model(validate, sets, vars, save_path=None, id=None):
             sets.learn_y,
             learning_rate=vars['learning_rate'],
             train_epochs=vars['train_epochs'],
-            dropout_rate=vars['dropout_rate']
+            keep_prob=vars['keep_prob']
         )

@@ -82,7 +82,7 @@ class Server:
             )
             config_dict = {
                 'learning_rate': 0.1,
-                'dropout_rate': 0.0,
+                'keep_prob': 0.0,
                 'hidden_layers': [
                     [10, 'relu'],
                     [10, 'relu']
@@ -300,7 +300,7 @@ class Server:
     def tune_hyperparameters(self, target_score=None, num_iterations=50,
                              num_employers=50, shuffle=False, data_split=None):
         '''Tunes the neural network learning hyperparameters (learning_rate,
-        validation_max_epochs, dropout_rate, neuron counts for each hidden
+        validation_max_epochs, keep_prob, neuron counts for each hidden
         layer) using an artificial bee colony search algorithm
 
         Args:
@@ -379,7 +379,7 @@ class Server:
 
         self.vars['learning_rate'] = new_hyperparameters[0]
         self.vars['validation_max_epochs'] = new_hyperparameters[1]
-        self.vars['dropout_rate'] = new_hyperparameters[2]
+        self.vars['keep_prob'] = new_hyperparameters[2]
         for idx, layer in enumerate(self.vars['hidden_layers'], 3):
             layer[0] = new_hyperparameters[idx]
 
