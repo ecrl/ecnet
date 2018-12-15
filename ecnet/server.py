@@ -11,10 +11,10 @@
 #
 
 # Stdlib imports
-from os import listdir, makedirs, path, walk
+from os import listdir, makedirs, name, path, walk
 from zipfile import ZipFile, ZIP_DEFLATED
 from pickle import dump as pdump, load as pload
-from multiprocessing import Pool
+from multiprocessing import Pool, set_start_method
 from shutil import rmtree
 
 # 3rd party imports
@@ -56,6 +56,9 @@ class Server:
         self.log_dir = log_dir
         self.log_level = log_level
         self.num_processes = num_processes
+
+        if name != 'nt':
+            set_start_method('spawn')
 
         if project_file is not None:
             self.__open_project(project_file)
