@@ -131,10 +131,6 @@ sv.import_data(
 You can change all the model configuration variables from your Python script, without having to edit and reopen your configuration .yml file:
 
 ```python
-from ecnet.server import Server
-
-sv = Server(config_filename='my_model_configuration.yml')
-
 # Configuration variables are found in the server's 'vars' dictionary
 sv.vars['learning_rate'] = 0.05
 sv.vars['keep_prob'] = 0.75
