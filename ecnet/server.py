@@ -237,7 +237,7 @@ class Server:
     def limit_input_parameters(self, limit_num, output_filename=None,
                                use_genetic=False, population_size=500,
                                num_generations=25, shuffle=False,
-                               data_split=None):
+                               data_split=[0.7, 0.2, 0.1]):
         '''Limits the input dimensionality of currently loaded data; default
         method is an iterative inclusion algorithm, options for using a genetic
         algorithm available.
@@ -692,7 +692,8 @@ class Server:
 
         if clean_up:
             rmtree(self.__project_name)
-            rmtree('./tmp/')
+            if path.exists('./tmp/'):
+                rmtree('./tmp/')
 
         self._logger.log(
             'info',

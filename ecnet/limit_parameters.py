@@ -150,7 +150,7 @@ def limit_iterative_include(DataFrame, limit_num, vars, logger=None):
     logger.log(
         'debug',
         'Limited inputs: {}'.format(retained_input_list),
-        call_loc={'call_loc', 'LIMIT'}
+        call_loc={'call_loc': 'LIMIT'}
     )
 
     return retained_input_list
