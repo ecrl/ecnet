@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/error_utils.py
-# v.1.7.0
+# v.2.0.0
 # Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions necessary creating, training, saving, and reusing neural
