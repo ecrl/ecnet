@@ -10,7 +10,7 @@
 **ECNet** is an open source Python package for creating scalable, retrainable and deployable machine learning projects, with a focus on fuel property prediction. An ECNet __project__ is considered a collection of __builds__, and each build is a collection of __nodes__. Nodes are neural networks that have been selected from a pool of candidate neural networks, where the pool's goal is to optimize certain learning criteria (for example, performing optimially on unseen data). Each node contributes a prediction derived from input data, and these predictions are averaged together to calculate the build's final prediction. Using multiple nodes allows a build to learn from a variety of learning and validation sets, which can reduce the build's prediction error. Projects can be saved and reused at a later time allowing additional training and deployable predictive models. 
 
 Future plans for ECNet include:
-- distributed candidate training GPU's
+- distributed candidate training for GPU's
 - a graphical user interface
 - implementing neural network neuron diagnostics - maybe it's not a black box after all 🤔
 
@@ -131,10 +131,6 @@ sv.import_data(
 You can change all the model configuration variables from your Python script, without having to edit and reopen your configuration .yml file:
 
 ```python
-from ecnet.server import Server
-
-sv = Server(config_filename='my_model_configuration.yml')
-
 # Configuration variables are found in the server's 'vars' dictionary
 sv.vars['learning_rate'] = 0.05
 sv.vars['keep_prob'] = 0.75
