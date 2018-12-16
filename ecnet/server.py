@@ -265,10 +265,14 @@ class Server:
         assert type(shuffle) is bool, \
             'Invalid shuffle type: {}'.format(type(shuffle))
 
+        self._logger.log('debug', 'Limiting input dimensionality to {}'.format(
+            limit_num
+        ), call_loc={'call_loc': 'LIMIT'})
+
         if use_genetic:
             self._logger.log(
                 'info',
-                'Limiting input parameters using a genetic algorithm',
+                'Limiting input dimensionality using a genetic algorithm',
                 call_loc={'call_loc': 'LIMIT'}
             )
             params = ecnet.limit_parameters.limit_genetic(
@@ -279,7 +283,7 @@ class Server:
         else:
             self._logger.log(
                 'info',
-                'Limiting input parameters using iterative inclusion',
+                'Limiting input dimensionality using iterative inclusion',
                 call_loc={'call_loc': 'LIMIT'}
             )
             params = ecnet.limit_parameters.limit_iterative_include(
