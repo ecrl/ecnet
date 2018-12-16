@@ -10,13 +10,16 @@ if __name__ == '__main__':
     sv.import_data('my_data.csv')
 
     # Limit the input dimensionality to 15, save to 'my_data_limited.csv'
-    sv.limit_input_parameters(15, 'my_data_limited.csv')
+    sv.limit_input_parameters(
+        15,
+        output_filename='my_data_limited.csv'
+    )
 
     # Use this line instead for limiting the input dimensionality using a
     # genetic algorithm
     sv.limit_input_parameters(
         15,
-        'my_data_limited_genetic.csv',
+        output_filename='my_data_limited_genetic.csv',
         use_genetic=True,
         population_size=50,
         num_generations=20
