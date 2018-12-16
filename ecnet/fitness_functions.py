@@ -128,7 +128,7 @@ def tune_hyperparameters(values, **kwargs):
             'all',
             split=kwargs['data_split']
         )
-        packaged_data_cf = args['DataFrame'].package_sets()
+        packaged_data_cf = kwargs['DataFrame'].package_sets()
     else:
         packaged_data_cf = kwargs['packaged_data']
 
