@@ -522,7 +522,7 @@ class Server:
             )
         self._logger.log(
             'info',
-            'Selecting best models from each mode for each build',
+            'Selecting best models from each node for each build',
             call_loc={'call_loc': 'SELECTION'}
         )
         x_vals = self.__determine_x_vals(dset)
