@@ -3,4 +3,4 @@ import ecnet.data_utils
 import ecnet.error_utils
 import ecnet.model
 import ecnet.limit_parameters
-__version__ = '1.6.0'
+__version__ = '2.0.0'

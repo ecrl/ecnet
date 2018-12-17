@@ -10,7 +10,7 @@
 **ECNet** is an open source Python package for creating scalable, retrainable and deployable machine learning projects, with a focus on fuel property prediction. An ECNet __project__ is considered a collection of __builds__, and each build is a collection of __nodes__. Nodes are neural networks that have been selected from a pool of candidate neural networks, where the pool's goal is to optimize certain learning criteria (for example, performing optimially on unseen data). Each node contributes a prediction derived from input data, and these predictions are averaged together to calculate the build's final prediction. Using multiple nodes allows a build to learn from a variety of learning and validation sets, which can reduce the build's prediction error. Projects can be saved and reused at a later time allowing additional training and deployable predictive models. 
 
 Future plans for ECNet include:
-- distributed candidate training for both CPU and GPU
+- distributed candidate training for GPU's
 - a graphical user interface
 - implementing neural network neuron diagnostics - maybe it's not a black box after all 🤔
 
@@ -52,6 +52,7 @@ Here is a configuration .yml file we use for cetane number predictions:
 ```yml
 ---
 learning_rate: 0.1
+keep_prob: 1.0
 hidden_layers:
 - - 32
   - relu
@@ -65,6 +66,7 @@ validation_max_epochs: 10000
 
 Here are brief explanations of each of these variables:
 - **learning_rate**: value passed to the AdamOptimizer to use as its learning rate during training
+- **keep_prob**: probability that a neuron in the hidden layers is not subjected to dropout
 - **hidden_layers**: *[[num_neurons_0, layer_type_0],...,[num_neurons_n, layer_type_n]]*: the architecture of the neural network between input and output layers
 	- Rectified linear unit (**'relu'**), **'sigmoid'**, **'softmax'** and **'linear'** *layer_type*s are currently supported
 - **input_activation**: the layer type of the input layer: number of nodes is determined by input data dimensionality
@@ -76,21 +78,119 @@ Here are brief explanations of each of these variables:
 
 To get started, create a Python script to handle your task and copy an ECNet-formatted CSV database file to your working directory. The Server object will create a default configuration file if an existing one is not specified or found. Example scripts, configuration files, and databases are provided ([examples/config](https://github.com/TJKessler/ECNet/tree/master/examples), [databases](https://github.com/TJKessler/ECNet/tree/master/databases)).
 
-Here is a script for creating a project, importing data, training neural networks, selecting the best neural networks from each build's nodes, grabbing results and errors for the test set, and saving the project. Outlined are a few ways each method can be called:
+Your first steps are importing the Server object, initializing the Server and importing some data:
 
 ```python
 from ecnet import Server
 
-# Create server object with configuration file 'my_model_configuration.yml' (default config will be
-# generated if the file does not already exist)
+# Initialize a Server
+sv = Server()
+
+# If 'config.yml' does not already exist in your working directory, it will be created with
+#   default values; to specify another configuration file, use the config_filename argument
 sv = Server(config_filename='my_model_configuration.yml')
 
-# By default, the Server will log build/selection progress to the console and a log file in a local
-# "Logs" directory. To turn off logging, specify it in the Server initialization
-sv = Server(config_filename='my_model_configuration.yml', log_progress=False)
+# By default, the Server will log build/selection progress to the console. To disable logging,
+#   set the "log_level" argument to 'disable':
+sv = Server(config_filename='my_model_configuration.yml', log_level='disable')
 
-# Create a project 'my_project', with 10 builds, 5 nodes/build, 75 candidates/node
-# If a project is not created, only one neural network will be created when train_model() is called
+# You can set the log level to 'disable', 'debug', 'info', 'warn', 'error', 'crit'; the level
+#   is set to info by default
+sv.log_level = 'debug'
+
+# If file logging is desired, you can specify a directory to save your logs:
+sv = Server(config_filename='my_model_configuration.yml', log_dir='path/to/my/log/directory')
+
+# File logging is disabled until a log_dir is supplied; you can disable file logging with:
+sv.log_dir = None
+
+# Or change the directory:
+sv.log_dir = 'path/to/my/new/log/directory'
+
+# You can utilize parallel processing (multiprocessing) for model construction, input parameter
+#   tuning and hyperparameter optimization:
+sv = Server(config_filename='my_model_configuration.yml', num_processes=4)
+sv.num_processes = 8
+
+# Import an ECNet-formatted CSV database, randomly assign data set assignments (proportions of
+#   70% learn, 20% validation, 10% test)
+sv.import_data(
+    'my_data.csv',
+    sort_type='random',
+    data_split=[0.7, 0.2, 0.1]
+)
+
+# You can specify set assignments in an ECNet formatted database; to use data set assignments
+#   specified in the input database, set the sort_type argument to 'explicit'
+sv.import_data(
+    'my_data.csv',
+    sort_type='explicit'
+)
+```
+
+You can change all the model configuration variables from your Python script, without having to edit and reopen your configuration .yml file:
+
+```python
+# Configuration variables are found in the server's 'vars' dictionary
+sv.vars['learning_rate'] = 0.05
+sv.vars['keep_prob'] = 0.75
+sv.vars['hidden_layers'] = [[32, 'relu'], [32, 'relu']]
+sv.vars['validation_max_epochs'] = 10000
+```
+
+Optimal input dimensionality, i.e. finding a balance between runtime and precision/accuracy, is often beneficial. ECNet has a few tools to help out with this. To limit input dimensionality to a specified number of input parameters, ECNet utilizes an iterative inclusion (add, pair and retain) method and a genetic algorithm:
+
+```python
+# To limit input dimensionality using iterative inclusion, call limit_input_parameters and
+#   supply a desired dimension
+sv.limit_input_parameters(15)
+
+# You can save an ECNet-formatted database once limiting is complete
+sv.limit_input_parameters(15, output_filename='my_limited_database.csv')
+
+# To limit input dimensionality using a genetic algorithm, supply the use_genetic argument,
+#   the size of the population and the number of generations to run the algorithm for
+sv.limit_input_parameters(
+    15,
+    use_genetic=True,
+    population_size=50,
+    num_generations=10
+)
+
+# You have the option to shuffle learning/validation/testing data for each population member
+sv.limit_input_parameters(
+    15,
+    use_genetic=True,
+    population_size=50,
+    num_generations=10,
+    shuffle=True,
+    data_split=[0.7, 0.2, 0.1]
+)
+```
+
+Optimal hyperparameters are essential for mapping inputs to outputs during neural network
+training. ECNet utilizes an artificial bee colony, [ECabc](https://github.com/ecrl/ecabc), to optimize hyperparameters such as
+learning rate, dropout rate, maximum number of epochs during validation training, and the size
+(number of neurons) of each hidden layer.
+
+
+```python
+# Tune hyperparameters for 50 iterations (bee cycles) with 50 employer bees
+sv.tune_hyperparameters(num_iterations=50, num_employers=50)
+
+# The fitness function handed to the bees calculates mean absolute error; you can halt tuning
+#   if the mean absolute error falls below a specified threshold
+sv.tune_hyperparameters(target_score='2.5', num_employers=50)
+```
+
+ECNet is able to create an ensemble of neural networks (candidates chosen from nodes) to
+predict for a final model (build). A runtime with multiple builds/nodes/candidates is called
+a project. Projects can be saved and used at a later time.
+
+
+```python
+# Create a project 'my_project' with 10 builds, 5 nodes/build, and 75 candidates/node; if this
+#   method is not called, only one neural network will be created during training
 sv.create_project(
     'my_project',
     num_builds=10,
@@ -98,92 +198,70 @@ sv.create_project(
     num_candidates=75,
 )
 
-# Import an ECNet-formatted CSV database, randomly assign data set assignments (proportions of 70%
-# learn, 20% validation, 10% test)
-sv.import_data(
-    'my_data.csv',
-    sort_type='random',
-    data_split=[0.7, 0.2, 0.1]
-)
-
-# To use data set assignments specified in the input database, set the sort_type argument to 'explicit'
-sv.import_data(
-    'my_data.csv',
-    sort_type='explicit'
-)
-
-# Trains neural network candidates for all nodes using periodic validation, shuffling learn and validate sets for
-# each candidate
-sv.train_model(
-    validate=True,
-    shuffle='lv',
-    data_split=[0.7, 0.2, 0.1]
-)
-
-# To avoid shuffling for each candidate, omit the shuffle variable (defaults to None)
-sv.train_model(validate=True)
-
-# If periodic validation (determines when to stop training) is not required, omit the validate variable (defaults
-# to False)
+# Train neural networks using the number of epochs in your configuration file
 sv.train_model()
 
-# Select best neural network from each build's nodes (based on test set performance) to predict for the node
-# Models can be selected based on 'test', 'learn', 'valid' and 'train' (learning and validation) sets,
-# or None (selects based on performance of all sets)
+# To use periodic validation (training halts when validation set performance stops improving),
+#   supply the validate argument
+sv.train_model(validate=True)
+
+# We can shuffle either 'train' (learning and validation) or 'all' sets with the shuffle
+#   argument and a data split
+sv.train_model(
+    validation=True,
+    shuffle='train',
+    data_split=[0.7, 0.2, 0.1]
+)
+
+# If you are using a project, select the best performing neural networks based on test set
+#   performance
 sv.select_best(dset='test')
 
-# Predict values for the test data set
-# Results can be obtained from 'test', 'learn', 'valid' and 'train' (learning and validation) sets,
-# or None (obtains results for all sets)
-test_results = sv.use_model(dset='test')	
+# You can select based on 'learn', 'valid', 'train', 'test' or None (all) set performances
+sv.select_best(dset='train')
 
-# Output results to specified file
-sv.save_results(results=test_results, filename='my_results.csv')	
-
-# Calculates errors for the test set (any combination of these error functions can be supplied as arguments)
-test_errors = sv.calc_error('rmse','r2','mean_abs_error','med_abs_error', dset='test')
-print(test_errors)
-
-# Save the project to a .project file, removing candidate neural networks not selected via select_best()
+# Save your project
 sv.save_project()
 
-# To retain candidate neural networks, set the clean_up argument to False
-sv.save_project(clean_up=False)
+# You can save it with a name other than the one assigned
+sv.save_project(filename='path/to/my/save.prj')
 
+# A project will have a folder structure with all your neural networks in your working directory;
+#   if your script is complete and you are done with the project, you can remove it (don't use
+#   this if you want to use the models in the same script!)
+sv.save_project(clean_up=True)
+
+# Predict values for the test data set
+test_results = sv.use_model(dset='test')
+
+# You can predict for 'learn', 'valid', 'train', 'test', or None (all) sets
+test_results = sv.use_model(dset='train')
+
+# If you want to save these results to a CSV file, supply the output_filename argument
+sv.use_model(dset='test', output_filename='my/test/results.csv')
+
+# Calculates errors for the test set (any combination of these error functions can be supplied as
+#   arguments, and any dset listed above)
+test_errors = sv.calc_error('rmse','r2','mean_abs_error','med_abs_error', dset='test')
+print(test_errors)
 ```
 
-You can change all the model configuration variables from your Python script, without having to edit and reopen your configuration .yml file:
-
-```python
-from ecnet.server import Server
-
-sv = Server(config_filename='my_model_configuration.yml')
-
-# Configuration variables are found in the server's 'vars' dictionary
-sv.vars['learning_rate'] = 0.05
-sv.vars['hidden_layers'] = [[32, 'relu'], [32, 'relu']]
-sv.vars['validation_max_epochs'] = 10000
-```
-
-Once you save a project, the .project file can be used at a later time:
+Once you save a project, the .prj file can be used at a later time:
 
 ```python
 from ecnet.server import Server
 
 # Specify a 'project_file' argument to open a preexisting project
-sv = Server(project_file='my_project.project')
+sv = Server(project_file='my_project.prj')
 
 # Open an ECNet database with new data
 sv.import_data('new_data.csv')
 
 # Save results to output file
 #  - NOTE: no 'dset' argument for 'use_model' defaults to using all currently loaded data
-sv.save_results(
-    results=sv.use_model(),
-    filename='new_data_results.csv'
-)
+sv.use_model(output_filename='my/new/test/results.csv')
 ```
-To view more examples of common ECNet tasks such as hyperparameter optimization and input dimensionality reduction, view the [examples](https://github.com/TJKessler/ECNet/tree/master/examples) directory. For additional documentation on Server methods view the README in the [ecnet](https://github.com/tjkessler/ecnet/tree/master/ecnet) directory.
+To view more examples of common ECNet tasks such as hyperparameter optimization and input dimensionality reduction, view the [examples](https://github.com/tjKessler/ecnet/tree/master/examples) directory. For additional documentation on Server methods and lower-level usage view the README in the [ecnet](https://github.com/tjkessler/ecnet/tree/master/ecnet) directory.
 
 # Database Format:
 
