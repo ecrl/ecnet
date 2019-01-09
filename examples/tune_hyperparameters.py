@@ -10,13 +10,13 @@ if __name__ == '__main__':
     sv.create_project('my_project')
 
     # Import data (change 'my_data.csv' to your database name)
-    sv.import_data('my_data.csv')
+    sv.import_data('db_template.csv')
 
     # Tune neural network hyperparemters (learning rate, maximum
     # training epochs during validation, number of neurons in
     # each hidden layer)
-    hp = sv.tune_hyperparameters()
-
+    hp = sv.tune_hyperparameters_abc()
+    
     # Print the tuned hyperparameters
     print(hp)
 

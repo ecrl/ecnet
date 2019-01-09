@@ -300,7 +300,7 @@ class Server:
             )
         return params
 
-    def tune_hyperparameters(self, target_score=None, num_iterations=50,
+    def tune_hyperparameters_abc(self, target_score=None, num_iterations=50,
                              num_employers=50, shuffle=False, data_split=None):
         '''Tunes the neural network learning hyperparameters (learning_rate,
         validation_max_epochs, keep_prob, neuron counts for each hidden
