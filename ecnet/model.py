@@ -19,7 +19,6 @@ from multiprocessing import current_process
 from copy import deepcopy
 
 # 3rd party imports
-import tensorflow as tf
 from tensorflow import add, global_variables_initializer, matmul, nn
 from tensorflow import placeholder, random_normal, reset_default_graph
 from tensorflow import Session, square, train, Variable
