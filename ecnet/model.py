@@ -164,7 +164,7 @@ class MultilayerPerceptron:
         sess.close()
 
     def fit_validation(self, x_l, y_l, x_v, y_v, learning_rate=0.1,
-                       max_epochs=10000, keep_prob=0.0):
+                       max_epochs=10000, keep_prob=1.0):
         '''Fits the neural network model using periodic (every 250 epochs)
         validation; if validation set performance does not improve, training
         stops
