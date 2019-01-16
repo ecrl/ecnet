@@ -8,30 +8,22 @@
 
 from argparse import ArgumentParser
 from csv import DictReader, DictWriter
-from sys import exit, argv
-
-try:
-    from pubchempy import get_compounds
-except ImportError:
-    print('Error: PubChemPy is not installed!')
-    print('Use `pip install pubchempy`')
-    exit([1])
+from sys import argv
+from pubchempy import get_compounds
 
 
-def get_names(csv_file, column_name):
-    '''Reads molecule names from supplied CSV file
+def get_names(names_file):
+    '''Reads molecule names from supplied .txt file
 
     Args:
-        csv_file (str): path to CSV file
-        column_name (str): column header for names
+        names_file (str): path to .txt file
 
     Returns:
         list: list of names, strings
     '''
 
-    with open(csv_file, 'r', encoding='utf-8') as file:
-        reader = DictReader(file)
-        return [row[column_name] for row in reader]
+    with open(names_file, 'r') as txt_file:
+        return txt_file.read().split('\n')
 
 
 def get_smiles(names):
@@ -99,7 +91,7 @@ def parse_args():
     ap.add_argument(
         'input_file',
         type=str,
-        help='Path to CSV file with molecule names'
+        help='Path to TXT file with molecule names'
     )
     ap.add_argument(
         '--output_file',
@@ -110,7 +102,7 @@ def parse_args():
     ap.add_argument(
         '--names_header',
         type=str,
-        help='Header for molecule names column',
+        help='Header for molecule names column of output file',
         default='Compound Name'
     )
     ap.add_argument(
@@ -126,7 +118,7 @@ def parse_args():
 def main(args):
     '''Run from command line'''
 
-    names = get_names(args['input_file'], args['names_header'])
+    names = get_names(args['input_file'])
     smiles = get_smiles(names)
     if args['output_file'] is None:
         args['output_file'] = args['input_file'].replace(
