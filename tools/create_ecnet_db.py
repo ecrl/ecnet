@@ -67,9 +67,10 @@ def parse_args():
     )
     ap.add_argument(
         '--clean_up',
-        type=bool,
+        type=str,
         help='If True, cleans up all temporary files created when processing',
-        default=True
+        default='True',
+        choices=['True', 'False']
     )
     return vars(ap.parse_args(argv[1:]))
 
@@ -102,9 +103,12 @@ def main(args):
             smi_file.write('{}\n'.format(mol[1]))
     molecules = smiles_to_qspr.get_descriptors(
         args['smiles_file'],
+        padel_path=args['padel_path'],
+        model_file=args['model_file'],
+        descriptors_file=args['descriptors_file'],
         clean_up=args['clean_up']
     )
-    if args['clean_up']:
+    if args['clean_up'] == 'True':
         remove(args['smiles_file'])
 
     # Create ECNet-formatted database

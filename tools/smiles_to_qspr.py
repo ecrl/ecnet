@@ -13,7 +13,7 @@ from shutil import which
 from argparse import ArgumentParser
 from sys import argv
 from subprocess import check_output
-from csv import DictReader, DictWriter
+from csv import reader, DictWriter
 import pybel
 
 # Default path is ..\PaDEL-Descriptor\PaDEL-Descriptor.jar
@@ -93,16 +93,14 @@ def get_descriptors(smiles_file, padel_path=_PADEL_PATH,
         smiles_strings = smi_file.read().split('\n')
     molecules = []
     with open(descriptors_file, 'r', encoding='utf-8') as csv_file:
-        reader = DictReader(csv_file)
-        fieldnames = reader.fieldnames
-        fieldnames.remove('Name')
-        for idx, row in enumerate(reader):
-            mol_dict = {}
-            mol_dict['SMILES'] = smiles_strings[idx]
-            for fn in fieldnames:
-                mol_dict[fn] = row[fn]
+        rows = list(reader(csv_file))
+        fieldnames = rows[0][1:]
+        for sidx, row in enumerate(rows[1:]):
+            mol_dict = {'SMILES': smiles_strings[sidx]}
+            for idx, cell in enumerate(row[1:]):
+                mol_dict[fieldnames[idx]] = cell
             molecules.append(mol_dict)
-    if clean_up:
+    if clean_up == 'True':
         remove(model_file)
         remove(descriptors_file)
     return molecules
@@ -177,9 +175,10 @@ def parse_args():
     )
     ap.add_argument(
         '--clean_up',
-        type=bool,
-        help='If true, cleans up temporary files',
-        default=True
+        type=str,
+        help='If True, cleans up temporary files',
+        default='True',
+        choices=['True', 'False']
     )
     return vars(ap.parse_args(argv[1:]))
 
