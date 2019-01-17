@@ -115,6 +115,16 @@ def main(args):
     print('Saving database: {}'.format(args['output_file']))
     fieldnames = sorted(list(molecules[0].keys()))
     fieldnames.remove('SMILES')
+    valid_fieldnames = []
+    for fn in fieldnames:
+        is_valid = True
+        for mol in molecules:
+            if mol[fn] == '' or mol[fn] is None:
+                is_valid = False
+                break
+        if is_valid:
+            valid_fieldnames.append(fn)
+    fieldnames = valid_fieldnames
     rows = []
     type_row = ['DATAID', 'ASSIGNMENT', 'STRING', 'STRING', 'TARGET']
     type_row.extend(['INPUT' for _ in range(len(fieldnames))])
