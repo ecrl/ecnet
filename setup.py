@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='ecnet',
-    version='2.0.0',
+    version='2.0.1',
     description='UMass Lowell Energy and Combustion Research Laboratory Neural Network Software',
     url='http://github.com/tjkessler/ecnet',
     author='Travis Kessler, Hernan Gelaf-Romer, Sanskriti Sharma',

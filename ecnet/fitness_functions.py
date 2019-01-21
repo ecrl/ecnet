@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/fitness_functions.py
-# v.2.0.0
+# v.2.0.1
 # Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains fitness functions used for input dimensionality reduction,
