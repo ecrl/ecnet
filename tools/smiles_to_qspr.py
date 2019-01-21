@@ -14,7 +14,6 @@ from argparse import ArgumentParser
 from sys import argv
 from subprocess import check_output
 from csv import reader, DictWriter
-import pybel
 
 # Default path is ..\PaDEL-Descriptor\PaDEL-Descriptor.jar
 _PADEL_PATH = join(
