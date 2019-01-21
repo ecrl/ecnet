@@ -11,9 +11,9 @@ for Dragon Software too!) - we have included a distributed version of PaDEL-Desc
 
 All source files in this directory are required to create a database, and must exist next to each other in your current working
 directory:
-- create_ecnet_db.py (aggregates SMILES, QSPR descriptors for database creation)
-- name_to_smiles.py (uses PubChemPy to obtain SMILES strings for supplied molecule names)
-- smiles_to_qspr.py (generates QSPR descriptors from SMILES strings using Open Babel and PaDEL-Descriptor)
+- **create_ecnet_db.py** (aggregates SMILES, QSPR descriptors for database creation)
+- **name_to_smiles.py** (uses PubChemPy to obtain SMILES strings for supplied molecule names)
+- **smiles_to_qspr.py** (generates QSPR descriptors from SMILES strings using Open Babel and PaDEL-Descriptor)
 
 You also need a .txt file populated with molecule names, one per line:
 ```
