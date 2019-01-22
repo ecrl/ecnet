@@ -66,7 +66,7 @@ Your database's DATAID column (essentially Bates numbers for each molecule) will
 To include a prefix for your molecule ID's, supply the "--id-prefix" argument:
 
 ```console
-foo@bar:~$ python create_ecnet_db.py molecules.txt my_database.csv --experimental_vals targets.txt --id-prefix MOL
+foo@bar:~$ python create_ecnet_db.py molecules.txt my_database.csv --experimental_vals targets.txt --id_prefix MOL
 ```
 
 | DATAID 	    |
