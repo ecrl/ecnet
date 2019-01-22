@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/server.py
-# v.2.0.0
+# v.2.0.1
 # Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "Server" class, which handles ECNet project creation, neural
@@ -227,7 +227,7 @@ class Server:
             self.DataFrame.create_sets(random=False)
         else:
             raise ValueError('Invalid sort_type {}'.format(sort_type))
-        self.__sets = self.DataFrame.package_sets()
+        self._sets = self.DataFrame.package_sets()
         self._logger.log(
             'info',
             'Imported data from {}'.format(data_filename),
@@ -290,7 +290,7 @@ class Server:
                 self.DataFrame, limit_num, self.vars, logger=self._logger
             )
         self.DataFrame.set_inputs(params)
-        self.__sets = self.DataFrame.package_sets()
+        self._sets = self.DataFrame.package_sets()
         if output_filename is not None:
             self.DataFrame.save(output_filename)
             self._logger.log(
@@ -339,7 +339,7 @@ class Server:
 
         cost_fn_args = {
             'DataFrame': self.DataFrame,
-            'packaged_data': self.__sets,
+            'packaged_data': self._sets,
             'shuffle': shuffle,
             'data_split': data_split,
             'num_processes': self.__num_processes,
@@ -432,7 +432,7 @@ class Server:
             )
             ecnet.model.train_model(
                 validate,
-                self.__sets,
+                self._sets,
                 self.vars,
                 save_path='./tmp/model'
             )
@@ -465,7 +465,7 @@ class Server:
                                 ecnet.model.train_model,
                                 [
                                     validate,
-                                    self.__sets,
+                                    self._sets,
                                     self.vars,
                                     model_path
                                 ]
@@ -480,7 +480,7 @@ class Server:
                             )
                             ecnet.model.train_model(
                                 validate,
-                                self.__sets,
+                                self._sets,
                                 self.vars,
                                 save_path=model_path
                             )
@@ -488,6 +488,7 @@ class Server:
                             self.DataFrame.shuffle(
                                 shuffle, split=data_split
                             )
+                            self._sets = self.DataFrame.package_sets()
 
             if self.__num_processes > 1:
                 train_pool.close()
@@ -752,7 +753,7 @@ class Server:
             self.DataFrame = pload(data_file)
         data_file.close()
 
-        self.__sets = self.DataFrame.package_sets()
+        self._sets = self.DataFrame.package_sets()
         self.__using_project = True
         self._logger.log(
             'info',
@@ -775,26 +776,19 @@ class Server:
             'Invalid dset argument: {}'.format(dset)
 
         if dset == 'test':
-            return self.__sets.test_x
+            return self._sets.test_x
         elif dset == 'valid':
-            return self.__sets.valid_x
+            return self._sets.valid_x
         elif dset == 'learn':
-            return self.__sets.learn_x
+            return self._sets.learn_x
         elif dset == 'train':
-            x_vals = []
-            for val in self.__sets.learn_x:
-                x_vals.append(val)
-            for val in self.__sets.valid_x:
-                x_vals.append(val)
+            x_vals = [val for val in self._sets.learn_x]
+            x_vals.extend([val for val in self._sets.valid_x])
             return asarray(x_vals)
         elif dset is None:
-            x_vals = []
-            for val in self.__sets.learn_x:
-                x_vals.append(val)
-            for val in self.__sets.valid_x:
-                x_vals.append(val)
-            for val in self.__sets.test_x:
-                x_vals.append(val)
+            x_vals = [val for val in self._sets.learn_x]
+            x_vals.extend([val for val in self._sets.valid_x])
+            x_vals.extend([val for val in self._sets.test_x])
             return asarray(x_vals)
         else:
             raise ValueError('Unknown dset argument {}'.format(dset))
@@ -814,26 +808,19 @@ class Server:
             'Invalid dset argument: {}'.format(dset)
 
         if dset == 'test':
-            return self.__sets.test_y
+            return self._sets.test_y
         elif dset == 'valid':
-            return self.__sets.valid_y
+            return self._sets.valid_y
         elif dset == 'learn':
-            return self.__sets.learn_y
+            return self._sets.learn_y
         elif dset == 'train':
-            y_vals = []
-            for val in self.__sets.learn_y:
-                y_vals.append(val)
-            for val in self.__sets.valid_y:
-                y_vals.append(val)
+            y_vals = [val for val in self._sets.learn_y]
+            y_vals.extend([val for val in self._sets.valid_y])
             return asarray(y_vals)
         elif dset is None:
-            y_vals = []
-            for val in self.__sets.learn_y:
-                y_vals.append(val)
-            for val in self.__sets.valid_y:
-                y_vals.append(val)
-            for val in self.__sets.test_y:
-                y_vals.append(val)
+            y_vals = [val for val in self._sets.learn_y]
+            y_vals.extend([val for val in self._sets.valid_y])
+            y_vals.extend([val for val in self._sets.test_y])
             return asarray(y_vals)
         else:
             raise ValueError('Unknown dset argument {}'.format(dset))

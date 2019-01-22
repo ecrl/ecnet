@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/error_utils.py
-# v.2.0.0
+# v.2.0.1
 # Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions necessary creating, training, saving, and reusing neural
@@ -19,7 +19,6 @@ from multiprocessing import current_process
 from copy import deepcopy
 
 # 3rd party imports
-import tensorflow as tf
 from tensorflow import add, global_variables_initializer, matmul, nn
 from tensorflow import placeholder, random_normal, reset_default_graph
 from tensorflow import Session, square, train, Variable
@@ -164,7 +163,7 @@ class MultilayerPerceptron:
         sess.close()
 
     def fit_validation(self, x_l, y_l, x_v, y_v, learning_rate=0.1,
-                       max_epochs=10000, keep_prob=0.0):
+                       max_epochs=10000, keep_prob=1.0):
         '''Fits the neural network model using periodic (every 250 epochs)
         validation; if validation set performance does not improve, training
         stops
