@@ -69,7 +69,7 @@ def create_db(input_txt, output_name, id_prefix='', targets=None, form='name',
 
     rows = []
     type_row = ['DATAID', 'ASSIGNMENT', 'STRING', 'STRING', 'TARGET']
-    type_row.extend(['INPUT' for _ in range(len(desc[0]))])
+    type_row.extend(['INPUT' for _ in range(len(desc_keys))])
     title_row = ['DATAID', 'ASSIGNMENT', 'Compound Name', 'SMILES', 'Target']
     title_row.extend(desc_keys)
     rows.append(type_row)
@@ -204,3 +204,14 @@ def mdl_to_descriptors(mdl_file, descriptors_csv):
     with open(descriptors_csv, 'r', encoding='utf-8') as desc_file:
         reader = DictReader(desc_file)
         return [row for row in reader]
+
+
+if __name__ == '__main__':
+
+    create_db(
+        'cp_mols.txt',
+        'cp_model_v1.0_full.csv',
+        targets='cp_targets.txt',
+        id_prefix='UMLCP',
+        form='smiles'
+    )
