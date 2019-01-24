@@ -13,11 +13,12 @@ setup(
     license='MIT',
     packages=find_packages(),
     install_requires=[
-        'pyyaml',
-        'ecabc',
-        'pygenetics',
         'colorlogging',
+        'ecabc',
         'numpy',
+        'pubchempy',
+        'pygenetics',
+        'pyyaml',
         'tensorflow'
     ],
     package_data={
