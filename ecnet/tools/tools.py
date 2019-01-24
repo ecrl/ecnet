@@ -1,13 +1,27 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# ecnet/tools/tools.py
+# v.2.0.1
+# Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
+#
+# Contains various tools for database creation, MDL file creation, QSPR
+# descriptor calculation
+#
+
+# Stdlib imports
+from copy import deepcopy
 from csv import writer, QUOTE_ALL, DictReader
 from os import devnull, remove
 from os.path import abspath, dirname, isfile, join
-from copy import deepcopy
+from re import compile, IGNORECASE
 from shutil import which
 from subprocess import call
-from re import compile, IGNORECASE
 
+# 3rd party imports
 from pubchempy import get_compounds
 
+# Path to PaDEL is included in the package
 _PADEL_PATH = join(
     dirname(abspath(__file__)),
     'PaDEL-Descriptor',
@@ -204,14 +218,3 @@ def mdl_to_descriptors(mdl_file, descriptors_csv):
     with open(descriptors_csv, 'r', encoding='utf-8') as desc_file:
         reader = DictReader(desc_file)
         return [row for row in reader]
-
-
-if __name__ == '__main__':
-
-    create_db(
-        'cp_mols.txt',
-        'cp_model_v1.0_full.csv',
-        targets='cp_targets.txt',
-        id_prefix='UMLCP',
-        form='smiles'
-    )
