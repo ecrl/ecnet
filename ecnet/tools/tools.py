@@ -196,7 +196,7 @@ def mdl_to_descriptors(mdl_file, descriptors_csv):
 
     dn = open(devnull, 'w')
     # Sometimes Java hangs, so we retry up to two more times if it does
-    for _ in range(3):
+    for attempt in range(3):
         try:
             call([
                 'java',
@@ -212,8 +212,11 @@ def mdl_to_descriptors(mdl_file, descriptors_csv):
                 descriptors_csv
             ], stdout=dn, stderr=dn, timeout=100)
             break
-        except:
-            continue
+        except Exception as e:
+            if attempt == 2:
+                raise e
+            else:
+                continue
 
     with open(descriptors_csv, 'r', encoding='utf-8') as desc_file:
         reader = DictReader(desc_file)
