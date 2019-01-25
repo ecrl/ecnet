@@ -163,17 +163,25 @@ def smiles_to_mdl(smiles_file, mdl_file):
         ))
 
     dn = open(devnull, 'w')
-    call([
-        'obabel',
-        '-i',
-        'smi',
-        smiles_file,
-        '-o',
-        'mdl',
-        '-O',
-        mdl_file,
-        '--gen3D'
-    ], stdout=dn, stderr=dn)
+    for attempt in range(3):
+        try:
+            call([
+                'obabel',
+                '-i',
+                'smi',
+                smiles_file,
+                '-o',
+                'mdl',
+                '-O',
+                mdl_file,
+                '--gen3D'
+            ], stdout=dn, stderr=dn, timeout=3600)
+            break
+        except Exception as e:
+            if attempt == 2:
+                raise e
+            else:
+                continue
 
 
 def mdl_to_descriptors(mdl_file, descriptors_csv):
@@ -195,7 +203,6 @@ def mdl_to_descriptors(mdl_file, descriptors_csv):
         )
 
     dn = open(devnull, 'w')
-    # Sometimes Java hangs, so we retry up to two more times if it does
     for attempt in range(3):
         try:
             call([
@@ -210,7 +217,7 @@ def mdl_to_descriptors(mdl_file, descriptors_csv):
                 mdl_file,
                 '-file',
                 descriptors_csv
-            ], stdout=dn, stderr=dn, timeout=100)
+            ], stdout=dn, stderr=dn, timeout=3600)
             break
         except Exception as e:
             if attempt == 2:
