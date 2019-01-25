@@ -85,10 +85,10 @@ class Server:
             )
             config_dict = {
                 'learning_rate': 0.1,
-                'keep_prob': 0.0,
+                'keep_prob': 1.0,
                 'hidden_layers': [
-                    [10, 'relu'],
-                    [10, 'relu']
+                    [32, 'relu'],
+                    [32, 'relu']
                 ],
                 'input_activation': 'relu',
                 'output_activation': 'linear',
