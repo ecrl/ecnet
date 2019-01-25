@@ -596,6 +596,11 @@ class Server:
                 self.DataFrame,
                 output_filename
             )
+            self._logger.log(
+                'info',
+                'Results saved to {}'.format(output_filename),
+                call_loc={'call_loc', 'USE'}
+            )
         return results
 
     def calc_error(self, *args, dset=None):
