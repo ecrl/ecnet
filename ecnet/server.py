@@ -599,7 +599,7 @@ class Server:
             self._logger.log(
                 'info',
                 'Results saved to {}'.format(output_filename),
-                call_loc={'call_loc', 'USE'}
+                call_loc={'call_loc': 'USE'}
             )
         return results
 
