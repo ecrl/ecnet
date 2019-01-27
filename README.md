@@ -267,7 +267,72 @@ To view more examples of common ECNet tasks such as hyperparameter optimization 
 
 ECNet databases are comma-separated value (CSV) formatted files that provide information such as the ID of each data point, an optional explicit sort type, various strings and groups to identify data points, target values and input parameters. Row 1 is used to identify which columns are used for ID, explicit sorting assignment, various strings and groups, and target and input data, and row 2 contains the names of these strings/groups/targets/inputs. Additional rows are data points.
 
-The [databases](https://github.com/TJKessler/ECNet/tree/master/databases) directory contains databases for cetane number as well as a database template.
+The [databases](https://github.com/TJKessler/ECNet/tree/master/databases) directory contains databases for cetane number, cloud point, pour point and yield sooting index, as well as a database template.
+
+You can create an ECNet-formatted database with molecule names or SMILES and (optionally) target values. The following programs must be installed for you to do so:
+- [Open Babel](http://openbabel.org/wiki/Main_Page) software
+- [Java JRE](https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html) version 6 and above
+
+Supplied names or SMILES must exist in a text file, one entry per line:
+```
+Acetaldehyde
+Acetaldehyde dimethyl acetal
+Acetic acid
+Acetic anhydride
+Acetol
+Acetone
+Acetonitrile
+Acetonylacetone
+```
+
+If target values are supplied, they must also exist in a text file (of equal length to the supplied names or SMILES):
+```
+70
+147
+244
+284
+295
+133
+180
+376
+```
+
+The database can then be constructed with:
+```python
+from ecnet.tools import create_db
+
+create_db('names.txt', 'my_database.csv', targets='targets.txt')
+```
+
+If SMILES strings are supplied instead of names:
+```python
+from ecnet.tools import create_db
+
+create_db('smiles.txt', 'my_database.csv', targets='targets.txt', form='smiles')
+```
+
+Your database's DATAID column (essentially Bates numbers for each molecule) will increment starting at 0001:
+
+| DATAID 	|
+|--------	|
+| DATAID 	|
+| 0001   	|
+| 0002   	|
+| 0003   	|
+
+If a prefix is desired for these values, specify it with:
+```python
+from ecnet.tools import create_db
+
+create_db('names.txt', 'my_database.csv', targets='targets.txt', id_prefix='MOL')
+```
+
+| DATAID 	    |
+|-----------	|
+| DATAID     	|
+| MOL0001   	|
+| MOL0002   	|
+| MOL0003   	|
 
 # Contributing, Reporting Issues and Other Support:
 
