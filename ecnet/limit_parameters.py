@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/limit_parameters.py
-# v.2.0.1
-# Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
+# v.2.1.0
+# Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the functions necessary for reducing the input dimensionality of a
 # database to the most influential input parameters, using either an iterative
