@@ -111,7 +111,11 @@ def create_db(input_txt, output_name, id_prefix='', targets=None, form='name',
 
     smiles_to_mdl(smiles_file, mdl_file)
     desc = mdl_to_descriptors(mdl_file, desc_file)
-    desc_keys = list(desc[0].keys())[1:]
+    desc_keys = list(desc[0].keys())
+    try:
+        desc_keys.remove('Name')
+    except:
+        pass
 
     valid_keys = []
     for ds in desc_keys:
