@@ -9,7 +9,7 @@ def test_init(log_level, log_dir):
         'LOGGING INIT | log_level: {} | log_dir: {}'.format(
             log_level, log_dir
         ),
-        call_loc={'call_loc': 'UNIT TESTING'}
+        call_loc='UNIT TESTING'
     )
     sv._logger.log('debug', 'Debug')
     sv._logger.log('info', 'Info')
@@ -26,7 +26,7 @@ def test_set(log_level, log_dir):
         'LOGGING SET | log_level: {} | log_dir: {}'.format(
             log_level, log_dir
         ),
-        call_loc={'call_loc': 'UNIT TESTING'}
+        call_loc='UNIT TESTING'
     )
     sv._logger.log('debug', 'Debug')
     sv._logger.log('info', 'Info')

@@ -7,7 +7,7 @@ def create_project():
     sv._logger.log(
         'crit',
         'CREATING PROJECT',
-        call_loc={'call_loc': 'UNIT TESTING'}
+        call_loc='UNIT TESTING'
     )
     sv.import_data('cn_model_v1.0.csv')
     sv.create_project(
@@ -27,7 +27,7 @@ def use_project():
     sv._logger.log(
         'crit',
         'USING PROJECT',
-        call_loc={'call_loc': 'UNIT TESTING'}
+        call_loc='UNIT TESTING'
     )
     sv.use_model('train', output_filename='use_project_train.csv')
     sv.use_model('test', output_filename='use_project_test.csv')

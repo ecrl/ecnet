@@ -6,7 +6,7 @@ def train(validate, dset=None):
     sv = Server(log_level='debug')
     sv._logger.log('crit', 'NO PROJECT | validate: {} | dset: {}'.format(
         validate, dset
-    ), call_loc={'call_loc': 'UNIT TESTING'})
+    ), call_loc='UNIT TESTING')
     sv.import_data('cn_model_v1.0.csv')
     sv.train_model(validate=validate)
     sv.use_model()
@@ -22,7 +22,7 @@ def train_project(validate, shuffle, num_processes, dset,
         'PROJECT | validate: {} | shuffle: {} | processes: {} | dset: {} | file: {}'
         .format(
             validate, shuffle, num_processes, dset, output_filename
-        ), call_loc={'call_loc': 'UNIT TESTING'}
+        ), call_loc='UNIT TESTING'
     )
     sv.import_data('cn_model_v1.0.csv')
     sv.create_project(

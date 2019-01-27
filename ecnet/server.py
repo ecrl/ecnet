@@ -74,14 +74,14 @@ class Server:
             self._logger.log(
                 'warn',
                 'Supplied configuration file not found',
-                call_loc={'call_loc': 'INIT'}
+                call_loc='INIT'
             )
             self._logger.log(
                 'warn',
                 'Generating default configuration for {}'.format(
                     config_filename
                 ),
-                call_loc={'call_loc': 'INIT'}
+                call_loc='INIT'
             )
             config_dict = {
                 'learning_rate': 0.1,
@@ -207,7 +207,7 @@ class Server:
         self._logger.log(
             'info',
             'Created project {}'.format(project_name),
-            call_loc={'call_loc': 'PROJECT'}
+            call_loc='PROJECT'
         )
 
     def import_data(self, data_filename, sort_type='random',
@@ -231,7 +231,7 @@ class Server:
         self._logger.log(
             'info',
             'Imported data from {}'.format(data_filename),
-            call_loc={'call_loc': 'IMPORT'}
+            call_loc='IMPORT'
         )
 
     def limit_input_parameters(self, limit_num, output_filename=None,
@@ -267,13 +267,13 @@ class Server:
 
         self._logger.log('debug', 'Limiting input dimensionality to {}'.format(
             limit_num
-        ), call_loc={'call_loc': 'LIMIT'})
+        ), call_loc='LIMIT')
 
         if use_genetic:
             self._logger.log(
                 'info',
                 'Limiting input dimensionality using a genetic algorithm',
-                call_loc={'call_loc': 'LIMIT'}
+                call_loc='LIMIT'
             )
             params = ecnet.limit_parameters.limit_genetic(
                 self.DataFrame, limit_num, self.vars, population_size,
@@ -284,7 +284,7 @@ class Server:
             self._logger.log(
                 'info',
                 'Limiting input dimensionality using iterative inclusion',
-                call_loc={'call_loc': 'LIMIT'}
+                call_loc='LIMIT'
             )
             params = ecnet.limit_parameters.limit_iterative_include(
                 self.DataFrame, limit_num, self.vars, logger=self._logger
@@ -296,7 +296,7 @@ class Server:
             self._logger.log(
                 'info',
                 'Saved limited database to {}'.format(output_filename),
-                call_loc={'call_loc': 'LIMIT'}
+                call_loc='LIMIT'
             )
         return params
 
@@ -361,7 +361,7 @@ class Server:
         self._logger.log(
             'info',
             'Tuning neural network hyperparameters with an ABC',
-            call_loc={'call_loc': 'TUNE'}
+            call_loc='TUNE'
         )
 
         abc.create_employers()
@@ -385,17 +385,17 @@ class Server:
         self._logger.log(
             'debug',
             'Tuned learning rate: {}'.format(new_hyperparameters[0]),
-            call_loc={'call_loc': 'TUNE'}
+            call_loc='TUNE'
         )
         self._logger.log(
             'debug',
             'Tuned max validation epochs: {}'.format(new_hyperparameters[1]),
-            call_loc={'call_loc': 'TUNE'}
+            call_loc='TUNE'
         )
         self._logger.log(
             'debug',
             'Tuned neuron keep probability: {}'.format(new_hyperparameters[2]),
-            call_loc={'call_loc': 'TUNE'}
+            call_loc='TUNE'
         )
         for idx, layer in enumerate(self.vars['hidden_layers'], 3):
             self._logger.log(
@@ -403,7 +403,7 @@ class Server:
                 'Tuned number of neurons in hidden layer {}: {}'.format(
                     idx - 2, new_hyperparameters[idx]
                 ),
-                call_loc={'call_loc': 'TUNE'}
+                call_loc='TUNE'
             )
 
         return new_hyperparameters
@@ -428,7 +428,7 @@ class Server:
             self._logger.log(
                 'info',
                 'Training single model',
-                call_loc={'call_loc': 'TRAIN'}
+                call_loc='TRAIN'
             )
             ecnet.model.train_model(
                 validate,
@@ -444,7 +444,7 @@ class Server:
                     self.__num_builds, self.__num_nodes,
                     self.__num_candidates
                 ),
-                call_loc={'call_loc': 'TRAIN'}
+                call_loc='TRAIN'
             )
 
             if self.__num_processes > 1:
@@ -476,7 +476,7 @@ class Server:
                                 'Build {}, Node {}, candidate {}'.format(
                                     build + 1, node + 1, candidate + 1
                                 ),
-                                call_loc={'call_loc': 'TRAIN'}
+                                call_loc='TRAIN'
                             )
                             ecnet.model.train_model(
                                 validate,
@@ -524,7 +524,7 @@ class Server:
         self._logger.log(
             'info',
             'Selecting best models from each node for each build',
-            call_loc={'call_loc': 'SELECTION'}
+            call_loc='SELECTION'
         )
         x_vals = self.__determine_x_vals(dset)
         y_vals = self.__determine_y_vals(dset)
@@ -580,13 +580,13 @@ class Server:
             self._logger.log(
                 'info',
                 'Predicting values for all data',
-                call_loc={'call_loc': 'USE'}
+                call_loc='USE'
             )
         else:
             self._logger.log(
                 'info',
                 'Predicting values for {} set'.format(dset),
-                call_loc={'call_loc': 'USE'}
+                call_loc='USE'
             )
         results = self.__use(dset)
         if output_filename is not None:
@@ -599,7 +599,7 @@ class Server:
             self._logger.log(
                 'info',
                 'Results saved to {}'.format(output_filename),
-                call_loc={'call_loc': 'USE'}
+                call_loc='USE'
             )
         return results
 
@@ -623,13 +623,13 @@ class Server:
                 self._logger.log(
                     'info',
                     'Calculating {} for all data'.format(arg),
-                    call_loc={'call_loc': 'METRICS'}
+                    call_loc='METRICS'
                 )
             else:
                 self._logger.log(
                     'info',
                     'Calculating {} for {} set'.format(arg, dset),
-                    call_loc={'call_loc': 'METRICS'}
+                    call_loc='METRICS'
                 )
         error_dict = {}
         y_hat = self.__use(dset)
@@ -645,7 +645,7 @@ class Server:
             self._logger.log(
                 'debug',
                 '{} : {}'.format(arg, error_dict[arg]),
-                call_loc={'call_loc': 'METRICS'}
+                call_loc='METRICS'
             )
         return error_dict
 
@@ -704,7 +704,7 @@ class Server:
         self._logger.log(
             'info',
             'Project saved to {}'.format(save_file),
-            call_loc={'call_loc': 'PROJECT'}
+            call_loc='PROJECT'
         )
 
     def __open_project(self, project_name):
@@ -763,7 +763,7 @@ class Server:
         self._logger.log(
             'info',
             'Opened project {}'.format(project_name),
-            call_loc={'call_loc': 'PROJECT'}
+            call_loc='PROJECT'
         )
 
     def __determine_x_vals(self, dset):
