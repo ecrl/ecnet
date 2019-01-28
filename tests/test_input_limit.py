@@ -6,7 +6,7 @@ def limit_iterative(output_filename=None):
     sv = Server(log_level='debug')
     sv._logger.log('crit', 'LIMIT ITER | output file: {}'.format(
         output_filename
-    ), call_loc={'call_loc': 'UNIT TESTING'})
+    ), call_loc='UNIT TESTING')
     sv.import_data('cn_model_v1.0.csv')
     sv.limit_input_parameters(
         3, output_filename=output_filename
@@ -20,7 +20,7 @@ def limit_genetic(num_processes, shuffle=False, output_filename=None):
         'crit',
         'LIMIT GEN | Processes: {} | shuffle: {} | output file: {}'.format(
             num_processes, shuffle, output_filename
-        ), call_loc={'call_loc': 'UNIT TESTING'}
+        ), call_loc='UNIT TESTING'
     )
     sv.import_data('cn_model_v1.0.csv')
     sv.limit_input_parameters(

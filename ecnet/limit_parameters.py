@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/limit_parameters.py
-# v.2.0.1
-# Developed in 2018 by Travis Kessler <travis.j.kessler@gmail.com>
+# v.2.1.0
+# Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the functions necessary for reducing the input dimensionality of a
 # database to the most influential input parameters, using either an iterative
@@ -139,18 +139,18 @@ def limit_iterative_include(DataFrame, limit_num, vars, logger=None):
             logger.log(
                 'debug',
                 'Currently retained: {}'.format(retained_input_list),
-                call_loc={'call_loc': 'LIMIT'}
+                call_loc='LIMIT'
             )
             logger.log(
                 'debug',
                 'Current RMSE: {}'.format(rmse_val),
-                call_loc={'call_loc': 'LIMIT'}
+                call_loc='LIMIT'
             )
 
     logger.log(
         'debug',
         'Limited inputs: {}'.format(retained_input_list),
-        call_loc={'call_loc': 'LIMIT'}
+        call_loc='LIMIT'
     )
 
     return retained_input_list
@@ -208,7 +208,7 @@ def limit_genetic(DataFrame, limit_num, vars, population_size, num_generations,
     if logger is not None:
         logger.log('debug', 'Generation: 0 - Population fitness: {}'.format(
             sum(p.fitness_score for p in population.members) / len(population),
-        ), call_loc={'call_loc': 'LIMIT'})
+        ), call_loc='LIMIT')
 
     for gen in range(num_generations):
         population.next_generation()
@@ -221,7 +221,7 @@ def limit_genetic(DataFrame, limit_num, vars, population_size, num_generations,
                         p.fitness_score for p in population.members
                     ) / len(population)
                 ),
-                call_loc={'call_loc': 'LIMIT'}
+                call_loc='LIMIT'
             )
 
     min_idx = 0
@@ -239,12 +239,12 @@ def limit_genetic(DataFrame, limit_num, vars, population_size, num_generations,
             'Best member fitness score: {}'.format(
                 population.members[min_idx].fitness_score
             ),
-            call_loc={'call_loc': 'LIMIT'}
+            call_loc='LIMIT'
         )
         logger.log(
             'debug',
             'Best member parameters: {}'.format(input_list),
-            call_loc={'call_loc': 'LIMIT'}
+            call_loc='LIMIT'
         )
 
     return input_list
