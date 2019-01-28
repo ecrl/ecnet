@@ -16,6 +16,10 @@ Future plans for ECNet include:
 
 [T. Sennott et al.](https://doi.org/10.1115/ICEF2013-19185) have shown that neural networks can be applied to cetane number prediction with relatively little error. ECNet provides scientists an open source tool for predicting key fuel properties of potential next-generation biofuels, reducing the need for costly fuel synthesis and experimentation.
 
+<p align="center">
+  <img align="center" src="docs/workflow_diagram.png">
+</p>
+
 Using ECNet, [T. Kessler et al.](https://doi.org/10.1016/j.fuel.2017.06.015) have increased the generalizability of neural networks to predict the cetane number for a variety of molecular classes represented in our [cetane number database](https://github.com/TJKessler/ECNet/tree/master/databases), and have increased the accuracy of neural networks for predicting the cetane number of underrepresented molecular classes through targeted database expansion.
 
 # Installation:
@@ -26,20 +30,29 @@ Using ECNet, [T. Kessler et al.](https://doi.org/10.1016/j.fuel.2017.06.015) hav
 
 ### Method 1: pip
 If you are working in a Linux/Mac environment:
-- **sudo pip install ecnet**
+```
+sudo pip install ecnet
+```
 
 Alternatively, in a Windows or virtualenv environment:
-- **pip install ecnet**
+```
+pip install ecnet
+```
 
 Note: if multiple Python releases are installed on your system (e.g. 2.7 and 3.6), you may need to execute the correct version of pip. For Python 3.6, change **"pip install ecnet"** to **"pip3 install ecnet"**.
 
 ### Method 2: From source
-- Download the ECNet repository, navigate to the download location on the command line/terminal, and execute 
-**"python setup.py install"**. 
+- Download the ECNet repository, navigate to the download location on the command line/terminal, and execute:
+```
+python setup.py install
+```
 
 Additional package dependencies (TensorFlow, NumPy, PyYaml, ecabc, PyGenetics, ColorLogging) will be installed during the ECNet installation process. If raw performance is your thing, consider building numerical packages like TensorFlow and NumPy from source.
 
-To update your version of ECNet to the latest release version, use "**pip install --upgrade ecnet**".
+To update your version of ECNet to the latest release version, use:
+```
+pip install --upgrade ecnet
+```
 
 # Usage:
 
