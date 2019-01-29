@@ -78,14 +78,16 @@ validation_max_epochs: 10000
 ```
 
 Here are brief explanations of each of these variables:
-- **learning_rate**: value passed to the AdamOptimizer to use as its learning rate during training
-- **keep_prob**: probability that a neuron in the hidden layers is not subjected to dropout
-- **hidden_layers**: *[[num_neurons_0, layer_type_0],...,[num_neurons_n, layer_type_n]]*: the architecture of the neural network between input and output layers
-	- Rectified linear unit (**'relu'**), **'sigmoid'**, **'softmax'** and **'linear'** *layer_type*s are currently supported
-- **input_activation**: the layer type of the input layer: number of nodes is determined by input data dimensionality
-- **output_activation**: the layer type of the output layer: number of nodes is determined by target data dimensionality
-- **train_epochs**: number of training iterations (not used with validation)
-- **validation_max_epochs**: the maximum number of training iterations during the validation process (if training with periodic validation)
+
+| Variable Name 	| Format/Type 	| Description 	|
+|-----------------------	|------------------------------------	|------------------------------------------------------------------------------------------------------------------------------------------	|
+| learning_rate 	| float, > 0.0 	| Neural network learning rate (AdamOptimizer algorithm) 	|
+| keep_prob 	| float, > 0.0, <= 1.0 	| Probability that a neuron in the hidden layers is not subjected to dropout 	|
+| hidden_layers 	| [[num_0, act_0],...[num_N, act_N]] 	| Architecture of hidden layers; num_X is the number of neurons, act_X is the activation function ('relu', 'sigmoid', 'softmax', 'linear') 	|
+| input_activation 	| string 	| Activation function of the NN's input layer ('relu', 'sigmoid', 'softmax', 'linear') 	|
+| output_activation 	| string 	| Activation function of the NN's output layer ('relu', 'sigmoid', 'softmax', 'linear') 	|
+| train_epochs 	| int, > 0 	| Number of training iterations (epochs), if not validating during training 	|
+| validation_max_epochs 	| int, > 0 	| Maximum number of training epochs allowed, if validating during training 	|
 
 ## Using the Server object
 
