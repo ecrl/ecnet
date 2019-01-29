@@ -9,11 +9,6 @@
 	
 **ECNet** is an open source Python package for creating scalable, retrainable and deployable machine learning projects, with a focus on fuel property prediction. An ECNet __project__ is considered a collection of __builds__, and each build is a collection of __nodes__. Nodes are neural networks that have been selected from a pool of candidate neural networks, where the pool's goal is to optimize certain learning criteria (for example, performing optimially on unseen data). Each node contributes a prediction derived from input data, and these predictions are averaged together to calculate the build's final prediction. Using multiple nodes allows a build to learn from a variety of learning and validation sets, which can reduce the build's prediction error. Projects can be saved and reused at a later time allowing additional training and deployable predictive models. 
 
-Future plans for ECNet include:
-- distributed candidate training for GPU's
-- a graphical user interface
-- implementing neural network neuron diagnostics - maybe it's not a black box after all 🤔
-
 [T. Sennott et al.](https://doi.org/10.1115/ICEF2013-19185) have shown that neural networks can be applied to cetane number prediction with relatively little error. ECNet provides scientists an open source tool for predicting key fuel properties of potential next-generation biofuels, reducing the need for costly fuel synthesis and experimentation.
 
 <p align="center">
@@ -21,6 +16,11 @@ Future plans for ECNet include:
 </p>
 
 Using ECNet, [T. Kessler et al.](https://doi.org/10.1016/j.fuel.2017.06.015) have increased the generalizability of neural networks to predict the cetane number for a variety of molecular classes represented in our [cetane number database](https://github.com/TJKessler/ECNet/tree/master/databases), and have increased the accuracy of neural networks for predicting the cetane number of underrepresented molecular classes through targeted database expansion.
+
+Future plans for ECNet include:
+- distributed candidate training for GPU's
+- a graphical user interface
+- implementing neural network neuron diagnostics - maybe it's not a black box after all 🤔
 
 # Installation:
 
