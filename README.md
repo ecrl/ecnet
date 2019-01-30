@@ -7,16 +7,20 @@
 [![status](http://joss.theoj.org/papers/f556afbc97e18e1c1294d98e0f7ff99f/status.svg)](http://joss.theoj.org/papers/f556afbc97e18e1c1294d98e0f7ff99f)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/TJKessler/ECNet/master/LICENSE.txt)
 	
-**ECNet** is an open source Python package for creating scalable, retrainable and deployable machine learning projects, with a focus on fuel property prediction. An ECNet __project__ is considered a collection of __builds__, and each build is a collection of __nodes__. Nodes are neural networks that have been selected from a pool of candidate neural networks, where the pool's goal is to optimize certain learning criteria (for example, performing optimially on unseen data). Each node contributes a prediction derived from input data, and these predictions are averaged together to calculate the build's final prediction. Using multiple nodes allows a build to learn from a variety of learning and validation sets, which can reduce the build's prediction error. Projects can be saved and reused at a later time allowing additional training and deployable predictive models. 
+**ECNet** is an open source Python package for creating scalable, retrainable and deployable machine learning projects, with a focus on fuel property prediction. An ECNet __project__ is considered a collection of __builds__, and each build is a collection of __nodes__. Nodes are neural networks that have been selected from a pool of candidate neural networks, where the pool's goal is to optimize certain learning criteria (for example, performing optimially on unseen data). Each node contributes a prediction derived from input data, and these predictions are averaged to calculate the build's final prediction. Using multiple nodes allows a build to learn from a variety of learning and validation sets, which can reduce the build's prediction error. Projects can be saved and reused at a later time allowing additional training and deployable predictive models. 
+
+[T. Sennott et al.](https://doi.org/10.1115/ICEF2013-19185) have shown that neural networks can be applied to cetane number prediction with relatively little error. ECNet provides scientists an open source tool for predicting key fuel properties of potential next-generation biofuels, reducing the need for costly fuel synthesis and experimentation.
+
+<p align="center">
+  <img align="center" src="docs/workflow_diagram.png" width="50%" height="50%">
+</p>
+
+Using ECNet, [T. Kessler et al.](https://doi.org/10.1016/j.fuel.2017.06.015) have increased the generalizability of neural networks to predict the cetane number for a variety of molecular classes represented in our [cetane number database](https://github.com/TJKessler/ECNet/tree/master/databases), and have increased the accuracy of neural networks for predicting the cetane number of underrepresented molecular classes through targeted database expansion.
 
 Future plans for ECNet include:
 - distributed candidate training for GPU's
 - a graphical user interface
 - implementing neural network neuron diagnostics - maybe it's not a black box after all 🤔
-
-[T. Sennott et al.](https://doi.org/10.1115/ICEF2013-19185) have shown that neural networks can be applied to cetane number prediction with relatively little error. ECNet provides scientists an open source tool for predicting key fuel properties of potential next-generation biofuels, reducing the need for costly fuel synthesis and experimentation.
-
-Using ECNet, [T. Kessler et al.](https://doi.org/10.1016/j.fuel.2017.06.015) have increased the generalizability of neural networks to predict the cetane number for a variety of molecular classes represented in our [cetane number database](https://github.com/TJKessler/ECNet/tree/master/databases), and have increased the accuracy of neural networks for predicting the cetane number of underrepresented molecular classes through targeted database expansion.
 
 # Installation:
 
@@ -26,20 +30,29 @@ Using ECNet, [T. Kessler et al.](https://doi.org/10.1016/j.fuel.2017.06.015) hav
 
 ### Method 1: pip
 If you are working in a Linux/Mac environment:
-- **sudo pip install ecnet**
+```
+sudo pip install ecnet
+```
 
 Alternatively, in a Windows or virtualenv environment:
-- **pip install ecnet**
+```
+pip install ecnet
+```
 
 Note: if multiple Python releases are installed on your system (e.g. 2.7 and 3.6), you may need to execute the correct version of pip. For Python 3.6, change **"pip install ecnet"** to **"pip3 install ecnet"**.
 
 ### Method 2: From source
-- Download the ECNet repository, navigate to the download location on the command line/terminal, and execute 
-**"python setup.py install"**. 
+- Download the ECNet repository, navigate to the download location on the command line/terminal, and execute:
+```
+python setup.py install
+```
 
 Additional package dependencies (TensorFlow, NumPy, PyYaml, ecabc, PyGenetics, ColorLogging) will be installed during the ECNet installation process. If raw performance is your thing, consider building numerical packages like TensorFlow and NumPy from source.
 
-To update your version of ECNet to the latest release version, use "**pip install --upgrade ecnet**".
+To update your version of ECNet to the latest release version, use:
+```
+pip install --upgrade ecnet
+```
 
 # Usage:
 
@@ -65,14 +78,16 @@ validation_max_epochs: 10000
 ```
 
 Here are brief explanations of each of these variables:
-- **learning_rate**: value passed to the AdamOptimizer to use as its learning rate during training
-- **keep_prob**: probability that a neuron in the hidden layers is not subjected to dropout
-- **hidden_layers**: *[[num_neurons_0, layer_type_0],...,[num_neurons_n, layer_type_n]]*: the architecture of the neural network between input and output layers
-	- Rectified linear unit (**'relu'**), **'sigmoid'**, **'softmax'** and **'linear'** *layer_type*s are currently supported
-- **input_activation**: the layer type of the input layer: number of nodes is determined by input data dimensionality
-- **output_activation**: the layer type of the output layer: number of nodes is determined by target data dimensionality
-- **train_epochs**: number of training iterations (not used with validation)
-- **validation_max_epochs**: the maximum number of training iterations during the validation process (if training with periodic validation)
+
+| Variable Name 	| Format/Type 	| Description 	|
+|-----------------------	|------------------------------------	|------------------------------------------------------------------------------------------------------------------------------------------	|
+| learning_rate 	| float, > 0.0 	| Neural network learning rate (AdamOptimizer algorithm) 	|
+| keep_prob 	| float, > 0.0, <= 1.0 	| Probability that a neuron in the hidden layers is not subjected to dropout 	|
+| hidden_layers 	| [[num_0, act_0],...[num_N, act_N]] 	| Architecture of hidden layers; num_X is the number of neurons, act_X is the activation function ('relu', 'sigmoid', 'softmax', 'linear') 	|
+| input_activation 	| string 	| Activation function of the NN's input layer ('relu', 'sigmoid', 'softmax', 'linear') 	|
+| output_activation 	| string 	| Activation function of the NN's output layer ('relu', 'sigmoid', 'softmax', 'linear') 	|
+| train_epochs 	| int, > 0 	| Number of training iterations (epochs), if not validating during training 	|
+| validation_max_epochs 	| int, > 0 	| Maximum number of training epochs allowed, if validating during training 	|
 
 ## Using the Server object
 
