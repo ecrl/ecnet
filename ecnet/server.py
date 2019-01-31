@@ -237,7 +237,8 @@ class Server:
     def limit_input_parameters(self, limit_num, output_filename=None,
                                use_genetic=False, population_size=500,
                                num_generations=25, shuffle=False,
-                               data_split=[0.7, 0.2, 0.1]):
+                               data_split=[0.7, 0.2, 0.1], mut_rate=0,
+                               max_mut_amt=0):
         '''Limits the input dimensionality of currently loaded data; default
         method is an iterative inclusion algorithm, options for using a genetic
         algorithm available.
@@ -253,6 +254,10 @@ class Server:
                 population member
             data_split (list): [learn%, valid%, test%] for splits if shuffle ==
                 True
+            mut_rate (float): probability that a population member is subject
+                to mutation
+            max_mut_amt (float): if mutating, how much a parameter can mutate
+                (proportionally)
 
         See https://github.com/tjkessler/pygenetics for genetic algorithm
         source code.
@@ -278,7 +283,8 @@ class Server:
             params = ecnet.limit_parameters.limit_genetic(
                 self.DataFrame, limit_num, self.vars, population_size,
                 num_generations, self.__num_processes, shuffle=shuffle,
-                data_split=data_split, logger=self._logger
+                data_split=data_split, mut_rate=mut_rate,
+                max_mut_amt=max_mut_amt, logger=self._logger
             )
         else:
             self._logger.log(
