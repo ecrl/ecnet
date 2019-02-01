@@ -9,40 +9,23 @@
 #
 
 # 3rd party imports
-from numpy import absolute, asarray, median, sqrt as nsqrt, sum as nsum
+from numpy import absolute, asarray, float64, isinf, isnan, median,\
+    nan_to_num, square, sqrt as nsqrt, sum as nsum
 
 
 def calc_rmse(y_hat, y):
 
-    try:
-        return(nsqrt(((y_hat-y)**2).mean()))
-    except:
-        try:
-            return(nsqrt(((asarray(y_hat)-asarray(y))**2).mean()))
-        except:
-            raise ValueError('Check input data format.')
+    return nsqrt((square(_get_diff(y_hat, y)).mean()))
 
 
 def calc_mean_abs_error(y_hat, y):
 
-    try:
-        return(abs(y_hat-y).mean())
-    except:
-        try:
-            return(abs(asarray(y_hat)-asarray(y)).mean())
-        except:
-            raise ValueError('Check input data format.')
+    return(absolute(_get_diff(y_hat, y)).mean())
 
 
 def calc_med_abs_error(y_hat, y):
 
-    try:
-        return(median(absolute(y_hat-y)))
-    except:
-        try:
-            return(median(absolute(asarray(y_hat)-asarray(y))))
-        except:
-            raise ValueError('Check input data format.')
+    return(median(absolute(_get_diff(y_hat, y))))
 
 
 def calc_r2(y_hat, y):
@@ -57,14 +40,16 @@ def calc_r2(y_hat, y):
             y_mean = sum(y_form)/len(y_form)
         except:
             raise ValueError('Check input data format.')
-    try:
-        s_res = nsum((y_hat-y)**2)
-        s_tot = nsum((y-y_mean)**2)
-        return(1 - (s_res/s_tot))
-    except:
-        try:
-            s_res = nsum((asarray(y_hat)-asarray(y))**2)
-            s_tot = nsum((asarray(y)-y_mean)**2)
-            return(1 - (s_res/s_tot))
-        except:
-            raise ValueError('Check input data format.')
+
+    s_res = nsum(_get_diff(y_hat, y)**2)
+    s_tot = nsum(_get_diff(y, y_mean)**2)
+    return(1 - (s_res / s_tot))
+
+
+def _get_diff(y_hat, y):
+
+    diff = asarray(y_hat, dtype=float64) - asarray(y, dtype=float64)
+    for i, d in enumerate(diff):
+        if isnan(d) or isinf(d):
+            diff[i] = nan_to_num(d)
+    return diff

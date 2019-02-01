@@ -25,8 +25,11 @@ from tensorflow import placeholder, random_normal, reset_default_graph
 from tensorflow import Session, square, train, Variable
 from numpy import asarray, isnan, nan_to_num, seterr, sqrt as nsqrt
 
+# ECNet imports
+from ecnet.error_utils import calc_rmse
+
 environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-filterwarnings('ignore', category=RuntimeWarning)
+# filterwarnings('ignore', category=RuntimeWarning)
 
 
 def __linear_fn(n):
@@ -216,9 +219,12 @@ class MultilayerPerceptron:
                 sess.run(optimizer, feed_dict={x: x_l, y: y_l})
                 current_epoch += 1
                 if current_epoch % 250 == 0:
-                    valid_rmse = self.__calc_rmse(
+                    valid_rmse = calc_rmse(
                         sess.run(pred, feed_dict={x: x_v}), y_v
                     )
+                    # valid_rmse = self.__calc_rmse(
+                    #     sess.run(pred, feed_dict={x: x_v}), y_v
+                    # )
                     if valid_rmse < valid_rmse_lowest:
                         valid_rmse_lowest = valid_rmse
                     elif valid_rmse > valid_rmse_lowest + (
@@ -333,8 +339,9 @@ class MultilayerPerceptron:
             diff = (y_hat - y)
         except:
             diff = (asarray(y_hat) - asarray(y))
-        if isnan(any(diff)):
-            diff = nan_to_num(diff)
+        for i, d in enumerate(diff):
+            if isnan(d):
+                diff[i] = nan_to_num(d)
         return(nsqrt((diff**2).mean()))
 
 
