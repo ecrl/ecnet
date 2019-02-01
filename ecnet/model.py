@@ -22,7 +22,7 @@ from copy import deepcopy
 from tensorflow import add, global_variables_initializer, matmul, nn
 from tensorflow import placeholder, random_normal, reset_default_graph
 from tensorflow import Session, square, train, Variable
-from numpy import asarray, sqrt as nsqrt
+from numpy import asarray, isnan, sqrt as nsqrt
 
 environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -328,7 +328,10 @@ class MultilayerPerceptron:
         '''
 
         try:
-            return(nsqrt(((y_hat - y)**2).mean()))
+            diff = (y_hat - y)
+            if isnan(diff):
+                diff = [0 for _ in range(len(y))]
+            return(nsqrt((diff**2).mean()))
         except:
             return(nsqrt(((asarray(y_hat) - asarray(y))**2).mean()))
 
