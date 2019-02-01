@@ -17,14 +17,16 @@ from os import environ, mkdir, path
 from random import uniform
 from multiprocessing import current_process
 from copy import deepcopy
+from warnings import filterwarnings
 
 # 3rd party imports
 from tensorflow import add, global_variables_initializer, matmul, nn
 from tensorflow import placeholder, random_normal, reset_default_graph
 from tensorflow import Session, square, train, Variable
-from numpy import asarray, isnan, sqrt as nsqrt
+from numpy import asarray, isnan, nan_to_num, seterr, sqrt as nsqrt
 
 environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+filterwarnings('ignore', category=RuntimeWarning)
 
 
 def __linear_fn(n):
@@ -329,11 +331,11 @@ class MultilayerPerceptron:
 
         try:
             diff = (y_hat - y)
-            if isnan(diff):
-                diff = [0 for _ in range(len(y))]
-            return(nsqrt((diff**2).mean()))
         except:
-            return(nsqrt(((asarray(y_hat) - asarray(y))**2).mean()))
+            diff = (asarray(y_hat) - asarray(y))
+        if isnan(any(diff)):
+            diff = nan_to_num(diff)
+        return(nsqrt((diff**2).mean()))
 
 
 def train_model(validate, sets, vars, save_path=None, id=None):
