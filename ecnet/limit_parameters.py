@@ -210,9 +210,12 @@ def limit_genetic(DataFrame, limit_num, vars, population_size, num_generations,
 
     population.generate_population()
     if logger is not None:
-        logger.log('debug', 'Generation: 0 - Population fitness: {}'.format(
-            population.ave_cost_fn_val
-        ), call_loc='LIMIT')
+        logger.log(
+            'debug',
+            'Generation: 0 - Population fitness: {:.5f}'.format(
+                float(population.med_cost_fn_val)
+            ), call_loc='LIMIT'
+        )
         logger.log('debug', '\tBest fitness: {}'.format(
             population.best_cost_fn_val
         ), call_loc='LIMIT')
@@ -222,13 +225,15 @@ def limit_genetic(DataFrame, limit_num, vars, population_size, num_generations,
         ), call_loc='LIMIT')
 
     for gen in range(num_generations):
+        fitnesses = [m.cost_fn_val for m in population.members]
+        print(fitnesses)
         population.next_generation(mut_rate, max_mut_amt)
         if logger is not None:
             logger.log(
                 'debug',
-                'Generation: {} - Population fitness: {}'.format(
+                'Generation: {} - Population fitness: {:.5f}'.format(
                     gen + 1,
-                    population.ave_cost_fn_val
+                    float(population.med_cost_fn_val)
                 ),
                 call_loc='LIMIT'
             )
