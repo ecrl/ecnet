@@ -225,8 +225,6 @@ def limit_genetic(DataFrame, limit_num, vars, population_size, num_generations,
         ), call_loc='LIMIT')
 
     for gen in range(num_generations):
-        fitnesses = [m.cost_fn_val for m in population.members]
-        print(fitnesses)
         population.next_generation(mut_rate, max_mut_amt)
         if logger is not None:
             logger.log(
