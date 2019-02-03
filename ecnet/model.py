@@ -23,7 +23,7 @@ from warnings import filterwarnings
 from tensorflow import add, global_variables_initializer, matmul, nn
 from tensorflow import placeholder, random_normal, reset_default_graph
 from tensorflow import Session, square, train, Variable
-from numpy import asarray, isnan, nan_to_num, seterr, sqrt as nsqrt
+from numpy import asarray, isinf, isnan, nan_to_num, seterr, sqrt as nsqrt
 
 # ECNet imports
 from ecnet.error_utils import calc_rmse
@@ -219,12 +219,10 @@ class MultilayerPerceptron:
                 sess.run(optimizer, feed_dict={x: x_l, y: y_l})
                 current_epoch += 1
                 if current_epoch % 250 == 0:
-                    valid_rmse = calc_rmse(
-                        sess.run(pred, feed_dict={x: x_v}), y_v
-                    )
-                    # valid_rmse = self.__calc_rmse(
-                    #     sess.run(pred, feed_dict={x: x_v}), y_v
-                    # )
+                    valid_preds = sess.run(pred, feed_dict={x: x_v})
+                    if isnan(valid_preds).any() or isinf(valid_preds).any():
+                        valid_preds = nan_to_num(valid_preds)
+                    valid_rmse = calc_rmse(valid_preds, y_v)
                     if valid_rmse < valid_rmse_lowest:
                         valid_rmse_lowest = valid_rmse
                     elif valid_rmse > valid_rmse_lowest + (
@@ -251,6 +249,8 @@ class MultilayerPerceptron:
             saver.restore(sess, self._filename)
             results = self.__feed_forward(x).eval()
         sess.close()
+        if isnan(results).any() or isinf(results).any():
+            results = nan_to_num(results)
         return results
 
     def save(self, filepath=None):

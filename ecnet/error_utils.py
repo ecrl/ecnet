@@ -15,26 +15,17 @@ from numpy import absolute, asarray, float64, isinf, isnan, median,\
 
 def calc_rmse(y_hat, y):
 
-    rmse = nsqrt((square(_get_diff(y_hat, y)).mean()))
-    if isnan(rmse) or isinf(rmse):
-        return 99
-    return rmse
+    return nsqrt((square(_get_diff(y_hat, y)).mean()))
 
 
 def calc_mean_abs_error(y_hat, y):
 
-    mae = absolute(_get_diff(y_hat, y)).mean()
-    if isnan(mae) or isinf(mae):
-        return 99
-    return mae
+    return absolute(_get_diff(y_hat, y)).mean()
 
 
 def calc_med_abs_error(y_hat, y):
 
-    medae = median(absolute(_get_diff(y_hat, y)))
-    if isnan(medae) or isinf(medae):
-        return 99
-    return medae
+    return median(absolute(_get_diff(y_hat, y)))
 
 
 def calc_r2(y_hat, y):
@@ -50,8 +41,8 @@ def calc_r2(y_hat, y):
         except:
             raise ValueError('Check input data format.')
 
-    s_res = nsum(_get_diff(y_hat, y)**2)
-    s_tot = nsum(_get_diff(y, y_mean)**2)
+    s_res = nsum(square(_get_diff(y_hat, y)))
+    s_tot = nsum(square(_get_diff(y, y_mean)))
     return(1 - (s_res / s_tot))
 
 
