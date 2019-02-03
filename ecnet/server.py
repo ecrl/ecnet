@@ -336,9 +336,9 @@ class Server:
             'Invalid shuffle type: {}'.format(type(shuffle))
 
         hyperparameters = [
-            ('float', (0.01, 0.2)),
-            ('int', (1000, 25000)),
-            ('float', (0.0, 1.0))
+            ('float', (0.01, 1.0)),
+            ('int', (1000, 35000)),
+            ('float', (0.01, 1.0))
         ]
         for _ in range(len(self.vars['hidden_layers'])):
             hyperparameters.append(('int', (8, 32)))
@@ -387,6 +387,8 @@ class Server:
         self.vars['keep_prob'] = new_hyperparameters[2]
         for idx, layer in enumerate(self.vars['hidden_layers'], 3):
             layer[0] = new_hyperparameters[idx]
+
+        self.__save_config(self.__config_filename)
 
         self._logger.log(
             'debug',
@@ -671,17 +673,9 @@ class Server:
                 'Project has not been created with create_project()'
             )
 
-        with open(
-            path.join(self.__project_name, self.__config_filename),
-            'w'
-        ) as config_save:
-            dump(
-                self.vars,
-                config_save,
-                default_flow_style=False,
-                explicit_start=True
-            )
-        config_save.close()
+        self.__save_config(
+            path.join(self.__project_name, self.__config_filename)
+        )
 
         with open(
             path.join(self.__project_name, 'data.d'),
@@ -712,6 +706,22 @@ class Server:
             'Project saved to {}'.format(save_file),
             call_loc='PROJECT'
         )
+
+    def __save_config(self, filename):
+        '''Private method: saves current Server config to specified filename
+
+        Args:
+            filename (str): path to config .yml save location
+        '''
+
+        with open(filename, 'w') as config_save:
+            dump(
+                self.vars,
+                config_save,
+                default_flow_style=False,
+                explicit_start=True
+            )
+        config_save.close()
 
     def __open_project(self, project_name):
         '''Private method: Opens a .prj file, imports data and model
