@@ -15,17 +15,26 @@ from numpy import absolute, asarray, float64, isinf, isnan, median,\
 
 def calc_rmse(y_hat, y):
 
-    return nsqrt((square(_get_diff(y_hat, y)).mean()))
+    rmse = nsqrt((square(_get_diff(y_hat, y)).mean()))
+    if isnan(rmse) or isinf(rmse):
+        return 99
+    return rmse
 
 
 def calc_mean_abs_error(y_hat, y):
 
-    return(absolute(_get_diff(y_hat, y)).mean())
+    mae = absolute(_get_diff(y_hat, y)).mean()
+    if isnan(mae) or isinf(mae):
+        return 99
+    return mae
 
 
 def calc_med_abs_error(y_hat, y):
 
-    return(median(absolute(_get_diff(y_hat, y))))
+    medae = median(absolute(_get_diff(y_hat, y)))
+    if isnan(medae) or isinf(medae):
+        return 99
+    return medae
 
 
 def calc_r2(y_hat, y):
@@ -48,8 +57,4 @@ def calc_r2(y_hat, y):
 
 def _get_diff(y_hat, y):
 
-    diff = asarray(y_hat, dtype=float64) - asarray(y, dtype=float64)
-    for i, d in enumerate(diff):
-        if isnan(d) or isinf(d):
-            diff[i] = nan_to_num(d)
-    return diff
+    return asarray(y_hat, dtype=float64) - asarray(y, dtype=float64)
