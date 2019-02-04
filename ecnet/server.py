@@ -211,20 +211,29 @@ class Server:
         )
 
     def import_data(self, data_filename, sort_type='random',
-                    data_split=[0.65, 0.25, 0.1]):
+                    sort_string=None, data_split=[0.65, 0.25, 0.1]):
         '''Imports data from ECNet formatted CSV database
 
         Args:
             data_filename (str): path to CSV database
             sort_type (str): 'random' or 'explicit' (DB specified) sorting
-            data_split (list): [learn%, valid%, test%] if sort_type == True
+            sort_string (str): if not None and type == 'random', data points w/
+                this STRING column name will be split proportionally
+            data_split (list): [learn%, valid%, test%] if sort_type == 'random'
+                (also applies this split for sorted sets)
         '''
 
         self.DataFrame = ecnet.data_utils.DataFrame(data_filename)
         if sort_type == 'random':
-            self.DataFrame.create_sets(random=True, split=data_split)
+            if sort_string is not None:
+                self.DataFrame.create_sorted_sets(
+                    sort_string,
+                    split=data_split
+                )
+            else:
+                self.DataFrame.create_sets(random=True, split=data_split)
         elif sort_type == 'explicit':
-            self.DataFrame.create_sets(random=False)
+            self.DataFrame.create_sets()
         else:
             raise ValueError('Invalid sort_type {}'.format(sort_type))
         self._sets = self.DataFrame.package_sets()
