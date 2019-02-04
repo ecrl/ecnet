@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/limit_parameters.py
-# v.2.1.0
+# v.2.1.1
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the functions necessary for reducing the input dimensionality of a
