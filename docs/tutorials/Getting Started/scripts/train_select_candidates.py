@@ -10,7 +10,7 @@ def main():
         data_split=[0.6, 0.2, 0.2]
     )
     sv.create_project(
-        '../kinetic_viscosity',
+        'kinetic_viscosity',
         num_builds=1,
         num_nodes=5,
         num_candidates=25

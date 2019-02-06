@@ -4,7 +4,7 @@ from ecnet import Server
 def main():
 
     sv = Server(
-        project_file='../kinetic_viscosity.prj',
+        project_file='kinetic_viscosity.prj',
         log_level='debug'
     )
     sv.use_model(
