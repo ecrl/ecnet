@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/server.py
-# v.2.1.0
+# v.2.1.1
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "Server" class, which handles ECNet project creation, neural
@@ -211,20 +211,29 @@ class Server:
         )
 
     def import_data(self, data_filename, sort_type='random',
-                    data_split=[0.65, 0.25, 0.1]):
+                    sort_string=None, data_split=[0.65, 0.25, 0.1]):
         '''Imports data from ECNet formatted CSV database
 
         Args:
             data_filename (str): path to CSV database
             sort_type (str): 'random' or 'explicit' (DB specified) sorting
-            data_split (list): [learn%, valid%, test%] if sort_type == True
+            sort_string (str): if not None and type == 'random', data points w/
+                this STRING column name will be split proportionally
+            data_split (list): [learn%, valid%, test%] if sort_type == 'random'
+                (also applies this split for sorted sets)
         '''
 
         self.DataFrame = ecnet.data_utils.DataFrame(data_filename)
         if sort_type == 'random':
-            self.DataFrame.create_sets(random=True, split=data_split)
+            if sort_string is not None:
+                self.DataFrame.create_sorted_sets(
+                    sort_string,
+                    split=data_split
+                )
+            else:
+                self.DataFrame.create_sets(random=True, split=data_split)
         elif sort_type == 'explicit':
-            self.DataFrame.create_sets(random=False)
+            self.DataFrame.create_sets()
         else:
             raise ValueError('Invalid sort_type {}'.format(sort_type))
         self._sets = self.DataFrame.package_sets()
@@ -237,7 +246,8 @@ class Server:
     def limit_input_parameters(self, limit_num, output_filename=None,
                                use_genetic=False, population_size=500,
                                num_generations=25, shuffle=False,
-                               data_split=[0.7, 0.2, 0.1]):
+                               data_split=[0.7, 0.2, 0.1], mut_rate=0,
+                               max_mut_amt=0):
         '''Limits the input dimensionality of currently loaded data; default
         method is an iterative inclusion algorithm, options for using a genetic
         algorithm available.
@@ -253,6 +263,10 @@ class Server:
                 population member
             data_split (list): [learn%, valid%, test%] for splits if shuffle ==
                 True
+            mut_rate (float): probability that a population member is subject
+                to mutation
+            max_mut_amt (float): if mutating, how much a parameter can mutate
+                (proportionally)
 
         See https://github.com/tjkessler/pygenetics for genetic algorithm
         source code.
@@ -278,7 +292,8 @@ class Server:
             params = ecnet.limit_parameters.limit_genetic(
                 self.DataFrame, limit_num, self.vars, population_size,
                 num_generations, self.__num_processes, shuffle=shuffle,
-                data_split=data_split, logger=self._logger
+                data_split=data_split, mut_rate=mut_rate,
+                max_mut_amt=max_mut_amt, logger=self._logger
             )
         else:
             self._logger.log(
@@ -330,9 +345,9 @@ class Server:
             'Invalid shuffle type: {}'.format(type(shuffle))
 
         hyperparameters = [
-            ('float', (0.01, 0.2)),
-            ('int', (1000, 25000)),
-            ('float', (0.0, 1.0))
+            ('float', (0.01, 1.0)),
+            ('int', (1000, 35000)),
+            ('float', (0.01, 1.0))
         ]
         for _ in range(len(self.vars['hidden_layers'])):
             hyperparameters.append(('int', (8, 32)))
@@ -381,6 +396,8 @@ class Server:
         self.vars['keep_prob'] = new_hyperparameters[2]
         for idx, layer in enumerate(self.vars['hidden_layers'], 3):
             layer[0] = new_hyperparameters[idx]
+
+        self.__save_config(self.__config_filename)
 
         self._logger.log(
             'debug',
@@ -665,17 +682,9 @@ class Server:
                 'Project has not been created with create_project()'
             )
 
-        with open(
-            path.join(self.__project_name, self.__config_filename),
-            'w'
-        ) as config_save:
-            dump(
-                self.vars,
-                config_save,
-                default_flow_style=False,
-                explicit_start=True
-            )
-        config_save.close()
+        self.__save_config(
+            path.join(self.__project_name, self.__config_filename)
+        )
 
         with open(
             path.join(self.__project_name, 'data.d'),
@@ -706,6 +715,22 @@ class Server:
             'Project saved to {}'.format(save_file),
             call_loc='PROJECT'
         )
+
+    def __save_config(self, filename):
+        '''Private method: saves current Server config to specified filename
+
+        Args:
+            filename (str): path to config .yml save location
+        '''
+
+        with open(filename, 'w') as config_save:
+            dump(
+                self.vars,
+                config_save,
+                default_flow_style=False,
+                explicit_start=True
+            )
+        config_save.close()
 
     def __open_project(self, project_name):
         '''Private method: Opens a .prj file, imports data and model

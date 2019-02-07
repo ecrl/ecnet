@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/limit_parameters.py
-# v.2.1.0
+# v.2.1.1
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the functions necessary for reducing the input dimensionality of a
@@ -158,7 +158,7 @@ def limit_iterative_include(DataFrame, limit_num, vars, logger=None):
 
 def limit_genetic(DataFrame, limit_num, vars, population_size, num_generations,
                   num_processes, shuffle=False, data_split=[0.65, 0.25, 0.1],
-                  logger=None):
+                  mut_rate=0, max_mut_amt=0, logger=None):
     '''Limits the dimensionality of input data using a genetic algorithm
 
     Args:
@@ -171,6 +171,10 @@ def limit_genetic(DataFrame, limit_num, vars, population_size, num_generations,
         shuffle (bool): whether to shuffle the data sets for each population
             member
         data_split (list): [learn%, valid%, test%] if shuffle == True
+        mut_rate (float): probability that a population member is subject
+            to mutation
+        max_mut_amt (float): if mutating, how much a parameter can mutate
+            (proportionally)
         logger (ColorLogger): ColorLogger object; if not supplied, does not log
 
     Returns:
@@ -206,38 +210,47 @@ def limit_genetic(DataFrame, limit_num, vars, population_size, num_generations,
 
     population.generate_population()
     if logger is not None:
-        logger.log('debug', 'Generation: 0 - Population fitness: {}'.format(
-            sum(p.fitness_score for p in population.members) / len(population),
+        logger.log(
+            'debug',
+            'Generation: 0 - Population fitness: {:.5f}'.format(
+                float(population.med_cost_fn_val)
+            ), call_loc='LIMIT'
+        )
+        logger.log('debug', '\tBest fitness: {}'.format(
+            population.best_cost_fn_val
+        ), call_loc='LIMIT')
+        logger.log('debug', '\tBest parameters: {}'.format(
+            [DataFrame.input_names[val] for val in
+             population.best_parameters.values()]
         ), call_loc='LIMIT')
 
     for gen in range(num_generations):
-        population.next_generation()
+        population.next_generation(mut_rate, max_mut_amt)
         if logger is not None:
             logger.log(
                 'debug',
-                'Generation: {} - Population fitness: {}'.format(
+                'Generation: {} - Population fitness: {:.5f}'.format(
                     gen + 1,
-                    sum(
-                        p.fitness_score for p in population.members
-                    ) / len(population)
+                    float(population.med_cost_fn_val)
                 ),
                 call_loc='LIMIT'
             )
+            logger.log('debug', '\tBest fitness: {}'.format(
+                population.best_cost_fn_val
+            ), call_loc='LIMIT')
+            logger.log('debug', '\tBest parameters: {}'.format(
+                [DataFrame.input_names[val] for val in
+                 population.best_parameters.values()]
+            ), call_loc='LIMIT')
 
-    min_idx = 0
-    for new_idx, member in enumerate(population.members):
-        if member.fitness_score < population.members[min_idx].fitness_score:
-            min_idx = new_idx
-
-    input_list = []
-    for val in population.members[min_idx].parameters.values():
-        input_list.append(DataFrame.input_names[val])
+    input_list = [DataFrame.input_names[val] for val in
+                  population.best_parameters.values()]
 
     if logger is not None:
         logger.log(
             'debug',
             'Best member fitness score: {}'.format(
-                population.members[min_idx].fitness_score
+                population.best_cost_fn_val
             ),
             call_loc='LIMIT'
         )

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='ecnet',
-    version='2.1.0',
+    version='2.1.1',
     description='UMass Lowell Energy and Combustion Research Laboratory Neural'
                 ' Network Software',
     url='http://github.com/tjkessler/ecnet',

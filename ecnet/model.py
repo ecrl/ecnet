@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/error_utils.py
-# v.2.1.0
+# v.2.1.1
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions necessary creating, training, saving, and reusing neural
@@ -17,14 +17,19 @@ from os import environ, mkdir, path
 from random import uniform
 from multiprocessing import current_process
 from copy import deepcopy
+from warnings import filterwarnings
 
 # 3rd party imports
 from tensorflow import add, global_variables_initializer, matmul, nn
 from tensorflow import placeholder, random_normal, reset_default_graph
 from tensorflow import Session, square, train, Variable
-from numpy import asarray, sqrt as nsqrt
+from numpy import asarray, isinf, isnan, nan_to_num, seterr, sqrt as nsqrt
+
+# ECNet imports
+from ecnet.error_utils import calc_rmse
 
 environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+# filterwarnings('ignore', category=RuntimeWarning)
 
 
 def __linear_fn(n):
@@ -214,9 +219,10 @@ class MultilayerPerceptron:
                 sess.run(optimizer, feed_dict={x: x_l, y: y_l})
                 current_epoch += 1
                 if current_epoch % 250 == 0:
-                    valid_rmse = self.__calc_rmse(
-                        sess.run(pred, feed_dict={x: x_v}), y_v
-                    )
+                    valid_preds = sess.run(pred, feed_dict={x: x_v})
+                    if isnan(valid_preds).any() or isinf(valid_preds).any():
+                        valid_preds = nan_to_num(valid_preds)
+                    valid_rmse = calc_rmse(valid_preds, y_v)
                     if valid_rmse < valid_rmse_lowest:
                         valid_rmse_lowest = valid_rmse
                     elif valid_rmse > valid_rmse_lowest + (
@@ -243,6 +249,8 @@ class MultilayerPerceptron:
             saver.restore(sess, self._filename)
             results = self.__feed_forward(x).eval()
         sess.close()
+        if isnan(results).any() or isinf(results).any():
+            results = nan_to_num(results)
         return results
 
     def save(self, filepath=None):
@@ -328,9 +336,13 @@ class MultilayerPerceptron:
         '''
 
         try:
-            return(nsqrt(((y_hat - y)**2).mean()))
+            diff = (y_hat - y)
         except:
-            return(nsqrt(((asarray(y_hat) - asarray(y))**2).mean()))
+            diff = (asarray(y_hat) - asarray(y))
+        for i, d in enumerate(diff):
+            if isnan(d):
+                diff[i] = nan_to_num(d)
+        return(nsqrt((diff**2).mean()))
 
 
 def train_model(validate, sets, vars, save_path=None, id=None):
