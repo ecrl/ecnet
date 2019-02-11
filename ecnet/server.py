@@ -137,8 +137,8 @@ class Server:
                        db_filename), call_loc='LIMIT')
 
     def tune_hyperparameters(self, num_employers, num_iterations,
-                             shuffle=False, split=None, selection_set=None,
-                             selection_fn='rmse'):
+                             shuffle=False, split=None, eval_set=None,
+                             eval_fn='rmse'):
         '''Tunes neural network learning hyperparameters using an artificial
         bee colony algorithm; tuned hyperparameters are saved to Server's
         model configuration file
@@ -149,9 +149,9 @@ class Server:
             shuffle (bool): if True, L/V/T sets are shuffled for each bee and
                 their evaluations
             split (list): if shuffle is True, [learn%, valid%, test%]
-            selection_set (str): set to evaluate bee fitness; `learn`, `valid`,
+            eval_set (str): set to evaluate bee fitness; `learn`, `valid`,
                 `train`, `test`, None (all sets)
-            selection_fn (str): error function used to evaluate bee fitness;
+            eval_fn (str): error function used to evaluate bee fitness;
                 `rmse`, `mean_abs_error`, `med_abs_error`
         '''
 
@@ -170,8 +170,8 @@ class Server:
             self._num_processes,
             shuffle,
             split,
-            selection_set,
-            selection_fn
+            eval_set,
+            eval_fn
         )
         self._vars['beta_1'] = params['beta_1']
         self._vars['beta_2'] = params['beta_2']
@@ -183,7 +183,7 @@ class Server:
         save_config(self._vars, self._cf_file)
 
     def train(self, shuffle=None, split=None, retrain=False,
-              validate=True, selection_set=None, selection_fn='rmse'):
+              validate=False, selection_set=None, selection_fn='rmse'):
         '''Trains neural network(s) using currently-loaded data; single NN if
         no project is created, all candidates if created
 
@@ -208,7 +208,8 @@ class Server:
                 self._vars,
                 selection_set,
                 selection_fn,
-                retrain
+                retrain,
+                validate=validate
             )
 
         else:
@@ -242,7 +243,7 @@ class Server:
                         pool_errors[pool].append(train_pool.apply_async(
                             train_model,
                             [self._sets, self._vars, selection_set,
-                             selection_fn, retrain, filename]
+                             selection_fn, retrain, filename, validate]
                         ))
 
                     else:
@@ -252,7 +253,8 @@ class Server:
                             selection_set,
                             selection_fn,
                             retrain,
-                            filename
+                            filename,
+                            validate
                         ))
 
                     if shuffle is not None:
