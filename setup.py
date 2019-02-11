@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='ecnet',
-    version='2.1.1',
+    version='3.0.0',
     description='UMass Lowell Energy and Combustion Research Laboratory Neural'
                 ' Network Software',
     url='http://github.com/tjkessler/ecnet',
@@ -13,11 +13,12 @@ setup(
     license='MIT',
     packages=find_packages(),
     install_requires=[
+        'apisoptimizer',
         'colorlogging',
-        'ecabc',
+        'ditto-lib',
+        'keras',
         'numpy',
         'pubchempy',
-        'pygenetics',
         'pyyaml',
         'tensorflow'
     ],
