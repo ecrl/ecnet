@@ -1,11 +1,11 @@
-from ecnet.tools import predict_with_prj
+from ecnet.tools.project import predict
 
 
 def predict():
 
-    predict_with_prj(
+    predict(
         'mols_smiles.txt',
-        '_test_results.csv',
+        'cp_test_results.csv',
         'cp_model_v1.5.prj',
         form='smiles'
     )
