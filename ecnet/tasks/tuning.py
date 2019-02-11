@@ -19,7 +19,7 @@ from ecnet.utils.server_utils import default_config, train_model
 
 def tune_hyperparameters(df, vars, num_employers, num_iterations,
                          num_processes=1, shuffle=False, split=None,
-                         selection_set=None, selection_fn='rmse'):
+                         eval_set=None, eval_fn='rmse'):
     '''Tunes neural network learning/architecture hyperparameters
 
     Args:
@@ -30,6 +30,10 @@ def tune_hyperparameters(df, vars, num_employers, num_iterations,
         num_processes (int): number of parallel processes to utilize
         shuffle (bool): if True, shuffles L/V/T data for all evals
         split (list): if shuffle is True, [learn%, valid%, test%]
+        eval_set (str): set used to evaluate bee performance; `learn`, `valid`,
+            `train`, `test`, None (all sets)
+        eval_fn (str): error function used to evaluate bee performance; `rmse`,
+            `mean_abs_error`, `med_abs_error`
 
     Returns:
         dict: tuned hyperparameters
@@ -40,8 +44,8 @@ def tune_hyperparameters(df, vars, num_employers, num_iterations,
         'shuffle': shuffle,
         'num_processes': num_processes,
         'split': split,
-        'sel_set': selection_set,
-        'sel_fn': selection_fn
+        'eval_set': eval_set,
+        'eval_fn': eval_fn
     }
 
     ap_logger.stream_level = logger.stream_level
@@ -95,5 +99,5 @@ def tune_fitness_function(params, args):
         df.shuffle('all', args['split'])
     sets = df.package_sets()
 
-    return train_model(sets, vars, args['sel_set'], args['sel_fn'],
+    return train_model(sets, vars, args['eval_set'], args['eval_fn'],
                        validate=False, save=False)
