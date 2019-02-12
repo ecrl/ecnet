@@ -273,7 +273,7 @@ class Server:
             for p_id, pool in enumerate(pool_errors):
                 candidate_fp = get_candidate_path(
                     self._prj_name, p_id, min(
-                        enumerate(pool_errors), key=itemgetter(1)
+                        enumerate(pool), key=itemgetter(1)
                     )[0], model=True
                 )
                 pool_fp = get_candidate_path(self._prj_name, p_id, p_best=True)
