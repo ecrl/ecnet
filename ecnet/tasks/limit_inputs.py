@@ -9,7 +9,7 @@
 #
 
 # 3rd party imports
-from ditto_lib.generic.itemcollection import ItemCollection, Attribute,\
+from ditto_lib.generic.itemcollection import Attribute, ItemCollection,\
     logger as ditto_logger
 
 # ECNet imports
@@ -23,31 +23,42 @@ def limit_rforest(df, limit_num, num_estimators=1000, num_processes=1):
         df (ecnet.utils.data_utils.DataFrame): loaded data
         limit_num (int): desired number of input parameters
         num_estimators (int): number of trees used by RFR algorithm
-        num_processes (int): number parallel jobs for RFR algorithm
+        num_processes (int): number of parallel jobs for RFR algorithm
 
     Returns:
-        list: input parameter names
+        ecnet.utils.data_utils.DataFrame: limited data
     '''
 
     ditto_logger.stream_level = logger.stream_level
     if logger.file_level != 'disable':
-        ditto_logger.file_level = logger.file_level
         ditto_logger.log_dir = logger.log_dir
+        ditto_logger.file_level = logger.file_level
     item_collection = ItemCollection(df._filename)
-    non_desc = ['DATAID', 'ASSIGNMENT']
-    non_desc.extend([sn for sn in df.string_names])
-    non_desc.extend([gn for gn in df.group_names])
-    non_desc.extend([tn for tn in df.target_names])
-    item_collection.from_csv(
-        df._filename,
-        start_row=1,
-        preamble_indexes=(0, 0),
-        non_descriptors=non_desc
-    )
+    for inp_name in df.input_names:
+        item_collection.add_attribute(Attribute(inp_name))
+    for pt in df.data_points:
+        item_collection.add_item(pt.id, pt.inputs)
+    for tar_name in df.target_names:
+        item_collection.add_attribute(Attribute(tar_name))
+    for pt in df.data_points:
+        for idx, tar in enumerate(pt.targets):
+            item_collection.set_item_attribute(
+                pt.id, tar, df.target_names[idx]
+            )
     item_collection.strip()
-    return [param[0] for param in item_collection.random_forest_regressor(
+    params = [param[0] for param in item_collection.random_forest_regressor(
         target_attribute=df.target_names[0],
         n_components=limit_num,
         n_estimators=num_estimators,
         n_jobs=num_processes
     )]
+    for idx, param in enumerate(params):
+        for tn in df.target_names:
+            if tn == param:
+                del params[idx]
+                break
+
+    logger.log('debug', 'Selected parameters: {}'.format(params),
+               call_loc='LIMIT')
+    df.set_inputs(params)
+    return df
