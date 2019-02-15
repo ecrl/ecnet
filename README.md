@@ -159,7 +159,7 @@ Optimal input dimensionality, i.e. finding a balance between runtime and precisi
 sv.limit_inputs(15)
 
 # Find the 15 most influential input parameters, and save them to an ECNet-formatted database:
-sv.limit_inputs(15, db_filename='my_limited_data.csv')
+sv.limit_inputs(15, output_filename='my_limited_data.csv')
 ```
 
 Optimal hyperparameters are essential for mapping inputs to outputs during neural network
