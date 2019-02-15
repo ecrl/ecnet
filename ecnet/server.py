@@ -14,6 +14,7 @@
 
 # ECNet imports
 from ecnet.tasks.limit_inputs import limit_rforest
+from ecnet.tasks.remove_outliers import remove_outliers
 from ecnet.tasks.tuning import tune_hyperparameters
 from ecnet.utils.data_utils import DataFrame, save_results
 from ecnet.utils.logging import logger
@@ -108,33 +109,52 @@ class Server:
         logger.log('debug', 'Number of candidates/pool: {}'.format(
                    num_candidates), call_loc='PROJECT')
 
-    def limit_inputs(self, limit_num, num_estimators=1000, db_filename=None):
+    def remove_outliers(self, leaf_size=30, output_filename=None):
+        '''Removes any outliers from the currently-loaded data using
+            unsupervised outlier detection using local outlier factor
+
+        Args:
+            leaf_size (int): used by nearest-neighbor algorithm as the number
+                of points at which to switch to brute force
+            output_filename (str): if not None, database w/o outliers is saved
+                here
+        '''
+
+        logger.log('info', 'Removing outliers', call_loc='OUTLIERS')
+        logger.log('debug', 'Leaf size: {}'.format(leaf_size),
+                   call_loc='OUTLIERS')
+        self._df = remove_outliers(self._df, leaf_size, self._num_processes)
+        if output_filename is not None:
+            self._df.save(output_filename)
+            logger.log('info', 'Resulting database saved to {}'.format(
+                       output_filename), call_loc='OUTLIERS')
+
+    def limit_inputs(self, limit_num, num_estimators=1000,
+                     output_filename=None):
         '''Selects `limit_num` influential input parameters using random
         forest regression
 
         Args:
             limit_num (int): desired number of inputs
             num_estimators (int): number of trees in the RFR algorithm
-            db_filename (str): if not None, new limited database is saved here
+            output_filename (str): if not None, new limited database is saved
+                here
         '''
 
         logger.log('info', 'Finding {} most influential input parameters'
                    .format(limit_num), call_loc='LIMIT')
         logger.log('debug', 'Number of estimators: {}'.format(num_estimators),
                    call_loc='LIMIT')
-        input_params = limit_rforest(
+        self._df = limit_rforest(
             self._df,
             limit_num,
             num_estimators,
             self._num_processes
         )
-        logger.log('debug', 'Selected parameters: {}'.format(input_params),
-                   call_loc='LIMIT')
-        self._df.set_inputs(input_params)
-        if db_filename is not None:
-            self._df.save(db_filename)
+        if output_filename is not None:
+            self._df.save(output_filename)
             logger.log('info', 'Resulting database saved to {}'.format(
-                       db_filename), call_loc='LIMIT')
+                       output_filename), call_loc='LIMIT')
 
     def tune_hyperparameters(self, num_employers, num_iterations,
                              shuffle=False, split=None, eval_set=None,
