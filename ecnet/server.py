@@ -375,7 +375,7 @@ class Server:
 
         if self._prj_name is None:
             raise RuntimeError('A project has not been created')
-        save_config(self._vars, self._cf_file)
+        save_config(self._vars, path.join(self._prj_name, self._cf_file))
         save_df(self._df, path.join(self._prj_name, 'data.d'))
         save_path = self._prj_name
         if filename is not None:
