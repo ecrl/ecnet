@@ -102,7 +102,7 @@ mdl_to_descriptors('molfile.md', 'descriptors.csv')
 
 ## ECNet .prj file usage
 
-Once an ECNet project has been created, the resulting .prj file can be used for new molecules. A text file containing names or SMILES strings, one per line, is required in addition to the .prj file.
+Once an ECNet project has been created, the resulting .prj file can be used to predict properties for new molecules. A text file containing names or SMILES strings of new molecules, one per line, is required in addition to the .prj file.
 
 ```python
 from ecnet.tools.project import predict
