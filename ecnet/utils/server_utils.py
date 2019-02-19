@@ -234,13 +234,13 @@ def train_model(sets, vars, eval_set, eval_fn, retrain=False,
     model = MultilayerPerceptron(filename=filename)
     if retrain:
         model.load()
-        return model
-    for idx, layer in enumerate(vars['hidden_layers']):
-        if idx == 0:
-            model.add_layer(layer[0], layer[1], len(sets.learn_x[0]))
-        else:
-            model.add_layer(layer[0], layer[1])
-    model.add_layer(len(sets.learn_y[0]), vars['output_activation'])
+    else:
+        for idx, layer in enumerate(vars['hidden_layers']):
+            if idx == 0:
+                model.add_layer(layer[0], layer[1], len(sets.learn_x[0]))
+            else:
+                model.add_layer(layer[0], layer[1])
+        model.add_layer(len(sets.learn_y[0]), vars['output_activation'])
     if validate:
         model.fit(
             sets.learn_x,

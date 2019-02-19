@@ -414,9 +414,13 @@ class Server:
             [pool for pool in listdir(self._prj_name)
              if path.isdir(path.join(self._prj_name, pool))]
         )
+        self._num_candidates = len(
+            [cand for cand in listdir(path.join(self._prj_name, 'pool_0'))
+             if path.isdir(path.join(self._prj_name, 'pool_0', cand))]
+        )
         for _, _, files in walk(self._prj_name):
             for file in files:
-                if '.yml' in files:
+                if '.yml' in file:
                     self._cf_file = file
                     self._vars = {}
                     self._vars.update(open_config(file))
