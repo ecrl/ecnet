@@ -112,4 +112,4 @@ def tune_fitness_function(params, **kwargs):
     sets = df.package_sets()
 
     return train_model(sets, vars, kwargs['eval_set'], kwargs['eval_fn'],
-                       validate=True, save=False)
+                       validate=False, save=False)
