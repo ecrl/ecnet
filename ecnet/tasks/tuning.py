@@ -9,8 +9,7 @@
 #
 
 # 3rd party imports
-from apisoptimizer import Colony
-from apisoptimizer import logger as ap_logger
+from ecabc.abc import ABC
 
 # ECNet imports
 from ecnet.utils.logging import logger
@@ -39,7 +38,7 @@ def tune_hyperparameters(df, vars, num_employers, num_iterations,
         dict: tuned hyperparameters
     '''
 
-    colony_args = {
+    fit_fn_args = {
         'df': df,
         'shuffle': shuffle,
         'num_processes': num_processes,
@@ -48,56 +47,70 @@ def tune_hyperparameters(df, vars, num_employers, num_iterations,
         'eval_fn': eval_fn
     }
 
-    ap_logger.stream_level = logger.stream_level
-    if logger.file_level != 'disable':
-        ap_logger.file_level = logger.file_level
-        ap_logger.log_dir = logger.log_dir
+    value_ranges = [
+        ('float', (0.0, 1.0)),
+        ('float', (0.0, 1.0)),
+        ('float', (0.0, 1.0)),
+        ('float', (0.0, 1.0)),
+        ('int', (4, 40)),
+        ('int', (4, 40)),
+        ('float', (0.0, 1.0))
+    ]
 
-    abc = Colony(
-        num_employers,
+    abc = ABC(
         tune_fitness_function,
-        colony_args,
-        num_processes=num_processes
+        num_employers=num_employers,
+        value_ranges=value_ranges,
+        args=fit_fn_args,
+        processes=num_processes
     )
-    abc.add_param('beta_1', 0.0, 1.0)
-    abc.add_param('beta_2', 0.0, 1.0)
-    abc.add_param('decay', 0.0, 1.0)
-    abc.add_param('epsilon', 0.0, 1.0)
-    abc.add_param('num_hidden_1', 4, 40)
-    abc.add_param('num_hidden_2', 4, 40)
-    abc.add_param('learning_rate', 0.0, 1.0)
-    abc.initialize()
+
+    abc._logger.stream_level = logger.stream_level
+    if logger.file_level != 'disable':
+        abc._logger.log_dir = logger.log_dir
+        abc._logger.file_level = logger.file_level
+    abc.create_employers()
     for _ in range(num_iterations):
-        logger.log('debug', 'Population fitness: {}'.format(
-            abc.ave_obj_fn_val), call_loc='TUNE')
-        abc.search()
-    return abc.best_parameters
+        abc.run_iteration()
+        logger.log('debug', 'Best Performer: {}, {}'.format(
+            abc.best_performer[2], abc.best_performer[1]
+        ))
+    params = abc.best_performer[1]
+    vars = default_config()
+    vars['beta_1'] = params[0]
+    vars['beta_2'] = params[1]
+    vars['decay'] = params[2]
+    vars['epsilon'] = params[3]
+    vars['hidden_layers'][0][0] = params[4]
+    vars['hidden_layers'][1][0] = params[5]
+    vars['learning_date'] = params[6]
+    return vars
 
 
-def tune_fitness_function(params, args):
+def tune_fitness_function(params, **kwargs):
     '''Fitness function used by ABC
 
     Args:
         params (dict): bee hyperparams
-        args (dict): additional arguments
+        kwargs (dict): additional arguments
 
     Returns:
-        float: mean absolute error of NN with supplied hyperparams
+        float: error of NN with supplied hyperparams
     '''
 
     vars = default_config()
-    vars['beta_1'] = params['beta_1'].value
-    vars['beta_2'] = params['beta_2'].value
-    vars['decay'] = params['decay'].value
-    vars['epsilon'] = params['epsilon'].value
-    vars['hidden_layers'][0][0] = params['num_hidden_1'].value
-    vars['hidden_layers'][1][0] = params['num_hidden_2'].value
-    vars['learning_date'] = params['learning_rate'].value
+    vars['beta_1'] = params[0]
+    vars['beta_2'] = params[1]
+    vars['decay'] = params[2]
+    vars['epsilon'] = params[3]
+    vars['hidden_layers'][0][0] = params[4]
+    vars['hidden_layers'][1][0] = params[5]
+    vars['learning_date'] = params[6]
 
-    df = args['df']
-    if args['shuffle']:
-        df.shuffle('all', args['split'])
+    df = kwargs['df']
+    if kwargs['shuffle']:
+        df.shuffle('all', kwargs['split'])
     sets = df.package_sets()
 
-    return train_model(sets, vars, args['eval_set'], args['eval_fn'],
-                       validate=False, save=False)
+    return train_model(sets, vars, kwargs['eval_set'], kwargs['eval_fn'],
+                       validate=True, save=False)

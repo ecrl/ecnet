@@ -13,9 +13,9 @@ setup(
     license='MIT',
     packages=find_packages(),
     install_requires=[
-        'apisoptimizer',
         'colorlogging',
         'ditto-lib',
+        'ecabc',
         'keras',
         'numpy',
         'pubchempy',
