@@ -6,7 +6,7 @@ def train(validate, dset=None):
 
     sv = Server()
     sv.load_data('cn_model_v1.0.csv')
-    sv.train(validate=validate, selection_set=dset, selection_fn=sel_fn)
+    sv.train(validate=validate, selection_set=dset)
     sv.use(dset=dset)
     sv.errors('rmse', 'med_abs_error', 'mean_abs_error', 'r2', dset=dset)
 
@@ -17,7 +17,7 @@ def train_project(validate, shuffle, split=[0.7, 0.2, 0.1], num_processes=1,
     sv = Server(num_processes=num_processes)
     sv.load_data('cn_model_v1.0.csv')
     sv.create_project(
-        '_training_test'
+        '_training_test',
         num_pools=2,
         num_candidates=2
     )

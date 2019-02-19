@@ -1,16 +1,16 @@
 from ecnet.tools.project import predict
 
 
-def predict():
+def prj_predict():
 
     predict(
         'mols_smiles.txt',
-        'cp_test_results.csv',
-        'cp_model_v1.5.prj',
+        'cn_test_results.csv',
+        'cn_model_v4.0.prj',
         form='smiles'
     )
 
 
 if __name__ == '__main__':
 
-    predict()
+    prj_predict()

@@ -24,5 +24,6 @@ def use_project():
 
 if __name__ == '__main__':
 
+    logger.stream_level = 'info'
     create_project()
     use_project()
