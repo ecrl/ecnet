@@ -8,6 +8,8 @@
 # Contains functions for selecting influential input parameters
 #
 
+from copy import deepcopy
+
 # 3rd party imports
 from ditto_lib.generic.itemcollection import Attribute, ItemCollection,\
     logger as ditto_logger
@@ -37,7 +39,7 @@ def limit_rforest(df, limit_num, num_estimators=1000, num_processes=1):
     for inp_name in df.input_names:
         item_collection.add_attribute(Attribute(inp_name))
     for pt in df.data_points:
-        item_collection.add_item(pt.id, pt.inputs)
+        item_collection.add_item(pt.id, deepcopy(pt.inputs))
     for tar_name in df.target_names:
         item_collection.add_attribute(Attribute(tar_name))
     for pt in df.data_points:
