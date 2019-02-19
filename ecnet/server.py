@@ -182,7 +182,7 @@ class Server:
                    '\t\t{}\n\t'.format(
                        num_employers, num_iterations, shuffle, split
                    ), call_loc='TUNE')
-        params = tune_hyperparameters(
+        self._vars = tune_hyperparameters(
             self._df,
             self._vars,
             num_employers,
@@ -193,13 +193,6 @@ class Server:
             eval_set,
             eval_fn
         )
-        self._vars['beta_1'] = params['beta_1']
-        self._vars['beta_2'] = params['beta_2']
-        self._vars['decay'] = params['decay']
-        self._vars['epsilon'] = params['epsilon']
-        self._vars['hidden_layers'][0][0] = params['num_hidden_1']
-        self._vars['hidden_layers'][1][0] = params['num_hidden_2']
-        self._vars['learning_rate'] = params['learning_rate']
         save_config(self._vars, self._cf_file)
 
     def train(self, shuffle=None, split=None, retrain=False,
