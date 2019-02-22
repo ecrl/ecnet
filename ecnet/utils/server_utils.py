@@ -26,7 +26,7 @@ def default_config():
     '''Returns default NN architecture/learning parameters'''
 
     return {
-        'epochs': 2000,
+        'epochs': 10000,
         'learning_rate': 0.001,
         'beta_1': 0.9,
         'beta_2': 0.999,
