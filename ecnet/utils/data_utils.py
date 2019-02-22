@@ -228,6 +228,20 @@ class DataFrame:
         logger.log('debug', 'Number of entries in test set: {}'.format(
                    len(self.test_set)), call_loc='DF')
 
+    def normalize(self):
+        '''Normalize input data (min-max, between 0 and 1)'''
+
+        for inp in range(len(self.data_points[0].inputs)):
+            vals = [float(pt.inputs[inp]) for pt in self.data_points]
+            v_min = min(vals)
+            v_max = max(vals)
+            for pt in self.data_points:
+                if v_max - v_min == 0:
+                    pt.inputs[inp] = 0
+                else:
+                    pt.inputs[inp] = (float(pt.inputs[inp]) - v_min) /\
+                        (v_max - v_min)
+
     def shuffle(self, sets='all', split=[0.7, 0.2, 0.1]):
         '''Shuffles learning, validation and test sets or learning and
         validation sets

@@ -69,7 +69,7 @@ class Server:
             self._vars = default_config()
             save_config(self._vars, self._cf_file)
 
-    def load_data(self, filename, random=False, split=None):
+    def load_data(self, filename, random=False, split=None, normalize=False):
         '''Loads data from an ECNet-formatted CSV database
 
         Args:
@@ -77,11 +77,15 @@ class Server:
             random (bool): if True, random set assignments (learn, validate,
                 test); if False, uses DB-specified assignmenets
             split (list): if random is True, [learn%, valid%, test%]
+            normalize (bool): if true, uses min-max normalization to normalize
+                input parameters between 0 and 1
         '''
 
         logger.log('info', 'Loading data from {}'.format(filename),
                    call_loc='LOAD')
         self._df = DataFrame(filename)
+        if normalize:
+            self._df.normalize()
         self._df.create_sets(random, split)
         self._sets = self._df.package_sets()
 
