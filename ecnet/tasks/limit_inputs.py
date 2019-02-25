@@ -41,7 +41,7 @@ def limit_rforest(df, limit_num, num_estimators=1000, num_processes=1):
     for pt in df.data_points:
         item_collection.add_item(pt.id, deepcopy(pt.inputs))
     for tar_name in df.target_names:
-        item_collection.add_attribute(Attribute(tar_name))
+        item_collection.add_attribute(Attribute(tar_name, is_descriptor=False))
     for pt in df.data_points:
         for idx, tar in enumerate(pt.targets):
             item_collection.set_item_attribute(
