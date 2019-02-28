@@ -11,8 +11,9 @@
 from copy import deepcopy
 
 # 3rd party imports
-from ditto_lib.generic.itemcollection import Attribute, ItemCollection,\
-    logger as ditto_logger
+from ditto_lib.itemcollection import Attribute, ItemCollection
+from ditto_lib.tasks.random_forest import random_forest_regressor
+from ditto_lib.utils.logging import logger as ditto_logger
 
 # ECNet imports
 from ecnet.utils.logging import logger
@@ -48,7 +49,8 @@ def limit_rforest(df, limit_num, num_estimators=1000, num_processes=1):
                 pt.id, tar, df.target_names[idx]
             )
     item_collection.strip()
-    params = [param[0] for param in item_collection.random_forest_regressor(
+    params = [param[0] for param in random_forest_regressor(
+        item_collection,
         target_attribute=df.target_names[0],
         n_components=limit_num,
         n_estimators=num_estimators,
