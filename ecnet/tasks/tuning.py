@@ -73,7 +73,7 @@ def tune_hyperparameters(df, vars, num_employers, num_iterations,
     for _ in range(num_iterations):
         abc.run_iteration()
         logger.log('debug', 'Best Performer: {}, {}'.format(
-            abc.best_performer[2], abc.best_performer[1]
+            abc.best_performer[0], abc.best_performer[1]
         ))
     params = abc.best_performer[1]
     vars['beta_1'] = params[0]
