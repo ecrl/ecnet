@@ -4,6 +4,7 @@ from copy import deepcopy
 from ditto_lib.itemcollection import Attribute, ItemCollection
 from ditto_lib.tasks.outliers import detect_outliers
 from ditto_lib.utils.logging import logger as ditto_logger
+from ditto_lib.utils.dataframe import Attribute
 
 from ecnet.utils.logging import logger
 
@@ -32,7 +33,7 @@ def remove_outliers(df, leaf_size=40, num_processes=1):
         item_collection.add_item(pt.id, deepcopy(pt.inputs))
     item_collection.strip()
     outliers = detect_outliers(
-        item_collection,
+        item_collection.dataframe,
         leaf_size=leaf_size,
         n_jobs=num_processes
     )
