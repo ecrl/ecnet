@@ -415,12 +415,12 @@ class Server:
             [cand for cand in listdir(path.join(self._prj_name, 'pool_0'))
              if path.isdir(path.join(self._prj_name, 'pool_0', cand))]
         )
-        for _, _, files in walk(self._prj_name):
+        for root, _, files in walk(self._prj_name):
             for file in files:
                 if '.yml' in file:
                     self._cf_file = file
                     self._vars = {}
-                    self._vars.update(open_config(file))
+                    self._vars.update(open_config(path.join(root, file)))
         self._df = open_df(path.join(self._prj_name, 'data.d'))
         self._sets = self._df.package_sets()
         logger.log('info', 'Opened project {}'.format(prj_file),
