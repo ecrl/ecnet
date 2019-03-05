@@ -6,8 +6,9 @@ from math import sqrt
 class ParityPlot:
 
     def __init__(self, title='Parity Plot', x_label='Experimental Value',
-                 y_label='Predicted Value'):
+                 y_label='Predicted Value', font='Times New Roman'):
 
+        plt.rcParams['font.family'] = font
         plt.title(title)
         plt.xlabel(x_label)
         plt.ylabel(y_label)
@@ -63,10 +64,11 @@ class ParityPlot:
 
     def _add_label(self, label, value):
 
+        string = '{}: '.format(label) + '%.3f' % value
         if self._labels is None:
-            self._labels = '{}: {}'.format(label, value)
+            self._labels = string
         else:
-            self._labels += '\n{}: {}'.format(label, value)
+            self._labels += '\n' + string
         text_box = AnchoredText(self._labels, frameon=True, loc=4, pad=0.5)
         plt.setp(text_box.patch, facecolor='white', edgecolor='w')
         plt.gca().add_artist(text_box)
