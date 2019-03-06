@@ -234,9 +234,9 @@ class Server:
                        self._num_pools, self._num_candidates),
                        call_loc='TRAIN')
             logger.log('debug', 'Arguments:\n\t| shuffle:\t\t{}\n\t| split:'
-                       '\t\t{}\n\t| retrain:\t\t{}\n\t| selection_set:\t{}\n\t'
-                       '| selection_fn:\t\t{}'.format(
-                           shuffle, split, retrain, selection_set,
+                       '\t\t{}\n\t| retrain:\t\t{}\n\t| validate:\t\t{}\n\t| '
+                       'selection_set:\t{}\n\t| selection_fn:\t\t{}'.format(
+                           shuffle, split, retrain, validate, selection_set,
                            selection_fn
                         ), call_loc='TRAIN')
 
