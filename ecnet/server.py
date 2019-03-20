@@ -161,8 +161,8 @@ class Server:
                        output_filename), call_loc='LIMIT')
 
     def tune_hyperparameters(self, num_employers, num_iterations,
-                             shuffle=False, split=None, eval_set=None,
-                             eval_fn='rmse'):
+                             shuffle=None, split=None, validate=True,
+                             eval_set=None, eval_fn='rmse'):
         '''Tunes neural network learning hyperparameters using an artificial
         bee colony algorithm; tuned hyperparameters are saved to Server's
         model configuration file
@@ -170,9 +170,10 @@ class Server:
         Args:
             num_employers (int): number of employer bees
             num_iterations (int): number of search iterations for the colony
-            shuffle (bool): if True, L/V/T sets are shuffled for each bee and
-                their evaluations
+            shuffle (str): `all` to shuffle all sets for each bee, `train` to
+                shuffle learning/validation data for each bee
             split (list): if shuffle is True, [learn%, valid%, test%]
+            validate (bool): if True, uses periodic validation; otherwise, no
             eval_set (str): set to evaluate bee fitness; `learn`, `valid`,
                 `train`, `test`, None (all sets)
             eval_fn (str): error function used to evaluate bee fitness;
@@ -183,8 +184,10 @@ class Server:
                    call_loc='TUNE')
         logger.log('debug', 'Arguments:\n\t| num_employers:\t{}\n\t| '
                    'num_iterations:\t{}\n\t| shuffle:\t\t{}\n\t| split:'
-                   '\t\t{}\n\t'.format(
-                       num_employers, num_iterations, shuffle, split
+                   '\t\t{}\n\t| validate:\t\t{}\n\t| eval_set:\t\t{}\n\t'
+                   '| eval_fn:\t\t{}'.format(
+                       num_employers, num_iterations, shuffle, split, validate,
+                       eval_set, eval_fn
                    ), call_loc='TUNE')
         self._vars = tune_hyperparameters(
             self._df,
@@ -194,6 +197,7 @@ class Server:
             self._num_processes,
             shuffle,
             split,
+            validate,
             eval_set,
             eval_fn
         )
