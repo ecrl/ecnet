@@ -46,7 +46,8 @@ def tune_hyperparameters(df, vars, num_employers, num_iterations,
         'split': split,
         'validate': validate,
         'eval_set': eval_set,
-        'eval_fn': eval_fn
+        'eval_fn': eval_fn,
+        'hidden_layers': vars['hidden_layers']
     }
 
     value_ranges = [
@@ -54,10 +55,11 @@ def tune_hyperparameters(df, vars, num_employers, num_iterations,
         ('float', (0.0, 1.0)),
         ('float', (0.0, 1.0)),
         ('float', (0.0, 1.0)),
-        ('int', (4, 40)),
-        ('int', (4, 40)),
         ('float', (0.0, 1.0))
     ]
+
+    for _ in range(len(vars['hidden_layers'])):
+        value_ranges.append(('int', (1, 50)))
 
     abc = ABC(
         tune_fitness_function,
@@ -72,19 +74,27 @@ def tune_hyperparameters(df, vars, num_employers, num_iterations,
         abc._logger.log_dir = logger.log_dir
         abc._logger.file_level = logger.file_level
     abc.create_employers()
-    for _ in range(num_iterations):
+    for i in range(num_iterations):
+        logger.log('info', 'Iteration {}'.format(i + 1), call_loc='TUNE')
         abc.run_iteration()
-        logger.log('debug', 'Best Performer: {}, {}'.format(
-            abc.best_performer[0], abc.best_performer[1]
-        ))
+        logger.log('info', 'Best Performer: {}, {}'.format(
+            abc.best_performer[2], {
+                'beta_1': abc.best_performer[1][0],
+                'beta_2': abc.best_performer[1][1],
+                'decay': abc.best_performer[1][2],
+                'epsilon': abc.best_performer[1][3],
+                'learning_rate': abc.best_performer[1][4],
+                'hidden_layers': abc.best_performer[1][5:]
+            }
+        ), call_loc='TUNE')
     params = abc.best_performer[1]
     vars['beta_1'] = params[0]
     vars['beta_2'] = params[1]
     vars['decay'] = params[2]
     vars['epsilon'] = params[3]
-    vars['hidden_layers'][0][0] = params[4]
-    vars['hidden_layers'][1][0] = params[5]
-    vars['learning_date'] = params[6]
+    vars['learning_date'] = params[4]
+    for l_idx in range(len(vars['hidden_layers'])):
+        vars['hidden_layers'][l_idx][0] = params[5 + l_idx]
     return vars
 
 
@@ -104,9 +114,10 @@ def tune_fitness_function(params, **kwargs):
     vars['beta_2'] = params[1]
     vars['decay'] = params[2]
     vars['epsilon'] = params[3]
-    vars['hidden_layers'][0][0] = params[4]
-    vars['hidden_layers'][1][0] = params[5]
-    vars['learning_date'] = params[6]
+    vars['learning_rate'] = params[4]
+    vars['hidden_layers'] = kwargs['hidden_layers']
+    for l_idx in range(len(vars['hidden_layers'])):
+        vars['hidden_layers'][l_idx][0] = params[5 + l_idx]
 
     df = kwargs['df']
     if kwargs['shuffle'] is not None:
