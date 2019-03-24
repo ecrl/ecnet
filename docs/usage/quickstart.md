@@ -102,7 +102,8 @@ learning rate, beta, decay and epsilon values, and number of neurons per hidden 
 sv.tune_hyperparameters(50, 50)
 
 # By default, all bees will use the same set assignments; to shuffle them:
-sv.tune_hyperparameters(50, 50, shuffle=True, split=[0.7, 0.2, 0.1])
+sv.tune_hyperparameters(50, 50, shuffle='all', split=[0.7, 0.2, 0.1])
+# To shuffle only the training sets (learning and validation), supply `train` instead
 
 # By default, bees are evaluated on their performance across all sets; to specify a set to
 #   perform the evaluation:
