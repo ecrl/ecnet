@@ -20,6 +20,7 @@ setup(
         'numpy',
         'pubchempy',
         'pyyaml',
+        'sklearn',
         'tensorflow'
     ],
     package_data={
