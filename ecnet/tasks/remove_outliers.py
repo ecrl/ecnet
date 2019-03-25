@@ -38,6 +38,7 @@ def remove_outliers(df, leaf_size=40, num_processes=1):
     if logger.file_level != 'disable':
         ditto_logger.log_dir = logger.log_dir
         ditto_logger.file_level = logger.file_level
+    ditto_logger.default_call_loc('OUTLIERS')
     item_collection = ItemCollection(df._filename)
     for inp_name in df.input_names:
         item_collection.add_attribute(Attribute(inp_name))

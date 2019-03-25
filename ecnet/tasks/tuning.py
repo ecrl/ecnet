@@ -73,6 +73,7 @@ def tune_hyperparameters(df, vars, num_employers, num_iterations,
     if logger.file_level != 'disable':
         abc._logger.log_dir = logger.log_dir
         abc._logger.file_level = logger.file_level
+    abc._logger.default_call_loc('TUNE')
     abc.create_employers()
     for i in range(num_iterations):
         logger.log('info', 'Iteration {}'.format(i + 1), call_loc='TUNE')
