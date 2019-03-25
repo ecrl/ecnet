@@ -1,4 +1,4 @@
-from ecnet.tools import create_db
+from ecnet.tools.database import create_db
 
 
 def from_names():

@@ -1,18 +1,14 @@
 from ecnet import Server
+from ecnet.utils.logging import logger
 
 
 def main():
 
-    sv = Server(log_level='debug', num_processes=4)
-    sv.import_data(
-        '../kv_model_v1.0.csv',
-        sort_type='random',
-        data_split=[0.6, 0.2, 0.2]
-    )
-    sv.tune_hyperparameters(
-        num_employers=30,
-        num_iterations=10
-    )
+    logger.stream_level = 'debug'
+    sv = Server(num_processes=4)
+    sv.load_data('../kv_model_v1.0.csv')
+    sv.tune_hyperparameters(20, 20, shuffle='train', split=[0.7, 0.2, 0.1],
+                            eval_set='test')
 
 
 if __name__ == '__main__':

@@ -1,2 +1,3 @@
-from ecnet.tools.tools import create_db, get_smiles, smiles_to_mdl,\
-    mdl_to_descriptors, predict_with_prj
+import ecnet.tools.conversions
+import ecnet.tools.database
+import ecnet.tools.project

@@ -1,27 +1,24 @@
 from ecnet import Server
+from ecnet.utils.logging import logger
 
 
 def main():
 
-    sv = Server(log_level='debug', num_processes=4)
-    sv.import_data(
-        '../kv_model_v1.0.csv',
-        sort_type='random',
-        data_split=[0.6, 0.2, 0.2]
-    )
+    logger.stream_level = 'debug'
+    sv = Server(num_processes=4)
+    sv.load_data('../kv_model_v1.0.csv')
     sv.create_project(
         'kinetic_viscosity',
-        num_builds=1,
-        num_nodes=5,
+        num_pools=5,
         num_candidates=25
     )
-    sv.train_model(
-        validate=True,
+    sv.train(
         shuffle='train',
-        data_split=[0.6, 0.2, 0.2]
+        split=[0.7, 0.2, 0.1],
+        validate=True,
+        selection_set='test'
     )
-    sv.select_best(dset='test')
-    sv.save_project(clean_up=True)
+    sv.save_project(del_candidates=True)
 
 
 if __name__ == '__main__':

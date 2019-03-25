@@ -1,9 +1,13 @@
+---
+beta_1: 0.9
+beta_2: 0.999
+decay: 0.0
+epochs: 2000
+epsilon: 1.0e-07
 hidden_layers:
-- [4, relu]
-- [4, relu]
-input_activation: relu
-keep_prob: 1.0
-learning_rate: 0.1
+- - 32
+  - relu
+- - 32
+  - relu
+learning_rate: 0.001
 output_activation: linear
-train_epochs: 50
-validation_max_epochs: 100
