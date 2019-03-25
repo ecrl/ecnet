@@ -39,7 +39,7 @@ def get_smiles(name):
 
     smiles = [m.isomeric_smiles for m in get_compounds(name, 'name')]
     if len(smiles) == 0:
-        raise IndexError('PubChem entry not found for {}'.format(name))
+        return ''
     else:
         return smiles[0]
 
