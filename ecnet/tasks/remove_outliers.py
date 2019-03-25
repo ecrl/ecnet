@@ -50,9 +50,9 @@ def remove_outliers(df, leaf_size=40, num_processes=1):
         n_jobs=num_processes
     )
     logger.log('debug', 'Outliers: {}'.format(outliers), call_loc='OUTLIERS')
-    for idx, pt in enumerate(df.data_points):
-        for out in outliers:
-            if pt.id == out:
+    for out in outliers:
+        for idx, pt in enumerate(df.data_points):
+            if out == pt.id:
                 del df.data_points[idx]
                 break
     return df
