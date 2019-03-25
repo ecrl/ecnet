@@ -36,6 +36,6 @@ def fingerprints():
 
 if __name__ == '__main__':
 
-    # from_names()
-    # from_smiles()
+    from_names()
+    from_smiles()
     fingerprints()
