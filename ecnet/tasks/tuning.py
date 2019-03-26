@@ -93,7 +93,7 @@ def tune_hyperparameters(df, vars, num_employers, num_iterations,
     vars['beta_2'] = params[1]
     vars['decay'] = params[2]
     vars['epsilon'] = params[3]
-    vars['learning_date'] = params[4]
+    vars['learning_rate'] = params[4]
     for l_idx in range(len(vars['hidden_layers'])):
         vars['hidden_layers'][l_idx][0] = params[5 + l_idx]
     return vars
