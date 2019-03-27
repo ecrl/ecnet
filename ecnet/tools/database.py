@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tools/database.py
-# v.3.0.0
+# v.3.0.1
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions for creating ECNet-formatted databases

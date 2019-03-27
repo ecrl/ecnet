@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/server.py
-# v.3.0.0
+# v.3.0.1
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "Server" class, which handles ECNet project creation, neural
