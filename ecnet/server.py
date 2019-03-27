@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/server.py
-# v.3.0.0
+# v.3.0.1
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "Server" class, which handles ECNet project creation, neural
@@ -23,9 +23,9 @@ from ecnet.utils.server_utils import default_config, get_candidate_path,\
     save_config, save_df, train_model, use_model
 
 # Stdlib imports
-from os import listdir, makedirs, path, walk
+from os import listdir, makedirs, name, path, walk
 from operator import itemgetter
-from multiprocessing import Pool
+from multiprocessing import Pool, set_start_method
 from shutil import rmtree
 from zipfile import ZipFile, ZIP_DEFLATED
 
@@ -52,6 +52,9 @@ class Server:
                     ), call_loc='INIT')
 
         self._num_processes = num_processes
+
+        if name != 'nt':
+            set_start_method('spawn', force=True)
 
         if prj_file is not None:
             self._open_project(prj_file)

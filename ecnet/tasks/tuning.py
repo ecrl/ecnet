@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tasks/tuning.py
-# v.3.0.0
+# v.3.0.1
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions/fitness functions for tuning hyperparameters
@@ -73,6 +73,7 @@ def tune_hyperparameters(df, vars, num_employers, num_iterations,
     if logger.file_level != 'disable':
         abc._logger.log_dir = logger.log_dir
         abc._logger.file_level = logger.file_level
+    abc._logger.default_call_loc('TUNE')
     abc.create_employers()
     for i in range(num_iterations):
         logger.log('info', 'Iteration {}'.format(i + 1), call_loc='TUNE')
@@ -92,7 +93,7 @@ def tune_hyperparameters(df, vars, num_employers, num_iterations,
     vars['beta_2'] = params[1]
     vars['decay'] = params[2]
     vars['epsilon'] = params[3]
-    vars['learning_date'] = params[4]
+    vars['learning_rate'] = params[4]
     for l_idx in range(len(vars['hidden_layers'])):
         vars['hidden_layers'][l_idx][0] = params[5 + l_idx]
     return vars

@@ -22,7 +22,20 @@ def from_smiles():
     )
 
 
+def fingerprints():
+
+    print('Creating database with fingerprints...')
+    create_db(
+        'mols_smiles.txt',
+        'db_with_fingerprints.csv',
+        targets='mols_targets.txt',
+        form='smiles',
+        fingerprints=True
+    )
+
+
 if __name__ == '__main__':
 
     from_names()
     from_smiles()
+    fingerprints()

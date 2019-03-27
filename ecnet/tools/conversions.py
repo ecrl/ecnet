@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tools/conversions.py
-# v.3.0.0
+# v.3.0.1
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions for converting various chemical file formats
@@ -39,7 +39,7 @@ def get_smiles(name):
 
     smiles = [m.isomeric_smiles for m in get_compounds(name, 'name')]
     if len(smiles) == 0:
-        raise IndexError('PubChem entry not found for {}'.format(name))
+        return ''
     else:
         return smiles[0]
 
@@ -84,13 +84,15 @@ def smiles_to_mdl(smiles_file, mdl_file):
                 continue
 
 
-def mdl_to_descriptors(mdl_file, descriptors_csv):
+def mdl_to_descriptors(mdl_file, descriptors_csv, fingerprints=False):
     '''Generates QSPR descriptors from supplied MDL file using
     PaDEL-Descriptor
 
     Args:
         mdl_file (str): path to source MDL file
         descriptors_csv (str): path to resulting CSV file w/ descriptors
+        fingerprints (bool): if True, generates molecular fingerprints instead
+            of QSPR descriptors
 
     Returns:
         list: list of dicts, where each dict is a molecule populated with
@@ -105,20 +107,35 @@ def mdl_to_descriptors(mdl_file, descriptors_csv):
     dn = open(devnull, 'w')
     for attempt in range(3):
         try:
-            call([
-                'java',
-                '-jar',
-                _PADEL_PATH,
-                '-2d',
-                '-3d',
-                '-retainorder',
-                '-retain3d',
-                '-dir',
-                mdl_file,
-                '-file',
-                descriptors_csv
-            ], stdout=dn, stderr=dn, timeout=3600)
-            break
+            if fingerprints:
+                call([
+                    'java',
+                    '-jar',
+                    _PADEL_PATH,
+                    '-fingerprints',
+                    '-retainorder',
+                    '-retain3d',
+                    '-dir',
+                    mdl_file,
+                    '-file',
+                    descriptors_csv
+                ], stdout=dn, stderr=dn, timeout=600)
+                break
+            else:
+                call([
+                    'java',
+                    '-jar',
+                    _PADEL_PATH,
+                    '-2d',
+                    '-3d',
+                    '-retainorder',
+                    '-retain3d',
+                    '-dir',
+                    mdl_file,
+                    '-file',
+                    descriptors_csv
+                ], stdout=dn, stderr=dn, timeout=600)
+                break
         except Exception as e:
             if attempt == 2:
                 raise e
