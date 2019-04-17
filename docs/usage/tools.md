@@ -116,7 +116,7 @@ predict('smiles.txt', 'results.csv', 'my_project.prj', form='smiles')
 
 Both Open Babel and the Java JRE are required for conversions.
 
-## Constructing a Parity Plot for Experimental/Predicted Data
+## Constructing parity plots
 
 A common method for visualizing how well neural networks predict data is by utilizing a parity plot. A parity plot will show how much predictions deviate from experimental values by plotting them in conjunction with a 1:1 linear function (the closer a plot's data points are to this line, the better they perform).
 
