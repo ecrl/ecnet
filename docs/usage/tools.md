@@ -210,5 +210,5 @@ my_plot.show()
 Here is what plotting cetane number training and test data looks like:
 
 <p align="center">
-  <img align="center" src="../img/cn_parity_plot.png" width="75%" height="75%">
+  <img align="center" src="./img/cn_parity_plot.png" width="75%" height="75%">
 </p>
