@@ -209,4 +209,4 @@ my_plot.show()
 
 Here is what plotting cetane number training and test data looks like:
 
-![CN Parity Plot](./img/cn_parity_plot.png)
+![](./img/cn_parity_plot.png)
