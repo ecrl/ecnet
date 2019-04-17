@@ -1,10 +1,14 @@
 # Quick Start
 
+A full tutorial and additional databases are provided ([tutorial](https://github.com/ECRL/ECNet/tree/dev/docs/tutorials/Getting%20Started), [databases](https://github.com/ECRL/ECNet/tree/master/databases)) to get you started. The following documentation is intended for users seeking additional information about ECNet's functionality.
+
+## Preface
+
 ECNet operates using a **Server** object that interfaces with data utility classes, error calculation functions, and neural network creation classes. The Server object handles importing data and model creation for your project, and serves the data to models. Configurable variables for neural networks, such as learning rate, number of neurons per hidden layer, activation functions for hidden/input/output layers, and number of training epochs are found in a **.yml** configuration file.
 
 ## Model configuration file
 
-For training, we apply the Adam optimization algorithm to feed-forward neural networks. Here is the default model configuration:
+For training, we apply the Adam optimization algorithm to feed-forward neural networks. Here is the default model configuration, outlining default values we pass to model creation and training functions:
 
 ```
 ---
@@ -24,7 +28,7 @@ output_activation: linear
 
 ## Using the Server object
 
-To get started, create a Python script to handle your task and copy an ECNet-formatted CSV database file to your working directory. The Server object will create a default configuration file if an existing one is not specified or found. Example scripts, configuration files, and databases are provided ([examples/config](https://github.com/ECRL/ECNet/tree/master/examples), [databases](https://github.com/ECRL/ECNet/tree/master/databases)).
+First, create a Python script to handle your task and copy an ECNet-formatted CSV database file to your working directory. The Server object will create a default configuration file if an existing one is not specified or found.
 
 Your first steps are importing the Server object, initializing the Server and importing some data:
 
