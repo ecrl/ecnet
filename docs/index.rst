@@ -8,3 +8,4 @@ ECNet Documentation
    usage/installation
    usage/quickstart
    usage/tools
+   usage/examples
