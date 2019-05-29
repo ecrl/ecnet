@@ -39,27 +39,31 @@ def limit_rforest(df, limit_num, num_estimators=1000, num_processes=1):
         ditto_logger.file_level = logger.file_level
     ditto_logger.default_call_loc('LIMIT')
     item_collection = ItemCollection(df._filename)
-    for inp_name in df.input_names:
+    for inp_name in df._input_names:
         item_collection.add_attribute(Attribute(inp_name))
     for pt in df.data_points:
-        item_collection.add_item(pt.id, deepcopy(pt.inputs))
-    for tar_name in df.target_names:
+        item_collection.add_item(
+            pt.id,
+            deepcopy([getattr(pt, i) for i in df._input_names])
+        )
+    for tar_name in df._target_names:
         item_collection.add_attribute(Attribute(tar_name, is_descriptor=False))
     for pt in df.data_points:
-        for idx, tar in enumerate(pt.targets):
+        target_vals = [getattr(pt, t) for t in df._target_names]
+        for idx, tar in enumerate(target_vals):
             item_collection.set_item_attribute(
-                pt.id, tar, df.target_names[idx]
+                pt.id, tar, df._target_names[idx]
             )
     item_collection.strip()
     params = [param[0] for param in random_forest_regressor(
         item_collection.dataframe,
-        target_attribute=df.target_names[0],
+        target_attribute=df._target_names[0],
         n_components=limit_num,
         n_estimators=num_estimators,
         n_jobs=num_processes
     )]
     for idx, param in enumerate(params):
-        for tn in df.target_names:
+        for tn in df._target_names:
             if tn == param:
                 del params[idx]
                 break
