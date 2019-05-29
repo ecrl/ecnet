@@ -117,6 +117,7 @@ def tune_fitness_function(params, **kwargs):
     vars['epsilon'] = params[3]
     vars['learning_rate'] = params[4]
     vars['hidden_layers'] = kwargs['hidden_layers']
+    vars['epochs'] = 2000
     for l_idx in range(len(vars['hidden_layers'])):
         vars['hidden_layers'][l_idx][0] = params[5 + l_idx]
 
