@@ -37,10 +37,9 @@ def predict(input_txt, results_file, prj_file, form='name',
 
     logger.stream_level = 'disable'
     sv = Server(prj_file=prj_file)
-    input_names = sv._df.input_names
     create_db(input_txt, temp_db, form=form, clean_up=clean_up)
     new_data = DataFrame(temp_db)
-    new_data.set_inputs(input_names)
+    new_data.set_inputs(sv._df._input_names)
     sv._df = new_data
     sv.use(output_filename=results_file)
     if clean_up:
