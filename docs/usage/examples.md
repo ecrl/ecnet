@@ -26,48 +26,26 @@ def validate_smiles(db_name, new_db):
     logger.log('info', 'Loading data from {}'.format(db_name))
     df = DataFrame(db_name)
 
-    # find index of `Compound Name` string
-    name_idx = -1
-    for idx, name in enumerate(df.string_names):
-        if name == 'Compound Name':
-            name_idx = idx
-            break
-    if name_idx == -1:
-        logger.log('error', '`Compound Name` string not found in database')
-        return
-
-    # find index of `SMILES` string
-    smiles_idx = -1
-    for idx, name in enumerate(df.string_names):
-        if name == 'SMILES':
-            smiles_idx = idx
-            break
-    if smiles_idx == -1:
-        logger.log('error', '`SMILES` string not found in database')
-
     # check each molecule's SMILES, replace if incorrect
     for pt in df.data_points:
-        smiles = get_smiles(pt.strings[name_idx])
-        if smiles == '':
-            logger.log('warn', '{} not found on PubChem'.format(
-                pt.strings[name_idx]
-            ))
+        mol_name = getattr(pt, 'Compound Name')
+        smiles = get_smiles(mol_name)
+        if len(smiles) == 0:
+            logger.log('warn', '{} not found on PubChem'.format(mol_name))
             continue
         else:
-            if smiles != pt.strings[smiles_idx]:
+            if pt.SMILES not in smiles:
                 logger.log(
                     'crit',
                     'Incorrect SMILES for {}:\n\tDatabase SMILES: {}'
                     '\n\tPubChem SMILES: {}'.format(
-                        pt.strings[name_idx],
-                        pt.strings[smiles_idx],
+                        mol_name,
+                        pt.SMILES,
                         smiles
                     ))
-                pt.strings[smiles_idx] = smiles
+                pt.SMILES = smiles[0]
             else:
-                logger.log('info', 'Correct SMILES for {}'.format(
-                    pt.strings[name_idx]
-                ))
+                logger.log('info', 'Correct SMILES for {}'.format(mol_name))
 
     # save the validated database
     logger.log('info', 'Saving validated data to {}'.format(new_db))
