@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tools/database.py
-# v.3.0.1
+# v.3.1.0
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions for creating ECNet-formatted databases
@@ -20,7 +20,8 @@ from ecnet.tools.conversions import get_smiles, smiles_to_mdl,\
 
 def create_db(input_txt, output_name, id_prefix='', targets=None, form='name',
               smiles_file='mols.smi', mdl_file='mols.mdl',
-              desc_file='descriptors.csv', clean_up=True, fingerprints=False):
+              desc_file='descriptors.csv', clean_up=True, fingerprints=False,
+              extra_strings={}):
     '''Create an ECNet-formatted database from either molecule names or SMILES
     strings
 
@@ -39,18 +40,32 @@ def create_db(input_txt, output_name, id_prefix='', targets=None, form='name',
             processing except for the input text files and output database
         fingerprints (bool): if True, generates molecular fingerprints instead
             of QSPR descriptors
+        extra_strings (dict): if additional STRING headers are desired,
+            specify them with {'Str Name': [str1, str2 ...]}
     '''
 
     input_data = _read_txt(input_txt)
     if form == 'name':
         input_names = deepcopy(input_data)
         for i, d in enumerate(input_data):
-            input_data[i] = get_smiles(d)
+            smiles = get_smiles(d)
+            if len(smiles) == 0:
+                raise IndexError('SMILES not found for {}'.format(d))
+            input_data[i] = smiles[0]
         with open(smiles_file, 'w') as smi_file:
             for d in input_data:
                 smi_file.write(d + '\n')
     elif form == 'smiles':
-        input_names = ['' for _ in range(len(input_data))]
+        if 'Compound Name' not in extra_strings:
+            input_names = ['' for _ in range(len(input_data))]
+        else:
+            input_names = extra_strings['Compound Name']
+            if len(input_names) != len(input_data):
+                raise IndexError('Number of supplied names does not equal the '
+                                 'number of supplied molecules: {}, {}'.format(
+                                     len(input_names), len(input_data)
+                                 ))
+            del extra_strings['Compound Name']
         smiles_file = input_txt
 
     else:
@@ -81,27 +96,36 @@ def create_db(input_txt, output_name, id_prefix='', targets=None, form='name',
         is_valid = True
         for row in desc[1:]:
             if row[ds] == '' or row[ds] is None:
-                row[ds] = 0
+                is_valid = False
+                break
         if is_valid:
             valid_keys.append(ds)
     desc_keys = valid_keys
 
     rows = []
-    type_row = ['DATAID', 'ASSIGNMENT', 'STRING', 'STRING', 'TARGET']
+
+    type_row = ['DATAID', 'ASSIGNMENT', 'STRING', 'STRING']
+    type_row.extend(['STRING' for string in extra_strings])
+    type_row.append('TARGET')
     type_row.extend(['INPUT' for _ in range(len(desc_keys))])
-    title_row = ['DATAID', 'ASSIGNMENT', 'Compound Name', 'SMILES', 'Target']
-    title_row.extend(desc_keys)
     rows.append(type_row)
+
+    title_row = ['DATAID', 'ASSIGNMENT', 'Compound Name', 'SMILES']
+    title_row.extend([string for string in extra_strings])
+    title_row.append('TARGET')
+    title_row.extend(desc_keys)
     rows.append(title_row)
 
     for idx, name in enumerate(input_names):
+
         mol_row = [
             '{}'.format(id_prefix) + '%04d' % (idx + 1),
             'L',
             name,
-            input_data[idx],
-            target_data[idx]
+            input_data[idx]
         ]
+        mol_row.extend([extra_strings[s][idx] for s in extra_strings])
+        mol_row.append(target_data[idx])
         mol_row.extend([desc[idx][k] for k in desc_keys])
         rows.append(mol_row)
 

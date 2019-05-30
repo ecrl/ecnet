@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/utils/logging.py
-# v.3.0.1
+# v.3.1.0
 # Developed in 2019 by Travis Kessler <Travis_Kessler@student.uml.edu>
 #
 # Contains logger used by ECNet

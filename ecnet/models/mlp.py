@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/models/mlp.py
-# v.3.0.1
+# v.3.1.0
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "MultilayerPerceptron" (feed-forward neural network) class
@@ -14,7 +14,7 @@ from os import devnull, environ
 import sys
 
 # 3rd party imports
-from tensorflow import get_default_graph
+from tensorflow import get_default_graph, logging
 stderr = sys.stderr
 sys.stderr = open(devnull, 'w')
 from keras.backend import clear_session, reset_uids
@@ -29,6 +29,7 @@ sys.stderr = stderr
 from ecnet.utils.logging import logger
 
 environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+logging.set_verbosity(logging.ERROR)
 
 H5_EXT = compile(r'.*\.h5', flags=IGNORECASE)
 

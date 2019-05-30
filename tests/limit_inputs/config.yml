@@ -1,0 +1,13 @@
+---
+beta_1: 0.9
+beta_2: 0.999
+decay: 0.0
+epochs: 1000
+epsilon: 1.0e-07
+hidden_layers:
+- - 32
+  - relu
+- - 32
+  - relu
+learning_rate: 0.001
+output_activation: linear

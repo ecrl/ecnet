@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/utils/data_utils.py
-# v.3.0.1
+# v.3.1.0
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions/classes for loading data, saving data, saving results
@@ -13,7 +13,7 @@ from csv import reader, writer, QUOTE_ALL
 from random import sample
 
 # 3rd party imports
-from numpy import asarray
+from numpy import array, asarray
 
 # ECNet imports
 from ecnet.utils.logging import logger
@@ -28,10 +28,6 @@ class DataPoint:
 
         self.id = None
         self.assignment = None
-        self.strings = []
-        self.groups = []
-        self.targets = []
-        self.inputs = []
 
 
 class PackagedData:
@@ -63,63 +59,60 @@ class DataFrame:
             filename += '.csv'
         try:
             with open(filename, newline='') as file:
-                data_raw = list(reader(file))
+                rows = list(reader(file))
         except FileNotFoundError:
             raise Exception('CSV database not found: {}'.format(filename))
 
         self._filename = filename
 
         self.data_points = []
-        for point in range(2, len([sublist[0] for sublist in data_raw])):
+
+        self._string_names = []
+        self._group_names = []
+        self._target_names = []
+        self._input_names = []
+
+        for p_idx, row in enumerate(rows[2:]):
+
             new_point = DataPoint()
-            new_point.id = [sublist[0] for sublist in data_raw][point]
-            for header in range(len(data_raw[0])):
-                if 'STRING' in data_raw[0][header]:
-                    new_point.strings.append(data_raw[point][header])
-                elif 'GROUP' in data_raw[0][header]:
-                    new_point.groups.append(data_raw[point][header])
-                elif 'TARGET' in data_raw[0][header]:
-                    new_point.targets.append(data_raw[point][header])
-                elif 'INPUT' in data_raw[0][header]:
-                    new_point.inputs.append(data_raw[point][header])
-                elif 'ASSIGNMENT' in data_raw[0][header]:
-                    new_point.assignment = data_raw[point][header]
-                elif 'DATAID' in data_raw[0][header]:
-                    new_point.id = data_raw[point][header]
+
+            for h_idx, header in enumerate(rows[0]):
+                if header == 'DATAID':
+                    new_point.id = row[h_idx]
+                elif header == 'ASSIGNMENT':
+                    new_point.assignment = row[h_idx]
+                elif header == 'STRING':
+                    if p_idx == 0:
+                        self._string_names.append(rows[1][h_idx])
+                    setattr(new_point, rows[1][h_idx], row[h_idx])
+                elif header == 'GROUP':
+                    if p_idx == 0:
+                        self._group_names.append(rows[1][h_idx])
+                    setattr(new_point, rows[1][h_idx], row[h_idx])
+                elif header == 'TARGET':
+                    if p_idx == 0:
+                        self._target_names.append(rows[1][h_idx])
+                    setattr(new_point, rows[1][h_idx], row[h_idx])
+                elif header == 'INPUT':
+                    if p_idx == 0:
+                        self._input_names.append(rows[1][h_idx])
+                    setattr(new_point, rows[1][h_idx], row[h_idx])
+
             self.data_points.append(new_point)
 
         logger.log('debug', 'Found {} data entries'.format(
                    len(self.data_points)), call_loc='DF')
-
-        self.string_names = []
-        self.group_names = []
-        self.target_names = []
-        self.input_names = []
-        for header in range(len(data_raw[0])):
-            if 'STRING' in data_raw[0][header]:
-                self.string_names.append(data_raw[1][header])
-            if 'GROUP' in data_raw[0][header]:
-                self.group_names.append(data_raw[1][header])
-            if 'TARGET' in data_raw[0][header]:
-                self.target_names.append(data_raw[1][header])
-            if 'INPUT' in data_raw[0][header]:
-                self.input_names.append(data_raw[1][header])
-        self.num_strings = len(self.string_names)
-        self.num_groups = len(self.group_names)
-        self.num_targets = len(self.target_names)
-        self.num_inputs = len(self.input_names)
         logger.log('debug', 'Input parameters/entry: {}'.format(
-                   self.num_inputs), call_loc='DF')
-        logger.log('debug', 'Target values/entry: {}'.format(self.num_targets),
-                   call_loc='DF')
+                   len(self._input_names)), call_loc='DF')
+        logger.log('debug', 'Target values/entry: {}'.format(
+                   len(self._target_names)), call_loc='DF')
 
     def __len__(self):
-        '''DataFrame length == number of DataPoints
-        '''
+        '''DataFrame length == number of DataPoints'''
 
         return len(self.data_points)
 
-    def create_sets(self, random=False, split=None):
+    def create_sets(self, random=False, split=[0.7, 0.2, 0.1]):
         '''Creates learning, validation and test sets
 
         Args:
@@ -174,33 +167,34 @@ class DataFrame:
         logger.log('debug', 'Number of entries in test set: {}'.format(
                    len(self.test_set)), call_loc='DF')
 
-    def create_sorted_sets(self, sort_string, split=[0.65, 0.25, 0.1]):
+    def create_sorted_sets(self, sort_str, split=[0.7, 0.2, 0.1]):
         '''Creates random learn, validate and test sets, ensuring data points with
         the supplied sort string are split proportionally between the sets
 
         Args:
-            sort_string (str): database STRING value used to sort data points
+            sort_str (str): database STRING value used to sort data points
             split (list): [learn%, valid%, test%] for set assignments
         '''
 
         logger.log('debug', 'Creating sorted sets using {} STRING'.format(
-                   sort_string), call_loc='DF')
+                   sort_str), call_loc='DF')
 
-        try:
-            string_idx = self.string_names.index(sort_string)
-        except ValueError:
-            raise Exception('{} not found in STRING names'.format(sort_string))
-        self.data_points.sort(key=lambda x: x.strings[string_idx])
+        if sort_str not in self._string_names:
+            raise ValueError('{} not found in STRING names'.format(
+                sort_str
+            ))
 
         string_vals = []
         string_groups = []
 
         for point in self.data_points:
-            if point.strings[string_idx] not in string_vals:
-                string_vals.append(point.strings[string_idx])
+            str_val = getattr(point, sort_str)
+            if str_val not in string_vals:
+                string_vals.append(str_val)
                 string_groups.append([point])
             else:
-                string_groups[-1].append(point)
+                str_loc = string_vals.index(str_val)
+                string_groups[str_loc].append(point)
 
         self.learn_set = []
         self.valid_set = []
@@ -231,16 +225,19 @@ class DataFrame:
     def normalize(self):
         '''Normalize input data (min-max, between 0 and 1)'''
 
-        for inp in range(len(self.data_points[0].inputs)):
-            vals = [float(pt.inputs[inp]) for pt in self.data_points]
+        for inp in self._input_names:
+            vals = [float(getattr(pt, inp)) for pt in self.data_points]
             v_min = min(vals)
             v_max = max(vals)
             for pt in self.data_points:
                 if v_max - v_min == 0:
-                    pt.inputs[inp] = 0
+                    setattr(pt, inp, 0)
                 else:
-                    pt.inputs[inp] = (float(pt.inputs[inp]) - v_min) /\
-                        (v_max - v_min)
+                    setattr(
+                        pt,
+                        inp,
+                        (float(getattr(pt, inp)) - v_min) / (v_max - v_min)
+                    )
 
     def shuffle(self, sets='all', split=[0.7, 0.2, 0.1]):
         '''Shuffles learning, validation and test sets or learning and
@@ -288,14 +285,26 @@ class DataFrame:
 
         pd = PackagedData()
         for point in self.learn_set:
-            pd.learn_x.append(asarray(point.inputs).astype('float32'))
-            pd.learn_y.append(asarray(point.targets).astype('float32'))
+            pd.learn_x.append(asarray(
+                [getattr(point, inp_name) for inp_name in self._input_names]
+            ).astype('float32'))
+            pd.learn_y.append(asarray(
+                [getattr(point, tar_name) for tar_name in self._target_names]
+            ).astype('float32'))
         for point in self.valid_set:
-            pd.valid_x.append(asarray(point.inputs).astype('float32'))
-            pd.valid_y.append(asarray(point.targets).astype('float32'))
+            pd.valid_x.append(asarray(
+                [getattr(point, inp_name) for inp_name in self._input_names]
+            ).astype('float32'))
+            pd.valid_y.append(asarray(
+                [getattr(point, tar_name) for tar_name in self._target_names]
+            ).astype('float32'))
         for point in self.test_set:
-            pd.test_x.append(asarray(point.inputs).astype('float32'))
-            pd.test_y.append(asarray(point.targets).astype('float32'))
+            pd.test_x.append(asarray(
+                [getattr(point, inp_name) for inp_name in self._input_names]
+            ).astype('float32'))
+            pd.test_y.append(asarray(
+                [getattr(point, tar_name) for tar_name in self._target_names]
+            ).astype('float32'))
 
         pd.learn_x = asarray(pd.learn_x)
         pd.learn_y = asarray(pd.learn_y)
@@ -315,52 +324,48 @@ class DataFrame:
         logger.log('debug', 'Setting input parameters to {}'.format(inputs),
                    call_loc='DF')
 
-        idxs = []
-        for input in inputs:
-            for cidx, current_input in enumerate(self.input_names):
-                if input == current_input:
-                    idxs.append(cidx)
-        for point in self.data_points:
-            new_inputs = []
-            for i in idxs:
-                new_inputs.append(point.inputs[i])
-            point.inputs = new_inputs
-        self.input_names = inputs
-        self.num_inputs = len(inputs)
-        self.create_sets()
+        for inp in inputs:
+            if inp not in self._input_names:
+                raise ValueError('{} not found in existing inputs'.format(inp))
+
+        self._input_names = inputs
 
     def save(self, filename):
         '''Saves the current state of the DataFrame to a new CSV database
 
         Args:
-            filename (str): path to location where database is saved
+            filename (str): path to location where database is saved; if not
+                supplied, saves to CSV file where data was loaded from
         '''
+
+        if filename is None:
+            filename = self._filename
 
         if '.csv' not in filename:
             filename += '.csv'
 
         rows = []
         type_row = ['DATAID', 'ASSIGNMENT']
-        type_row.extend(['STRING' for _ in range(self.num_strings)])
-        type_row.extend(['GROUP' for _ in range(self.num_groups)])
-        type_row.extend(['TARGET' for _ in range(self.num_targets)])
-        type_row.extend(['INPUT' for _ in range(self.num_inputs)])
+        type_row.extend(['STRING' for _ in range(len(self._string_names))])
+        type_row.extend(['GROUP' for _ in range(len(self._group_names))])
+        type_row.extend(['TARGET' for _ in range(len(self._target_names))])
+        type_row.extend(['INPUT' for _ in range(len(self._input_names))])
         rows.append(type_row)
 
         title_row = ['DATAID', 'ASSIGNMENT']
-        title_row.extend(self.string_names)
-        title_row.extend(self.group_names)
-        title_row.extend(self.target_names)
-        title_row.extend(self.input_names)
+        title_row.extend(self._string_names)
+        title_row.extend(self._group_names)
+        title_row.extend(self._target_names)
+        title_row.extend(self._input_names)
         rows.append(title_row)
 
         data_rows = []
         for point in self.data_points:
             data_row = [point.id, point.assignment]
-            data_row.extend(point.strings)
-            data_row.extend(point.groups)
-            data_row.extend(point.targets)
-            data_row.extend(point.inputs)
+            data_row.extend([getattr(point, s) for s in self._string_names])
+            data_row.extend([getattr(point, g) for g in self._group_names])
+            data_row.extend([getattr(point, t) for t in self._target_names])
+            data_row.extend([getattr(point, i) for i in self._input_names])
             data_rows.append(data_row)
         rows.extend(sorted(data_rows, key=lambda x: x[0]))
 
@@ -390,16 +395,16 @@ def save_results(results, dset, df, filename):
 
     rows = []
     type_row = ['DATAID', 'ASSIGNMENT']
-    type_row.extend(['STRING' for _ in range(df.num_strings)])
-    type_row.extend(['GROUP' for _ in range(df.num_groups)])
-    type_row.extend(['TARGET' for _ in range(df.num_targets)])
+    type_row.extend(['STRING' for _ in range(len(df._string_names))])
+    type_row.extend(['GROUP' for _ in range(len(df._group_names))])
+    type_row.extend(['TARGET' for _ in range(len(df._target_names))])
     type_row.extend(['RESULT' for _ in range(len(results[0]))])
     rows.append(type_row)
 
     title_row = ['DATAID', 'ASSIGNMENT']
-    title_row.extend(df.string_names)
-    title_row.extend(df.group_names)
-    title_row.extend(df.target_names)
+    title_row.extend(df._string_names)
+    title_row.extend(df._group_names)
+    title_row.extend(df._target_names)
     title_row.append('Result')
     rows.append(title_row)
 
@@ -423,14 +428,10 @@ def save_results(results, dset, df, filename):
     data_rows = []
     for idx, point in enumerate(output_points):
         data_row = [point.id, point.assignment]
-        data_row.extend(point.strings)
-        data_row.extend(point.groups)
-        data_row.extend(point.targets)
+        data_row.extend([getattr(point, s) for s in df._string_names])
+        data_row.extend([getattr(point, g) for g in df._group_names])
+        data_row.extend([getattr(point, t) for t in df._target_names])
         data_row.extend(results[idx])
-        # if df.num_targets == 1:
-        #     data_row.extend(r[idx][0] for r in results)
-        # else:
-        #     data_row.extend(r[idx] for r in results)
         data_rows.append(data_row)
     rows.extend(sorted(data_rows, key=lambda x: x[0]))
 

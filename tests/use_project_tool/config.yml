@@ -2,7 +2,7 @@
 beta_1: 0.9
 beta_2: 0.999
 decay: 0.0
-epochs: 2000
+epochs: 10000
 epsilon: 1.0e-07
 hidden_layers:
 - - 32

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tools/conversions.py
-# v.3.0.1
+# v.3.1.0
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions for converting various chemical file formats
@@ -30,18 +30,14 @@ def get_smiles(name):
     '''Queries PubChemPy for SMILES string for supplied molecule
 
     Args:
-        name (str): name of the molecule
+        name (str): name of the molecule (IUPAC, CAS, etc.)
 
     Returns:
         str or None: if molecule found, returns first idenitifying SMILES,
             else None
     '''
 
-    smiles = [m.isomeric_smiles for m in get_compounds(name, 'name')]
-    if len(smiles) == 0:
-        return ''
-    else:
-        return smiles[0]
+    return [m.isomeric_smiles for m in get_compounds(name, 'name')]
 
 
 def smiles_to_mdl(smiles_file, mdl_file):

@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/server.py
-# v.3.0.1
+# v.3.1.0
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "Server" class, which handles ECNet project creation, neural
 # network model creation, data hand-off to models, prediction error
 # calculation, input parameter selection, hyperparameter tuning.
 #
-# For example scripts, refer to https://github.com/ecrl/ecnet/examples
+# For example scripts, refer to https://ecnet.readthedocs.io/en/latest/
 #
 
 # ECNet imports

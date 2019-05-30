@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tasks/tuning.py
-# v.3.0.1
+# v.3.1.0
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions/fitness functions for tuning hyperparameters
@@ -117,6 +117,7 @@ def tune_fitness_function(params, **kwargs):
     vars['epsilon'] = params[3]
     vars['learning_rate'] = params[4]
     vars['hidden_layers'] = kwargs['hidden_layers']
+    vars['epochs'] = 2000
     for l_idx in range(len(vars['hidden_layers'])):
         vars['hidden_layers'][l_idx][0] = params[5 + l_idx]
 

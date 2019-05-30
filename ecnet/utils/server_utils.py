@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/utils/server_utils.py
-# v.3.0.1
+# v.3.1.0
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions used by ecnet.Server
@@ -14,7 +14,7 @@ from pickle import dump as pdump, load as pload
 
 # 3rd party imports
 from numpy import asarray
-from yaml import dump, load
+from yaml import dump, load, FullLoader
 
 # ECNet imports
 from ecnet.utils.error_utils import calc_rmse, calc_mean_abs_error,\
@@ -171,7 +171,7 @@ def open_config(filename):
     '''
 
     with open(filename, 'r') as cf_file:
-        return load(cf_file)
+        return load(cf_file, FullLoader)
 
 
 def open_df(filename):
