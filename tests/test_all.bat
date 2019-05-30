@@ -25,3 +25,7 @@ cd ../
 cd ./use_project
 python ./test.py
 cd ../
+
+cd ./use_project_tool
+python ./test.py
+cd ../
