@@ -40,6 +40,77 @@ def get_smiles(name):
     return [m.isomeric_smiles for m in get_compounds(name, 'name')]
 
 
+def smiles_to_descriptors(smiles_file, descriptors_csv, fingerprints=False):
+    '''Generates QSPR descriptors from supplied SMILES file using
+    PaDEL-Descriptor
+
+    Args:
+        smiles_file (str): path to source SMI file
+        descriptors_csv (str): path to resulting CSV file w/ descriptors
+        fingerprints (bool): if True, generates molecular fingerprints instead
+            of QSPR descriptors
+
+    Returns:
+        list: list of dicts, where each dict is a molecule populated with
+            descriptor names (keys) and values
+    '''
+
+    if which('java') is None:
+        raise ReferenceError(
+            'Java JRE 6+ not found (required for PaDEL-Descriptor)'
+        )
+
+    is_smi = compile(r'.*\.smi$', IGNORECASE)
+    if is_smi.match(smiles_file) is None:
+        raise ValueError('SMILES file must have a SMI extension: {}'.format(
+            smiles_file
+        ))
+
+    dn = open(devnull, 'w')
+    for attempt in range(3):
+        try:
+            if fingerprints:
+                call([
+                    'java',
+                    '-jar',
+                    _PADEL_PATH,
+                    '-fingerprints',
+                    '-retainorder',
+                    '-convert3d',
+                    '-retain3d',
+                    '-dir',
+                    smiles_file,
+                    '-file',
+                    descriptors_csv
+                ], stdout=dn, stderr=dn, timeout=15)
+                break
+            else:
+                call([
+                    'java',
+                    '-jar',
+                    _PADEL_PATH,
+                    '-2d',
+                    '-3d',
+                    '-retainorder',
+                    '-convert3d',
+                    '-retain3d',
+                    '-dir',
+                    smiles_file,
+                    '-file',
+                    descriptors_csv
+                ], stdout=dn, stderr=dn, timeout=15)
+                break
+        except Exception as e:
+            if attempt == 2:
+                raise e
+            else:
+                continue
+
+    with open(descriptors_csv, 'r', encoding='utf-8') as desc_file:
+        reader = DictReader(desc_file)
+        return [row for row in reader]
+
+
 def smiles_to_mdl(smiles_file, mdl_file):
     '''Invoke Open Babel to generate an MDL file containing all supplied
     molecules; requires Open Babel to be installed externally
@@ -71,7 +142,7 @@ def smiles_to_mdl(smiles_file, mdl_file):
                 '-O',
                 mdl_file,
                 '--gen3D'
-            ], stdout=dn, stderr=dn, timeout=3600)
+            ], stdout=dn, stderr=dn, timeout=15)
             break
         except Exception as e:
             if attempt == 2:
@@ -115,7 +186,7 @@ def mdl_to_descriptors(mdl_file, descriptors_csv, fingerprints=False):
                     mdl_file,
                     '-file',
                     descriptors_csv
-                ], stdout=dn, stderr=dn, timeout=600)
+                ], stdout=dn, stderr=dn, timeout=15)
                 break
             else:
                 call([
@@ -130,7 +201,7 @@ def mdl_to_descriptors(mdl_file, descriptors_csv, fingerprints=False):
                     mdl_file,
                     '-file',
                     descriptors_csv
-                ], stdout=dn, stderr=dn, timeout=600)
+                ], stdout=dn, stderr=dn, timeout=15)
                 break
         except Exception as e:
             if attempt == 2:
