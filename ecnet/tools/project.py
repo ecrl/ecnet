@@ -40,6 +40,7 @@ def predict(input_txt, results_file, prj_file, form='name',
     create_db(input_txt, temp_db, form=form, clean_up=clean_up)
     new_data = DataFrame(temp_db)
     new_data.set_inputs(sv._df._input_names)
+    new_data.create_sets()
     sv._df = new_data
     sv.use(output_filename=results_file)
     if clean_up:
