@@ -47,7 +47,7 @@ class PackagedData:
 
 class DataFrame:
 
-    def __init__(self, filename):
+    def __init__(self, filename: str):
         '''DataFrame object: handles data importing, set splitting, shuffling,
         packaging
 
@@ -112,7 +112,7 @@ class DataFrame:
 
         return len(self.data_points)
 
-    def create_sets(self, random=False, split=[0.7, 0.2, 0.1]):
+    def create_sets(self, random: bool=False, split: list=[0.7, 0.2, 0.1]):
         '''Creates learning, validation and test sets
 
         Args:
@@ -167,7 +167,7 @@ class DataFrame:
         logger.log('debug', 'Number of entries in test set: {}'.format(
                    len(self.test_set)), call_loc='DF')
 
-    def create_sorted_sets(self, sort_str, split=[0.7, 0.2, 0.1]):
+    def create_sorted_sets(self, sort_str: str, split: list=[0.7, 0.2, 0.1]):
         '''Creates random learn, validate and test sets, ensuring data points with
         the supplied sort string are split proportionally between the sets
 
@@ -239,7 +239,7 @@ class DataFrame:
                         (float(getattr(pt, inp)) - v_min) / (v_max - v_min)
                     )
 
-    def shuffle(self, sets='all', split=[0.7, 0.2, 0.1]):
+    def shuffle(self, sets: str='all', split: list=[0.7, 0.2, 0.1]):
         '''Shuffles learning, validation and test sets or learning and
         validation sets
 
@@ -275,7 +275,7 @@ class DataFrame:
         else:
             raise ValueError('Invalid sets argument: {}'.format(sets))
 
-    def package_sets(self):
+    def package_sets(self) -> PackagedData:
         '''Packages learn, validate and test sets for model hand-off
 
         Returns:
@@ -314,7 +314,7 @@ class DataFrame:
         pd.test_y = asarray(pd.test_y)
         return pd
 
-    def set_inputs(self, inputs):
+    def set_inputs(self, inputs: list):
         '''Removes all input variables except those supplied
 
         Args:
@@ -330,7 +330,7 @@ class DataFrame:
 
         self._input_names = inputs
 
-    def save(self, filename):
+    def save(self, filename: str):
         '''Saves the current state of the DataFrame to a new CSV database
 
         Args:
@@ -378,7 +378,7 @@ class DataFrame:
                    call_loc='DF')
 
 
-def save_results(results, dset, df, filename):
+def save_results(results: list, dset: str, df: DataFrame, filename: str):
     '''Saves results obtained from ecnet.Server.use_model()
 
     Args:

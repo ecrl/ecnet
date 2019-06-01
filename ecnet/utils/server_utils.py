@@ -13,16 +13,17 @@ from os import path
 from pickle import dump as pdump, load as pload
 
 # 3rd party imports
-from numpy import asarray
+from numpy import asarray, array
 from yaml import dump, load, FullLoader
 
 # ECNet imports
+from ecnet.utils.data_utils import DataFrame, PackagedData
 from ecnet.utils.error_utils import calc_rmse, calc_mean_abs_error,\
     calc_med_abs_error, calc_r2
 from ecnet.models.mlp import MultilayerPerceptron
 
 
-def default_config():
+def default_config() -> dict:
     '''Returns default NN architecture/learning parameters'''
 
     return {
@@ -40,7 +41,8 @@ def default_config():
     }
 
 
-def get_candidate_path(prj, pool, candidate=None, model=False, p_best=False):
+def get_candidate_path(prj: str, pool: int, candidate: int=None,
+                       model: bool=False, p_best: bool=False) -> str:
     '''Get path to various states of model.h5 files
 
     Args:
@@ -75,7 +77,7 @@ def get_candidate_path(prj, pool, candidate=None, model=False, p_best=False):
         )
 
 
-def get_error(y_hat, y, fn):
+def get_error(y_hat: array, y: array, fn: str) -> float:
     '''Obtains specified error for supplied results/targets
 
     Args:
@@ -100,7 +102,7 @@ def get_error(y_hat, y, fn):
         raise ValueError('Unknown error function: {}'.format(fn))
 
 
-def get_x(sets, dset):
+def get_x(sets: PackagedData, dset: str) -> array:
     '''Obtains input values for specified data set
 
     Args:
@@ -130,7 +132,7 @@ def get_x(sets, dset):
         raise ValueError('Unknown dset argument: {}'.format(dset))
 
 
-def get_y(sets, dset):
+def get_y(sets: PackagedData, dset: str) -> array:
     '''Obtains target values for specified data set
 
     Args:
@@ -160,7 +162,7 @@ def get_y(sets, dset):
         raise ValueError('Unknown dset argument: {}'.format(dset))
 
 
-def open_config(filename):
+def open_config(filename: str) -> dict:
     '''Returns contents of YML model configuration file
 
     Args:
@@ -174,7 +176,7 @@ def open_config(filename):
         return load(cf_file, FullLoader)
 
 
-def open_df(filename):
+def open_df(filename: str) -> DataFrame:
     '''Opens pickled DataFrame object
 
     Args:
@@ -188,7 +190,7 @@ def open_df(filename):
         return pload(data_file)
 
 
-def resave_df(old, new):
+def resave_df(old: str, new: str):
     '''Resaves picked DataFrame to new location
 
     Args:
@@ -199,7 +201,7 @@ def resave_df(old, new):
     save_df(open_df(old), new)
 
 
-def resave_model(old, new):
+def resave_model(old: str, new: str):
     '''Resaves .h5 model file
 
     Args:
@@ -212,8 +214,9 @@ def resave_model(old, new):
     model.save(new)
 
 
-def train_model(sets, vars, eval_set, eval_fn, retrain=False,
-                filename='model.h5', validate=True, save=True):
+def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
+                retrain: bool=False, filename: str='model.h5',
+                validate: bool=True, save: bool=True) -> float:
     '''Trains neural network
 
     Args:
@@ -274,7 +277,7 @@ def train_model(sets, vars, eval_set, eval_fn, retrain=False,
     )
 
 
-def save_config(vars, filename):
+def save_config(vars: dict, filename: str):
     '''Saves model architecture/learning variables to YML file
 
     Args:
@@ -286,7 +289,7 @@ def save_config(vars, filename):
     cf_file.close()
 
 
-def save_df(df, filename):
+def save_df(df: DataFrame, filename: str):
     '''Saves DataFrame to pickled file
 
     Args:
@@ -298,7 +301,8 @@ def save_df(df, filename):
     data_file.close()
 
 
-def use_model(sets, dset, filename='model.h5'):
+def use_model(sets: PackagedData, dset: str,
+              filename: str='model.h5') -> array:
     '''Uses existing model to predict data
 
     Args:

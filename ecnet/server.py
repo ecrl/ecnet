@@ -32,8 +32,8 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 class Server:
 
-    def __init__(self, model_config='config.yml', prj_file=None,
-                 num_processes=1):
+    def __init__(self, model_config: str='config.yml', prj_file: str=None,
+                 num_processes: int=1):
         '''Server object: handles data loading, model creation, data-to-model
         hand-off, data input parameter selection, hyperparameter tuning
 
@@ -72,7 +72,8 @@ class Server:
             self._vars = default_config()
             save_config(self._vars, self._cf_file)
 
-    def load_data(self, filename, random=False, split=None, normalize=False):
+    def load_data(self, filename: str, random: bool=False, split: list=None,
+                  normalize: bool=False):
         '''Loads data from an ECNet-formatted CSV database
 
         Args:
@@ -92,7 +93,8 @@ class Server:
         self._df.create_sets(random, split)
         self._sets = self._df.package_sets()
 
-    def create_project(self, project_name, num_pools=1, num_candidates=1):
+    def create_project(self, project_name: str, num_pools: int=1,
+                       num_candidates: int=1):
         '''Creates folder hierarchy for a new project
 
         Args:
@@ -116,7 +118,7 @@ class Server:
         logger.log('debug', 'Number of candidates/pool: {}'.format(
                    num_candidates), call_loc='PROJECT')
 
-    def remove_outliers(self, leaf_size=30, output_filename=None):
+    def remove_outliers(self, leaf_size: int=30, output_filename: str=None):
         '''Removes any outliers from the currently-loaded data using
             unsupervised outlier detection using local outlier factor
 
@@ -136,8 +138,8 @@ class Server:
             logger.log('info', 'Resulting database saved to {}'.format(
                        output_filename), call_loc='OUTLIERS')
 
-    def limit_inputs(self, limit_num, num_estimators=1000,
-                     output_filename=None):
+    def limit_inputs(self, limit_num: int, num_estimators: int=1000,
+                     output_filename: str=None):
         '''Selects `limit_num` influential input parameters using random
         forest regression
 
@@ -163,9 +165,10 @@ class Server:
             logger.log('info', 'Resulting database saved to {}'.format(
                        output_filename), call_loc='LIMIT')
 
-    def tune_hyperparameters(self, num_employers, num_iterations,
-                             shuffle=None, split=None, validate=True,
-                             eval_set=None, eval_fn='rmse'):
+    def tune_hyperparameters(self, num_employers: int, num_iterations: int,
+                             shuffle: bool=None, split: list=None,
+                             validate: bool=True, eval_set: str=None,
+                             eval_fn: str='rmse'):
         '''Tunes neural network learning hyperparameters using an artificial
         bee colony algorithm; tuned hyperparameters are saved to Server's
         model configuration file
@@ -206,8 +209,9 @@ class Server:
         )
         save_config(self._vars, self._cf_file)
 
-    def train(self, shuffle=None, split=None, retrain=False,
-              validate=False, selection_set=None, selection_fn='rmse'):
+    def train(self, shuffle: str=None, split: list=None, retrain: bool=False,
+              validate: bool=False, selection_set: str=None,
+              selection_fn: str='rmse'):
         '''Trains neural network(s) using currently-loaded data; single NN if
         no project is created, all candidates if created
 
@@ -307,7 +311,7 @@ class Server:
                     pool_fp.replace('model.h5', 'data.d')
                 )
 
-    def use(self, dset=None, output_filename=None):
+    def use(self, dset: str=None, output_filename: str=None):
         '''Uses trained neural network(s) to predict for specified set; single
         NN if no project created, best pool candidates if created
 
@@ -341,7 +345,7 @@ class Server:
                        call_loc='USE')
         return results
 
-    def errors(self, *args, dset=None):
+    def errors(self, *args, dset: str=None):
         '''Obtains various errors for specified set
 
         Args:
@@ -365,7 +369,8 @@ class Server:
         logger.log('debug', 'Errors: {}'.format(errors), call_loc='ERRORS')
         return errors
 
-    def save_project(self, filename=None, clean_up=True, del_candidates=False):
+    def save_project(self, filename: str=None, clean_up: bool=True,
+                     del_candidates: bool=False):
         '''Saves current state of project to a .prj file
 
         Args:
@@ -400,7 +405,7 @@ class Server:
         logger.log('info', 'Project saved to {}'.format(save_path),
                    call_loc='PROJECT')
 
-    def _open_project(self, prj_file):
+    def _open_project(self, prj_file: str):
         '''Private method: if project file specified on Server.__init__, loads
         the project
 

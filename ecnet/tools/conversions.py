@@ -26,21 +26,21 @@ _PADEL_PATH = join(
 )
 
 
-def get_smiles(name):
+def get_smiles(name: str) -> list:
     '''Queries PubChemPy for SMILES string for supplied molecule
 
     Args:
         name (str): name of the molecule (IUPAC, CAS, etc.)
 
     Returns:
-        str or None: if molecule found, returns first idenitifying SMILES,
-            else None
+        list: list of all SMILES strings representing the given molecule
     '''
 
     return [m.isomeric_smiles for m in get_compounds(name, 'name')]
 
 
-def smiles_to_descriptors(smiles_file, descriptors_csv, fingerprints=False):
+def smiles_to_descriptors(smiles_file: str, descriptors_csv: str,
+                          fingerprints: bool=False) -> list:
     '''Generates QSPR descriptors from supplied SMILES file using
     PaDEL-Descriptor
 
@@ -111,7 +111,7 @@ def smiles_to_descriptors(smiles_file, descriptors_csv, fingerprints=False):
         return [row for row in reader]
 
 
-def smiles_to_mdl(smiles_file, mdl_file):
+def smiles_to_mdl(smiles_file: str, mdl_file: str):
     '''Invoke Open Babel to generate an MDL file containing all supplied
     molecules; requires Open Babel to be installed externally
 
@@ -151,7 +151,8 @@ def smiles_to_mdl(smiles_file, mdl_file):
                 continue
 
 
-def mdl_to_descriptors(mdl_file, descriptors_csv, fingerprints=False):
+def mdl_to_descriptors(mdl_file: str, descriptors_csv: str,
+                       fingerprints: bool=False) -> list:
     '''Generates QSPR descriptors from supplied MDL file using
     PaDEL-Descriptor
 

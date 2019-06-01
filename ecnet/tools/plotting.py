@@ -18,8 +18,9 @@ from matplotlib.offsetbox import AnchoredText
 
 class ParityPlot:
 
-    def __init__(self, title='Parity Plot', x_label='Experimental Value',
-                 y_label='Predicted Value', font='Times New Roman'):
+    def __init__(self, title: str='Parity Plot',
+                 x_label: str='Experimental Value',
+                 y_label: str='Predicted Value', font: str='Times New Roman'):
         ''' ParityPlot: creates a plot of predicted values vs. experimental
         data relative to a 1:1 parity line
 
@@ -37,7 +38,7 @@ class ParityPlot:
         self._max_val = 0
         self._labels = None
 
-    def add_series(self, x_vals, y_vals, name=None, color=None):
+    def add_series(self, x_vals, y_vals, name: str=None, color: str=None):
         ''' Adds data to the plot
 
         Args:
@@ -59,7 +60,7 @@ class ParityPlot:
         if y_max > self._max_val:
             self._max_val = y_max
 
-    def add_error_bars(self, error, label=None):
+    def add_error_bars(self, error: float, label: str=None):
         ''' Adds error bars, +/- the error relative to the 1:1 parity line
 
         Args:
@@ -78,7 +79,7 @@ class ParityPlot:
         self._add_parity_line()
         plt.show()
 
-    def save(self, filename):
+    def save(self, filename: str):
         ''' Saves the plot to a file
 
         Args:
@@ -88,7 +89,7 @@ class ParityPlot:
         self._add_parity_line()
         plt.savefig(filename)
 
-    def _add_parity_line(self, offset=0):
+    def _add_parity_line(self, offset: float=0.0):
         ''' Adds a 1:1 parity line
 
         Args:
@@ -110,7 +111,7 @@ class ParityPlot:
             linewidth=1
         )
 
-    def _add_label(self, label, value):
+    def _add_label(self, label: str, value: float):
         ''' Adds a label and value to the plot's legend
 
         Args:

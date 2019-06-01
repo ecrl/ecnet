@@ -15,6 +15,7 @@ import sys
 
 # 3rd party imports
 from tensorflow import get_default_graph, logging
+from numpy import array
 stderr = sys.stderr
 sys.stderr = open(devnull, 'w')
 from keras.backend import clear_session, reset_uids
@@ -36,7 +37,7 @@ H5_EXT = compile(r'.*\.h5', flags=IGNORECASE)
 
 class MultilayerPerceptron:
 
-    def __init__(self, filename='model.h5'):
+    def __init__(self, filename: str='model.h5'):
         '''MultilayerPerceptron object: fits neural network to supplied inputs
         and targets
 
@@ -54,7 +55,8 @@ class MultilayerPerceptron:
         clear_session()
         self._model = Sequential(name=filename.lower().replace('.h5', ''))
 
-    def add_layer(self, num_neurons, activation, input_dim=None):
+    def add_layer(self, num_neurons: int, activation: str,
+                  input_dim: int=None):
         '''Adds a fully-connected layer to the model
 
         Args:
@@ -71,8 +73,10 @@ class MultilayerPerceptron:
             input_shape=(input_dim,)
         ))
 
-    def fit(self, l_x, l_y, v_x=None, v_y=None, epochs=1500, lr=0.001,
-            beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, v=0):
+    def fit(self, l_x: array, l_y: array, v_x: array=None, v_y: array=None,
+            epochs: int=1500, lr: float=0.001, beta_1: float=0.9,
+            beta_2: float=0.999, epsilon: float=0.0000001, decay: float=0.0,
+            v: int=0):
         '''Fits neural network to supplied inputs and targets
 
         Args:
@@ -133,7 +137,7 @@ class MultilayerPerceptron:
         logger.log('debug', 'Training complete after {} epochs'.format(epochs),
                    call_loc='MLP')
 
-    def use(self, x):
+    def use(self, x: array):
         '''Uses neural network to predict values for supplied data
 
         Args:
@@ -146,7 +150,7 @@ class MultilayerPerceptron:
         with get_default_graph().as_default():
             return self._model.predict(x)
 
-    def save(self, filename=None):
+    def save(self, filename: str=None):
         '''Saves neural network to .h5 file
 
         filename (str): if None, uses MultilayerPerceptron._filename;
@@ -165,7 +169,7 @@ class MultilayerPerceptron:
         logger.log('debug', 'Model saved to {}'.format(filename),
                    call_loc='MLP')
 
-    def load(self, filename=None):
+    def load(self, filename: str=None):
         '''Loads neural network from .h5 file
 
         Args:

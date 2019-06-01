@@ -17,9 +17,10 @@ from os import remove
 from ecnet.tools.conversions import get_smiles, smiles_to_descriptors
 
 
-def create_db(input_txt, output_name, id_prefix='', targets=None, form='name',
-              smiles_file='mols.smi', desc_file='descriptors.csv',
-              clean_up=True, fingerprints=False, extra_strings={}):
+def create_db(input_txt: str, output_name: str, id_prefix: str='',
+              targets: str=None, form: str='name', smiles_file: str='mols.smi',
+              desc_file: str='descriptors.csv', clean_up: bool=True,
+              fingerprints: bool=False, extra_strings: dict={}):
     '''Create an ECNet-formatted database from either molecule names or SMILES
     strings
 
@@ -137,7 +138,7 @@ def create_db(input_txt, output_name, id_prefix='', targets=None, form='name',
         remove(desc_file)
 
 
-def _read_txt(file):
+def _read_txt(file: str) -> list:
     '''Reads text file, returns contents
 
     Args:

@@ -9,26 +9,26 @@
 #
 
 # 3rd party imports
-from numpy import absolute, asarray, float64, median, square, sqrt as nsqrt,\
-    sum as nsum
+from numpy import absolute, asarray, array, float64, median, square,\
+    sqrt as nsqrt, sum as nsum
 
 
-def calc_rmse(y_hat, y):
+def calc_rmse(y_hat: array, y: array) -> float:
 
     return nsqrt((square(_get_diff(y_hat, y)).mean()))
 
 
-def calc_mean_abs_error(y_hat, y):
+def calc_mean_abs_error(y_hat: array, y: array) -> float:
 
     return absolute(_get_diff(y_hat, y)).mean()
 
 
-def calc_med_abs_error(y_hat, y):
+def calc_med_abs_error(y_hat: array, y: array) -> float:
 
     return median(absolute(_get_diff(y_hat, y)))
 
 
-def calc_r2(y_hat, y):
+def calc_r2(y_hat: array, y: array) -> float:
 
     try:
         y_mean = y.mean()
@@ -46,6 +46,6 @@ def calc_r2(y_hat, y):
     return(1 - (s_res / s_tot))
 
 
-def _get_diff(y_hat, y):
+def _get_diff(y_hat: array, y: array) -> array:
 
     return asarray(y_hat, dtype=float64) - asarray(y, dtype=float64)
