@@ -10,7 +10,8 @@
 
 # 3rd party imports
 from numpy import absolute, asarray, array, float64, median, square,\
-    sqrt as nsqrt, sum as nsum
+    sqrt as nsqrt
+from sklearn.metrics import r2_score
 
 
 def calc_rmse(y_hat: array, y: array) -> float:
@@ -30,20 +31,7 @@ def calc_med_abs_error(y_hat: array, y: array) -> float:
 
 def calc_r2(y_hat: array, y: array) -> float:
 
-    try:
-        y_mean = y.mean()
-    except:
-        try:
-            y_form = []
-            for i in range(len(y)):
-                y_form.append(y[i][0])
-            y_mean = sum(y_form)/len(y_form)
-        except:
-            raise ValueError('Check input data format.')
-
-    s_res = nsum(square(_get_diff(y_hat, y)))
-    s_tot = nsum(square(_get_diff(y, y_mean)))
-    return(1 - (s_res / s_tot))
+    return r2_score(y, y_hat)
 
 
 def _get_diff(y_hat: array, y: array) -> array:
