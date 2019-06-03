@@ -137,7 +137,7 @@ class MultilayerPerceptron:
         logger.log('debug', 'Training complete after {} epochs'.format(epochs),
                    call_loc='MLP')
 
-    def use(self, x: array):
+    def use(self, x: array) -> array:
         '''Uses neural network to predict values for supplied data
 
         Args:
