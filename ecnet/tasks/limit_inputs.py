@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tasks/limit_inputs.py
-# v.3.1.1
+# v.3.1.2
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions for selecting influential input parameters
@@ -17,10 +17,12 @@ from ditto_lib.utils.logging import logger as ditto_logger
 from ditto_lib.utils.dataframe import Attribute
 
 # ECNet imports
+from ecnet.utils.data_utils import DataFrame
 from ecnet.utils.logging import logger
 
 
-def limit_rforest(df, limit_num, num_estimators=1000, num_processes=1):
+def limit_rforest(df: DataFrame, limit_num: int, num_estimators: int=1000,
+                  num_processes: int=1) -> DataFrame:
     '''Uses random forest regression to select input parameters
 
     Args:

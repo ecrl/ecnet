@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tasks/tuning.py
-# v.3.1.1
+# v.3.1.2
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions/fitness functions for tuning hyperparameters
@@ -12,13 +12,16 @@
 from ecabc.abc import ABC
 
 # ECNet imports
+from ecnet.utils.data_utils import DataFrame
 from ecnet.utils.logging import logger
 from ecnet.utils.server_utils import default_config, train_model
 
 
-def tune_hyperparameters(df, vars, num_employers, num_iterations,
-                         num_processes=1, shuffle=None, split=None,
-                         validate=True, eval_set=None, eval_fn='rmse'):
+def tune_hyperparameters(df: DataFrame, vars: dict, num_employers: int,
+                         num_iterations: int, num_processes: int=1,
+                         shuffle: str=None, split: list=None,
+                         validate: bool=True, eval_set: str=None,
+                         eval_fn: str='rmse') -> dict:
     '''Tunes neural network learning/architecture hyperparameters
 
     Args:
@@ -27,7 +30,7 @@ def tune_hyperparameters(df, vars, num_employers, num_iterations,
         num_employers (int): number of employer bees
         num_iterations (int): number of search cycles for the colony
         num_processes (int): number of parallel processes to utilize
-        shuffle (bool): if True, shuffles L/V/T data for all evals
+        shuffle (str): shuffles `train` or `all` sets if not None
         split (list): if shuffle is True, [learn%, valid%, test%]
         validate (bool): if True, uses periodic validation; otherwise, no
         eval_set (str): set used to evaluate bee performance; `learn`, `valid`,
@@ -99,7 +102,7 @@ def tune_hyperparameters(df, vars, num_employers, num_iterations,
     return vars
 
 
-def tune_fitness_function(params, **kwargs):
+def tune_fitness_function(params: dict, **kwargs):
     '''Fitness function used by ABC
 
     Args:

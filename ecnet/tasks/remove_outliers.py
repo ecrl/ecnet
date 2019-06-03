@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tasks/remove_outliers.py
-# v.3.1.1
+# v.3.1.2
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains function for removing outliers from ECNet DataFrame
@@ -18,10 +18,12 @@ from ditto_lib.utils.logging import logger as ditto_logger
 from ditto_lib.utils.dataframe import Attribute
 
 # ECNet imports
+from ecnet.utils.data_utils import DataFrame
 from ecnet.utils.logging import logger
 
 
-def remove_outliers(df, leaf_size=40, num_processes=1):
+def remove_outliers(df: DataFrame, leaf_size: int=40,
+                    num_processes: int=1) -> DataFrame:
     '''Unsupervised outlier detection using local outlier factor
 
     Args:

@@ -1,7 +1,7 @@
 # Installation
 
 ### Prerequisites
-- Have Python 3.5/3.6 installed
+- Have Python 3.7 installed
 - Have the ability to install Python packages
 
 ### Install via pip
@@ -15,7 +15,7 @@ Alternatively, in a Windows or virtualenv environment:
 pip install ecnet
 ```
 
-Note: if multiple Python releases are installed on your system (e.g. 2.7 and 3.6), you may need to execute the correct version of pip. For Python 3.6, change **"pip install ecnet"** to **"pip3 install ecnet"**.
+Note: if multiple Python releases are installed on your system (e.g. 2.7 and 3.7), you may need to execute the correct version of pip. For Python 3.7, change **"pip install ecnet"** to **"pip3 install ecnet"**.
 
 To update your version of ECNet to the latest release version, use:
 ```

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tools/project.py
-# v.3.1.0
+# v.3.1.2
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions for predicting data using pre-existing .prj files
@@ -19,8 +19,8 @@ from ecnet.utils.logging import logger
 from ecnet.tools.database import create_db
 
 
-def predict(input_txt, results_file, prj_file, form='name',
-            temp_db='_new_mols.csv', clean_up=True):
+def predict(input_txt: str, results_file: str, prj_file: str, form: str='name',
+            temp_db: str='_new_mols.csv', clean_up: bool=True):
     '''Predicts values for new data using pre-existing .prj file
 
     Args:
@@ -35,7 +35,6 @@ def predict(input_txt, results_file, prj_file, form='name',
             function (except for input/results files)
     '''
 
-    logger.stream_level = 'disable'
     sv = Server(prj_file=prj_file)
     create_db(input_txt, temp_db, form=form, clean_up=clean_up)
     new_data = DataFrame(temp_db)
