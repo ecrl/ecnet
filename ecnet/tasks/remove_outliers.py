@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tasks/remove_outliers.py
-# v.3.1.1
+# v.3.1.2
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains function for removing outliers from ECNet DataFrame
