@@ -90,16 +90,10 @@ def create_db(input_txt: str, output_name: str, id_prefix: str='',
     except:
         pass
 
-    valid_keys = []
     for ds in desc_keys:
-        is_valid = True
         for row in desc[1:]:
             if row[ds] == '' or row[ds] is None:
-                is_valid = False
-                break
-        if is_valid:
-            valid_keys.append(ds)
-    desc_keys = valid_keys
+                row[ds] = 0
 
     rows = []
 
