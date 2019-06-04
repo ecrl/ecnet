@@ -26,6 +26,22 @@ _PADEL_PATH = join(
 )
 
 
+def _file_len(filename: str) -> int:
+    '''Counts number of lines in supplied file
+
+    Args:
+        filename (str): path to file
+
+    Returns:
+        int: number of lines in the file
+    '''
+
+    with open(filename, 'r') as file:
+        for i, l in enumerate(file):
+            pass
+    return i + 1
+
+
 def get_smiles(name: str) -> list:
     '''Queries PubChemPy for SMILES string for supplied molecule
 
@@ -66,6 +82,9 @@ def smiles_to_descriptors(smiles_file: str, descriptors_csv: str,
             smiles_file
         ))
 
+    line_count = _file_len(smiles_file)
+    padel_timeout = max([15, int(line_count * 0.5)])
+
     dn = open(devnull, 'w')
     for attempt in range(3):
         try:
@@ -82,7 +101,7 @@ def smiles_to_descriptors(smiles_file: str, descriptors_csv: str,
                     smiles_file,
                     '-file',
                     descriptors_csv
-                ], stdout=dn, stderr=dn, timeout=15)
+                ], stdout=dn, stderr=dn, timeout=padel_timeout)
                 break
             else:
                 call([
@@ -98,7 +117,7 @@ def smiles_to_descriptors(smiles_file: str, descriptors_csv: str,
                     smiles_file,
                     '-file',
                     descriptors_csv
-                ], stdout=dn, stderr=dn, timeout=15)
+                ], stdout=dn, stderr=dn, timeout=padel_timeout)
                 break
         except Exception as e:
             if attempt == 2:
@@ -129,6 +148,9 @@ def smiles_to_mdl(smiles_file: str, mdl_file: str):
             mdl_file
         ))
 
+    line_count = _file_len(smiles_file)
+    babel_timeout = max([15, int(line_count * 0.5)])
+
     dn = open(devnull, 'w')
     for attempt in range(3):
         try:
@@ -142,7 +164,7 @@ def smiles_to_mdl(smiles_file: str, mdl_file: str):
                 '-O',
                 mdl_file,
                 '--gen3D'
-            ], stdout=dn, stderr=dn, timeout=15)
+            ], stdout=dn, stderr=dn, timeout=babel_timeout)
             break
         except Exception as e:
             if attempt == 2:
@@ -172,6 +194,9 @@ def mdl_to_descriptors(mdl_file: str, descriptors_csv: str,
             'Java JRE 6+ not found (required for PaDEL-Descriptor)'
         )
 
+    line_count = _file_len(mdl_file)
+    padel_timeout = max([15, int(line_count * 0.1)])
+
     dn = open(devnull, 'w')
     for attempt in range(3):
         try:
@@ -187,7 +212,7 @@ def mdl_to_descriptors(mdl_file: str, descriptors_csv: str,
                     mdl_file,
                     '-file',
                     descriptors_csv
-                ], stdout=dn, stderr=dn, timeout=15)
+                ], stdout=dn, stderr=dn, timeout=padel_timeout)
                 break
             else:
                 call([
@@ -202,7 +227,7 @@ def mdl_to_descriptors(mdl_file: str, descriptors_csv: str,
                     mdl_file,
                     '-file',
                     descriptors_csv
-                ], stdout=dn, stderr=dn, timeout=15)
+                ], stdout=dn, stderr=dn, timeout=padel_timeout)
                 break
         except Exception as e:
             if attempt == 2:
