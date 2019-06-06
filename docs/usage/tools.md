@@ -6,44 +6,16 @@ ECNet databases are comma-separated value (CSV) formatted files that provide inf
 
 Our [databases](https://github.com/ECRL/ECNet/tree/master/databases) directory on GitHub contains databases for cetane number, cloud point, kinetic viscosity, pour point and yield sooting index, as well as a database template.
 
-You can create an ECNet-formatted database with molecule names or SMILES and (optionally) target values. [Java JRE](https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html) version 6 and above is required to create a database.
-
-Supplied names or SMILES must exist in a text file, one entry per line:
-```
-Acetaldehyde
-Acetaldehyde dimethyl acetal
-Acetic acid
-Acetic anhydride
-Acetol
-Acetone
-Acetonitrile
-Acetonylacetone
-```
-
-If target values are supplied, they must also exist in a text file (of equal length to the supplied names or SMILES):
-```
-70
-147
-244
-284
-295
-133
-180
-376
-```
+You can create an ECNet-formatted database with SMILES strings and (optionally) target values. [Java JRE](https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html) version 6 and above is required to create a database.
 
 The database can then be constructed with:
 ```python
 from ecnet.tools.database import create_db
 
-create_db('names.txt', 'my_database.csv', targets='targets.txt')
-```
+smiles_strings = ['CCC', 'CCCC', 'CCCCC']
+targets = [0, 1, 2]
 
-If SMILES strings are supplied instead of names:
-```python
-from ecnet.tools.database import create_db
-
-create_db('smiles.txt', 'my_database.csv', targets='targets.txt', form='smiles')
+create_db(smiles_strings, 'my_database.csv', targets=targets)
 ```
 
 Your database's DATAID column (essentially Bates numbers for each molecule) will increment starting at 0001. If a prefix is desired for these values, specify it with:
@@ -51,66 +23,30 @@ Your database's DATAID column (essentially Bates numbers for each molecule) will
 ```python
 from ecnet.tools.database import create_db
 
-create_db('names.txt', 'my_database.csv', targets='targets.txt', id_prefix='MOL')
+smiles_strings = ['CCC', 'CCCC', 'CCCCC']
+targets = [0, 1, 2]
+
+create_db(smiles_strings, 'my_database.csv', targets=targets, id_prefix='MOL')
 ```
 
-## Chemical file/format conversion
-
-ECNet has a variety of tools for converting chemical files/formats:
-
-### Molecule name to SMILES string
+You may specify additional STRING columns:
 
 ```python
-from ecnet.tools.conversions import get_smiles
+from ecnet.tools.database import create_db
 
-smiles = get_smiles('Molecule Name')
-```
+smiles_strings = ['CCC', 'CCCC', 'CCCCC']
+targets = [0, 1, 2]
+extra_strings = {
+    'Compound Name': ['Propane', 'n-Butane', 'Pentane'],
+    'Literature Source': ['[1]', '[2]', '[3]']
+}
 
-### SMILES string to MDL Molfile
-
-Creating an MDL file requires [Open Babel](http://openbabel.org/wiki/Main_Page) to be installed.
-
-A text file containing SMILES strings, one per line, is required:
-
-```
-CC1=CC=C(O1)C(C2=CC=CO2)C3=CC=C(O3)C
-CCCCC1=CC=CO1
-C1CCOCC1
-CC1=CC=C(C)O1
-C1C=CCO1
-```
-
-```python
-from ecnet.tools.conversions import smiles_to_mdl
-
-# An MDL file is generated
-smiles_to_mdl('smiles.txt', 'molfile.mdl')
-```
-
-Note that [Open Babel](http://openbabel.org/wiki/Main_Page) is required to execute this function.
-
-### MDL to QSPR descriptors
-
-An existing MDL file is required, as well as an installation of [Java JRE](https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html).
-
-```python
-from ecnet.tools.conversions import mdl_to_descriptors
-
-# A CSV file with descriptors is generated
-mdl_to_descriptors('molfile.md', 'descriptors.csv')
-```
-
-### SMILES string to QSPR descriptors
-
-A text file containing SMILES strings, one per line, is required, as well as an installation of [Java JRE](https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html).
-
-*Note: the file extension for the text file containing SMILES strings must be ".smi"
-
-```python
-from ecnet.tools.conversions import smiles_to_descriptors
-
-# A CSV file with descriptors is generated
-smiles_to_descriptors('molecules.smi', 'descriptors.csv')
+create_db(
+    smiles_strings,
+    'my_database.csv',
+    targets=targets,
+    extra_strings=extra_strings
+)
 ```
 
 ## ECNet .prj file usage

@@ -13,12 +13,14 @@ setup(
     license='MIT',
     packages=find_packages(),
     install_requires=[
+        'alvadescpy',
         'colorlogging',
         'ditto-lib',
         'ecabc',
         'keras',
+        'matplotlib',
         'numpy',
-        'pubchempy',
+        'padelpy',
         'pyyaml',
         'sklearn',
         'tensorflow'
