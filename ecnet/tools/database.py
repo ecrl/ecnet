@@ -31,9 +31,9 @@ class _Molecule:
 
 def create_db(smiles: list, db_name: str, targets: list=None,
               id_prefix: str='', extra_strings: dict={}, backend: str='padel'):
-    ''' create_db_alvadesc: creates an ECNet-formatted database from SMILES
-    strings using alvaDesc software; requires a valid installation/license of
-    alvaDesc
+    ''' create_db: creates an ECNet-formatted database from SMILES strings
+    using either PaDEL-Descriptor or alvaDesc software; using alvaDesc
+    requires a valid installation/license of alvaDesc
 
     Args:
         smiles (list): list of SMILES strings
