@@ -36,6 +36,10 @@ def remove_outliers(df: DataFrame, leaf_size: int=40,
         ecnet.utils.data_utils.DataFrame: data w/o outliers
     '''
 
+    logger.log('info', 'Removing outliers', call_loc='OUTLIERS')
+    logger.log('debug', 'Leaf size: {}'.format(leaf_size),
+               call_loc='OUTLIERS')
+
     ditto_logger.stream_level = logger.stream_level
     if logger.file_level != 'disable':
         ditto_logger.log_dir = logger.log_dir

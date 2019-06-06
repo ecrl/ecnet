@@ -35,6 +35,11 @@ def limit_rforest(df: DataFrame, limit_num: int, num_estimators: int=1000,
         ecnet.utils.data_utils.DataFrame: limited data
     '''
 
+    logger.log('info', 'Finding {} most influential input parameters'
+               .format(limit_num), call_loc='LIMIT')
+    logger.log('debug', 'Number of estimators: {}'.format(num_estimators),
+               call_loc='LIMIT')
+
     ditto_logger.stream_level = logger.stream_level
     if logger.file_level != 'disable':
         ditto_logger.log_dir = logger.log_dir
