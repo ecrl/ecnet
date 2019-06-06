@@ -51,19 +51,21 @@ create_db(
 
 ## ECNet .prj file usage
 
-Once an ECNet project has been created, the resulting .prj file can be used to predict properties for new molecules. A text file containing names or SMILES strings of new molecules, one per line, is required in addition to the .prj file.
+Once an ECNet project has been created, the resulting .prj file can be used to predict properties for new molecules. Just supply SMILES strings, a pre-existing ECNet .prj file, and optionally a path to save the results to:
 
 ```python
 from ecnet.tools.project import predict
 
-# From a names txt file
-predict('molecules.txt', 'results.csv', 'my_project.prj', form='name')
+smiles = ['CCC', 'CCCC']
 
-# From a SMILES txt file
-predict('smiles.txt', 'results.csv', 'my_project.prj', form='smiles')
+# obtain results, do not save to file
+results = predict(smiles, 'my_project.prj')
+
+# obtain results, save to file
+results = predict(smiles, 'my_project.prj', 'results.csv')
 ```
 
-Both Open Babel and the Java JRE are required for conversions.
+Java JRE 6.0+ is required for conversions.
 
 ## Constructing parity plots
 
