@@ -17,7 +17,6 @@ class TestUseProject(unittest.TestCase):
         sv.save_project()
 
         results = predict(['CCC', 'CCCC'], 'test_project.prj', 'results.csv')
-        print(results)
 
         self.assertEqual(len(results), 2)
         with open('results.csv', 'r') as res_file:
