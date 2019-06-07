@@ -10,8 +10,9 @@
 
 # Stdlib imports
 from csv import writer
-from os import remove
 from datetime import datetime
+from os import remove
+from warnings import warn
 
 # 3rd party imports
 from alvadescpy import smiles_to_descriptors
@@ -66,8 +67,17 @@ def create_db(smiles: list, db_name: str, targets: list=None,
         for mol in smiles:
             mols.append(smiles_to_descriptors(mol))
     elif backend == 'padel':
-        for mol in smiles:
-            mols.append(from_smiles(mol))
+        for idx, mol in enumerate(smiles):
+            try:
+                mols.append(from_smiles(mol))
+            except RuntimeError:
+                warn('Could not calculate descriptors for {}, omitting'.format(
+                     mol), RuntimeWarning)
+                del smiles[idx]
+                if targets is not None:
+                    del targets[idx]
+                for string in list(extra_strings.keys()):
+                    del extra_strings[string][idx]
     else:
         raise ValueError('Unknown backend software: {}'.format(backend))
 
