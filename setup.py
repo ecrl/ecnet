@@ -23,7 +23,7 @@ setup(
         'padelpy',
         'pyyaml',
         'sklearn',
-        'tensorflow'
+        'tensorflow==1.13.1'
     ],
     package_data={
         'ecnet': [
