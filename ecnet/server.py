@@ -128,6 +128,7 @@ class Server:
         '''
 
         self._df = remove_outliers(self._df, leaf_size, self._num_processes)
+        self._sets = self._df.package_sets()
         if output_filename is not None:
             self._df.save(output_filename)
             logger.log('info', 'Resulting database saved to {}'.format(
@@ -151,6 +152,7 @@ class Server:
             num_estimators,
             self._num_processes
         )
+        self._sets = self._df.package_sets()
         if output_filename is not None:
             self._df.save(output_filename)
             logger.log('info', 'Resulting database saved to {}'.format(
