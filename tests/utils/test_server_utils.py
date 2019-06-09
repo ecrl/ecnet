@@ -1,5 +1,5 @@
 import unittest
-from os.path import exists
+from os.path import exists, join
 from os import remove
 
 from numpy import array
@@ -38,16 +38,16 @@ class TestServerUtils(unittest.TestCase):
         candidate = 2
         self.assertEqual(
             server_utils.get_candidate_path(prj_name, pool, candidate),
-            'test_project\\pool_1\\candidate_2'
+            join('test_project', 'pool_1', 'candidate_2')
         )
         self.assertEqual(
             server_utils.get_candidate_path(prj_name, pool, candidate, True),
-            'test_project\\pool_1\\candidate_2\\model.h5'
+            join('test_project', 'pool_1', 'candidate_2', 'model.h5')
         )
         self.assertEqual(
             server_utils.get_candidate_path(prj_name, pool, candidate,
                                             p_best=True),
-            'test_project\\pool_1\\model.h5'
+            join('test_project', 'pool_1', 'model.h5')
         )
 
     def test_get_error(self):
