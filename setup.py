@@ -20,7 +20,7 @@ setup(
         'keras==2.2.4',
         'matplotlib==3.1.0',
         'numpy==1.16.4',
-        'padelpy==0.1.3',
+        'padelpy==0.1.4',
         'pyyaml==5.1.1',
         'sklearn',
         'tensorflow==1.13.1'
