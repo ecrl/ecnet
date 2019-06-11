@@ -49,6 +49,7 @@ class TestServer(unittest.TestCase):
         sv = Server()
         sv.load_data('cn_model_v1.0.csv', random=True, split=[0.7, 0.2, 0.1])
         sv.create_project('test_project', 2, 2)
+        sv._vars['epochs'] = 100
         sv.train()
         for pool in range(2):
             self.assertTrue(exists(join(
@@ -72,6 +73,7 @@ class TestServer(unittest.TestCase):
         sv = Server()
         sv.load_data('cn_model_v1.0.csv', random=True, split=[0.7, 0.2, 0.1])
         sv.create_project('test_project', 2, 2)
+        sv._vars['epochs'] = 100
         sv.train()
         results = sv.use()
         self.assertEqual(len(results), len(sv._df))
@@ -84,6 +86,7 @@ class TestServer(unittest.TestCase):
         sv = Server()
         sv.load_data('cn_model_v1.0.csv', random=True, split=[0.7, 0.2, 0.1])
         sv.create_project('test_project', 2, 2)
+        sv._vars['epochs'] = 100
         sv.train()
         sv.save_project()
         self.assertTrue(exists('test_project.prj'))
@@ -96,6 +99,7 @@ class TestServer(unittest.TestCase):
         sv = Server(num_processes=8)
         sv.load_data('cn_model_v1.0.csv')
         sv.create_project('test_project', 2, 4)
+        sv._vars['epochs'] = 100
         sv.train()
         for pool in range(2):
             self.assertTrue(exists(join(

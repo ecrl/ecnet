@@ -13,6 +13,7 @@ class TestUseProject(unittest.TestCase):
         sv = Server()
         sv.load_data('cn_model_v2.0.csv')
         sv.create_project('test_project', 1, 1)
+        sv._vars['epochs'] = 100
         sv.train()
         sv.save_project()
 
