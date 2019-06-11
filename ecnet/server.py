@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/server.py
-# v.3.1.2
+# v.3.2.0
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "Server" class, which handles ECNet project creation, neural
@@ -15,19 +15,18 @@
 # ECNet imports
 from ecnet.tasks.limit_inputs import limit_rforest
 from ecnet.tasks.remove_outliers import remove_outliers
+from ecnet.tasks.training import train_project
 from ecnet.tasks.tuning import tune_hyperparameters
 from ecnet.utils.data_utils import DataFrame, save_results
 from ecnet.utils.logging import logger
-from ecnet.utils.server_utils import default_config, get_candidate_path,\
-    get_error, get_y, open_config, open_df, resave_df, resave_model,\
-    save_config, save_df, train_model, use_model
+from ecnet.utils.server_utils import create_project, default_config,\
+    get_candidate_path, get_error, get_y, open_config, open_df, open_project,\
+    resave_df, resave_model, save_config, save_df, save_project, train_model,\
+    use_model, use_project
 
 # Stdlib imports
-from os import listdir, makedirs, name, path, walk
-from operator import itemgetter
-from multiprocessing import Pool, set_start_method
-from shutil import rmtree
-from zipfile import ZipFile, ZIP_DEFLATED
+from multiprocessing import set_start_method
+from os import name
 
 
 class Server:
@@ -57,7 +56,10 @@ class Server:
             set_start_method('spawn', force=True)
 
         if prj_file is not None:
-            self._open_project(prj_file)
+            self._prj_name, self._num_pools, self._num_candidates, self._df,\
+                self._cf_file, self._vars = open_project(prj_file)
+            logger.log('info', 'Opened project {}'.format(prj_file),
+                       call_loc='INIT')
             return
 
         self._cf_file = model_config
@@ -106,11 +108,7 @@ class Server:
         self._prj_name = project_name
         self._num_pools = num_pools
         self._num_candidates = num_candidates
-        for pool in range(self._num_pools):
-            for candidate in range(self._num_candidates):
-                pc_dir = get_candidate_path(self._prj_name, pool, candidate)
-                if not path.exists(pc_dir):
-                    makedirs(pc_dir)
+        create_project(project_name, num_pools, num_candidates)
         logger.log('info', 'Created project: {}'.format(project_name),
                    call_loc='PROJECT')
         logger.log('debug', 'Number of pools: {}'.format(num_pools),
@@ -129,10 +127,8 @@ class Server:
                 here
         '''
 
-        logger.log('info', 'Removing outliers', call_loc='OUTLIERS')
-        logger.log('debug', 'Leaf size: {}'.format(leaf_size),
-                   call_loc='OUTLIERS')
         self._df = remove_outliers(self._df, leaf_size, self._num_processes)
+        self._sets = self._df.package_sets()
         if output_filename is not None:
             self._df.save(output_filename)
             logger.log('info', 'Resulting database saved to {}'.format(
@@ -150,16 +146,13 @@ class Server:
                 here
         '''
 
-        logger.log('info', 'Finding {} most influential input parameters'
-                   .format(limit_num), call_loc='LIMIT')
-        logger.log('debug', 'Number of estimators: {}'.format(num_estimators),
-                   call_loc='LIMIT')
         self._df = limit_rforest(
             self._df,
             limit_num,
             num_estimators,
             self._num_processes
         )
+        self._sets = self._df.package_sets()
         if output_filename is not None:
             self._df.save(output_filename)
             logger.log('info', 'Resulting database saved to {}'.format(
@@ -186,15 +179,6 @@ class Server:
                 `rmse`, `mean_abs_error`, `med_abs_error`
         '''
 
-        logger.log('info', 'Tuning architecture/learning hyperparameters',
-                   call_loc='TUNE')
-        logger.log('debug', 'Arguments:\n\t| num_employers:\t{}\n\t| '
-                   'num_iterations:\t{}\n\t| shuffle:\t\t{}\n\t| split:'
-                   '\t\t{}\n\t| validate:\t\t{}\n\t| eval_set:\t\t{}\n\t'
-                   '| eval_fn:\t\t{}'.format(
-                       num_employers, num_iterations, shuffle, split, validate,
-                       eval_set, eval_fn
-                   ), call_loc='TUNE')
         self._vars = tune_hyperparameters(
             self._df,
             self._vars,
@@ -241,77 +225,23 @@ class Server:
             )
 
         else:
-            logger.log('info', 'Training {}x{} models'.format(
-                       self._num_pools, self._num_candidates),
-                       call_loc='TRAIN')
-            logger.log('debug', 'Arguments:\n\t| shuffle:\t\t{}\n\t| split:'
-                       '\t\t{}\n\t| retrain:\t\t{}\n\t| validate:\t\t{}\n\t| '
-                       'selection_set:\t{}\n\t| selection_fn:\t\t{}'.format(
-                           shuffle, split, retrain, validate, selection_set,
-                           selection_fn
-                        ), call_loc='TRAIN')
+            train_project(
+                self._prj_name,
+                self._num_pools,
+                self._num_candidates,
+                self._df,
+                self._sets,
+                self._vars,
+                shuffle,
+                split,
+                retrain,
+                validate,
+                selection_set,
+                selection_fn,
+                self._num_processes
+            )
 
-            pool_errors = [[] for _ in range(self._num_pools)]
-            if self._num_processes > 1:
-                train_pool = Pool(processes=self._num_processes)
-
-            for pool in range(self._num_pools):
-
-                for candidate in range(self._num_candidates):
-
-                    filename = get_candidate_path(
-                        self._prj_name,
-                        pool,
-                        candidate,
-                        model=True
-                    )
-                    save_df(self._df, filename.replace('model.h5', 'data.d'))
-
-                    if self._num_processes > 1:
-                        pool_errors[pool].append(train_pool.apply_async(
-                            train_model,
-                            [self._sets, self._vars, selection_set,
-                             selection_fn, retrain, filename, validate]
-                        ))
-
-                    else:
-                        pool_errors[pool].append(train_model(
-                            self._sets,
-                            self._vars,
-                            selection_set,
-                            selection_fn,
-                            retrain,
-                            filename,
-                            validate
-                        ))
-
-                    if shuffle is not None:
-                        self._df.shuffle(sets=shuffle, split=split)
-                        self._sets = self._df.package_sets()
-
-            if self._num_processes > 1:
-                train_pool.close()
-                train_pool.join()
-                for p_id, pool in enumerate(pool_errors):
-                    pool_errors[p_id] = [e.get() for e in pool]
-
-            logger.log('debug', 'Pool errors: {}'.format(pool_errors),
-                       call_loc='TRAIN')
-
-            for p_id, pool in enumerate(pool_errors):
-                candidate_fp = get_candidate_path(
-                    self._prj_name, p_id, min(
-                        enumerate(pool), key=itemgetter(1)
-                    )[0], model=True
-                )
-                pool_fp = get_candidate_path(self._prj_name, p_id, p_best=True)
-                resave_model(candidate_fp, pool_fp)
-                resave_df(
-                    candidate_fp.replace('model.h5', 'data.d'),
-                    pool_fp.replace('model.h5', 'data.d')
-                )
-
-    def use(self, dset: str=None, output_filename: str=None):
+    def use(self, dset: str=None, output_filename: str=None) -> list:
         '''Uses trained neural network(s) to predict for specified set; single
         NN if no project created, best pool candidates if created
 
@@ -321,31 +251,26 @@ class Server:
             output_filename (str): if supplied, saves results to this CSV file
 
         Returns:
-            numpy.array: array of results for specified set
+            list: list of results for specified set
         '''
 
         if self._prj_name is None:
             results = use_model(self._sets, dset)
 
         else:
-            res = []
-            for pool in range(self._num_pools):
-                res.append(use_model(
-                    self._sets,
-                    dset,
-                    filename=get_candidate_path(
-                        self._prj_name, pool, p_best=True
-                    )
-                ))
-            results = sum(res) / len(res)
-
+            results = use_project(
+                self._prj_name,
+                self._num_pools,
+                dset,
+                self._sets
+            )
         if output_filename is not None:
             save_results(results, dset, self._df, output_filename)
             logger.log('info', 'Results saved to {}'.format(output_filename),
                        call_loc='USE')
         return results
 
-    def errors(self, *args, dset: str=None):
+    def errors(self, *args, dset: str=None) -> dict:
         '''Obtains various errors for specified set
 
         Args:
@@ -384,56 +309,14 @@ class Server:
 
         if self._prj_name is None:
             raise RuntimeError('A project has not been created')
-        save_config(self._vars, path.join(self._prj_name, self._cf_file))
-        save_df(self._df, path.join(self._prj_name, 'data.d'))
-        save_path = self._prj_name
-        if filename is not None:
-            save_path = filename
-        if '.prj' not in save_path:
-            save_path += '.prj'
-        prj_save = ZipFile(save_path, 'w', ZIP_DEFLATED)
-        for root, dirs, files in walk(self._prj_name):
-            for file in files:
-                prj_save.write(path.join(root, file))
-            if del_candidates:
-                for d in dirs:
-                    if 'candidate_' in d:
-                        rmtree(path.join(root, d))
-        prj_save.close()
-        if clean_up:
-            rmtree(self._prj_name)
+        save_path = save_project(
+            self._prj_name,
+            filename,
+            self._cf_file,
+            self._df,
+            self._vars,
+            clean_up,
+            del_candidates
+        )
         logger.log('info', 'Project saved to {}'.format(save_path),
-                   call_loc='PROJECT')
-
-    def _open_project(self, prj_file: str):
-        '''Private method: if project file specified on Server.__init__, loads
-        the project
-
-        Args:
-            prj_file (str): path to .prj file
-        '''
-
-        self._prj_name = prj_file.replace('.prj', '')
-        if '.prj' not in prj_file:
-            prj_file += '.prj'
-        prj_save = ZipFile(prj_file, 'r')
-        prj_save.extractall()
-        prj_save.close()
-        self._num_pools = len(
-            [pool for pool in listdir(self._prj_name)
-             if path.isdir(path.join(self._prj_name, pool))]
-        )
-        self._num_candidates = len(
-            [cand for cand in listdir(path.join(self._prj_name, 'pool_0'))
-             if path.isdir(path.join(self._prj_name, 'pool_0', cand))]
-        )
-        for root, _, files in walk(self._prj_name):
-            for file in files:
-                if '.yml' in file:
-                    self._cf_file = file
-                    self._vars = {}
-                    self._vars.update(open_config(path.join(root, file)))
-        self._df = open_df(path.join(self._prj_name, 'data.d'))
-        self._sets = self._df.package_sets()
-        logger.log('info', 'Opened project {}'.format(prj_file),
                    call_loc='PROJECT')

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='ecnet',
-    version='3.1.2',
+    version='3.2.0',
     description='UMass Lowell Energy and Combustion Research Laboratory Neural'
                 ' Network Software',
     url='http://github.com/tjkessler/ecnet',
@@ -13,22 +13,17 @@ setup(
     license='MIT',
     packages=find_packages(),
     install_requires=[
-        'colorlogging',
-        'ditto-lib',
-        'ecabc',
-        'keras',
-        'numpy',
-        'pubchempy',
-        'pyyaml',
+        'alvadescpy==0.1.0',
+        'colorlogging==0.3.5',
+        'ditto-lib==1.0.0',
+        'ecabc==2.2.3',
+        'keras==2.2.4',
+        'matplotlib==3.1.0',
+        'numpy==1.16.4',
+        'padelpy==0.1.5',
+        'pyyaml==5.1.1',
         'sklearn',
-        'tensorflow'
+        'tensorflow==1.13.1'
     ],
-    package_data={
-        'ecnet': [
-            'tools/PaDEL-Descriptor/*',
-            'tools/PaDEL-Descriptor/lib/*',
-            'tools/PaDEL-Descriptor/license/*'
-        ]
-    },
     zip_safe=False
 )

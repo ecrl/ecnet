@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tasks/tuning.py
-# v.3.1.2
+# v.3.2.0
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions/fitness functions for tuning hyperparameters
@@ -41,6 +41,16 @@ def tune_hyperparameters(df: DataFrame, vars: dict, num_employers: int,
     Returns:
         dict: tuned hyperparameters
     '''
+
+    logger.log('info', 'Tuning architecture/learning hyperparameters',
+               call_loc='TUNE')
+    logger.log('debug', 'Arguments:\n\t| num_employers:\t{}\n\t| '
+               'num_iterations:\t{}\n\t| shuffle:\t\t{}\n\t| split:'
+               '\t\t{}\n\t| validate:\t\t{}\n\t| eval_set:\t\t{}\n\t'
+               '| eval_fn:\t\t{}'.format(
+                   num_employers, num_iterations, shuffle, split, validate,
+                   eval_set, eval_fn
+               ), call_loc='TUNE')
 
     fit_fn_args = {
         'df': df,

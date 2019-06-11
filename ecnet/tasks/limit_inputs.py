@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tasks/limit_inputs.py
-# v.3.1.2
+# v.3.2.0
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions for selecting influential input parameters
@@ -34,6 +34,11 @@ def limit_rforest(df: DataFrame, limit_num: int, num_estimators: int=1000,
     Returns:
         ecnet.utils.data_utils.DataFrame: limited data
     '''
+
+    logger.log('info', 'Finding {} most influential input parameters'
+               .format(limit_num), call_loc='LIMIT')
+    logger.log('debug', 'Number of estimators: {}'.format(num_estimators),
+               call_loc='LIMIT')
 
     ditto_logger.stream_level = logger.stream_level
     if logger.file_level != 'disable':

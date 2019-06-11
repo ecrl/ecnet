@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tasks/remove_outliers.py
-# v.3.1.2
+# v.3.2.0
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains function for removing outliers from ECNet DataFrame
@@ -35,6 +35,10 @@ def remove_outliers(df: DataFrame, leaf_size: int=40,
     Returns:
         ecnet.utils.data_utils.DataFrame: data w/o outliers
     '''
+
+    logger.log('info', 'Removing outliers', call_loc='OUTLIERS')
+    logger.log('debug', 'Leaf size: {}'.format(leaf_size),
+               call_loc='OUTLIERS')
 
     ditto_logger.stream_level = logger.stream_level
     if logger.file_level != 'disable':
