@@ -24,10 +24,6 @@ from ecnet.utils.server_utils import create_project, default_config,\
     resave_df, resave_model, save_config, save_df, save_project, train_model,\
     use_model, use_project
 
-# Stdlib imports
-from multiprocessing import set_start_method
-from os import name
-
 
 class Server:
 
@@ -51,9 +47,6 @@ class Server:
                     ), call_loc='INIT')
 
         self._num_processes = num_processes
-
-        if name != 'nt':
-            set_start_method('spawn', force=True)
 
         if prj_file is not None:
             self._prj_name, self._num_pools, self._num_candidates, self._df,\

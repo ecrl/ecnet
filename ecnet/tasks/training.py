@@ -13,8 +13,9 @@
 #
 
 # stdlib. imports
-from multiprocessing import Pool
+from multiprocessing import Pool, set_start_method
 from operator import itemgetter
+from os import name
 
 # ECNet imports
 from ecnet.utils.logging import logger
@@ -47,6 +48,9 @@ def train_project(prj_name: str, num_pools: int, num_candidates: int,
             metric; `rmse`, `mean_abs_error`, `med_abs_error`
         num_processes (int): number of concurrent processes used to train
     '''
+
+    if name != 'nt':
+        set_start_method('spawn', force=True)
 
     logger.log('info', 'Training {}x{} models'.format(
         num_pools, num_candidates

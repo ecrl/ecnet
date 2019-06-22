@@ -8,6 +8,10 @@
 # Contains functions/fitness functions for tuning hyperparameters
 #
 
+# stdlib. imports
+from multiprocessing import set_start_method
+from os import name
+
 # 3rd party imports
 from ecabc.abc import ABC
 
@@ -41,6 +45,9 @@ def tune_hyperparameters(df: DataFrame, vars: dict, num_employers: int,
     Returns:
         dict: tuned hyperparameters
     '''
+
+    if name != 'nt':
+        set_start_method('spawn', force=True)
 
     logger.log('info', 'Tuning architecture/learning hyperparameters',
                call_loc='TUNE')
