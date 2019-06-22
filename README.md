@@ -7,7 +7,7 @@
 [![status](http://joss.theoj.org/papers/f556afbc97e18e1c1294d98e0f7ff99f/status.svg)](http://joss.theoj.org/papers/f556afbc97e18e1c1294d98e0f7ff99f)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/TJKessler/ECNet/master/LICENSE.txt)
 [![Documentation Status](https://readthedocs.org/projects/ecnet/badge/?version=latest)](https://ecnet.readthedocs.io/en/latest/?badge=latest)
-[![Build Status](https://dev.azure.com/travisjkessler/uml.ecrl/_apis/build/status/ECRL.ECNet?branchName=master)](https://dev.azure.com/travisjkessler/uml.ecrl/_build/latest?definitionId=5&branchName=master)
+[![Build Status](https://dev.azure.com/uml-ecrl/package-management/_apis/build/status/ECRL.ECNet?branchName=master)](https://dev.azure.com/uml-ecrl/package-management/_build/latest?definitionId=1&branchName=master)
 	
 **ECNet** is an open source Python package for creating scalable, retrainable and deployable machine learning projects with a focus on fuel property prediction. An ECNet __project__ is considered a collection of __pools__, where each pool contains a neural network that has been selected from a group of __candidate__ neural networks. Candidates are selected to represent pools based on their ability to optimize certain learning criteria (for example, performing optimially on unseen data). Each pool contributes a prediction derived from input data, and these predictions are averaged to calculate the project's final prediction. Using multiple pools allows a project to learn from a variety of learning and validation sets, which can reduce the project's prediction error. Projects can be saved and reused at a later time allowing additional training and deployable predictive models. 
 
