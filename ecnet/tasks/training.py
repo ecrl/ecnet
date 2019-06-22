@@ -1,20 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# ecnet/server.py
-# v.3.2.0
+# ecnet/tasks/training.py
+# v.3.2.1
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
-# Contains the "Server" class, which handles ECNet project creation, neural
-# network model creation, data hand-off to models, prediction error
-# calculation, input parameter selection, hyperparameter tuning.
-#
-# For example scripts, refer to https://ecnet.readthedocs.io/en/latest/
+# Contains function for project training (multiprocessed training)
 #
 
 # stdlib. imports
-from multiprocessing import Pool
+from multiprocessing import Pool, set_start_method
 from operator import itemgetter
+from os import name
 
 # ECNet imports
 from ecnet.utils.logging import logger
@@ -47,6 +44,9 @@ def train_project(prj_name: str, num_pools: int, num_candidates: int,
             metric; `rmse`, `mean_abs_error`, `med_abs_error`
         num_processes (int): number of concurrent processes used to train
     '''
+
+    if name != 'nt':
+        set_start_method('spawn', force=True)
 
     logger.log('info', 'Training {}x{} models'.format(
         num_pools, num_candidates

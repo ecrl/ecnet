@@ -2,11 +2,15 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tasks/tuning.py
-# v.3.2.0
+# v.3.2.1
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions/fitness functions for tuning hyperparameters
 #
+
+# stdlib. imports
+from multiprocessing import set_start_method
+from os import name
 
 # 3rd party imports
 from ecabc.abc import ABC
@@ -41,6 +45,9 @@ def tune_hyperparameters(df: DataFrame, vars: dict, num_employers: int,
     Returns:
         dict: tuned hyperparameters
     '''
+
+    if name != 'nt':
+        set_start_method('spawn', force=True)
 
     logger.log('info', 'Tuning architecture/learning hyperparameters',
                call_loc='TUNE')

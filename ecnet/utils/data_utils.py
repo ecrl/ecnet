@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/utils/data_utils.py
-# v.3.2.0
+# v.3.2.1
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions/classes for loading data, saving data, saving results
