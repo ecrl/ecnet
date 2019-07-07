@@ -17,6 +17,16 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(len(df._input_names), 1875)
         remove('database.csv')
 
+    def test_create_db_convert(self):
+
+        print('\nUNIT TEST: create_db, convert MDL')
+
+        database.create_db(['CCC', 'CC'], 'database.csv', convert_mdl=True)
+        df = DataFrame('database.csv')
+        self.assertEqual(len(df), 2)
+        self.assertEqual(len(df._input_names), 1875)
+        remove('database.csv')
+
 
 if __name__ == '__main__':
 
