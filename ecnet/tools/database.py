@@ -16,7 +16,12 @@ from warnings import warn
 
 # 3rd party imports
 from alvadescpy import smiles_to_descriptors
-from padelpy import from_smiles
+from padelpy import from_mdl, from_smiles
+
+try:
+    import pybel
+except:
+    pybel = None
 
 
 class _Molecule:
@@ -31,7 +36,8 @@ class _Molecule:
 
 
 def create_db(smiles: list, db_name: str, targets: list=None,
-              id_prefix: str='', extra_strings: dict={}, backend: str='padel'):
+              id_prefix: str='', extra_strings: dict={}, backend: str='padel',
+              convert_mdl: bool=False):
     ''' create_db: creates an ECNet-formatted database from SMILES strings
     using either PaDEL-Descriptor or alvaDesc software; using alvaDesc
     requires a valid installation/license of alvaDesc
@@ -46,6 +52,8 @@ def create_db(smiles: list, db_name: str, targets: list=None,
             with length equal to number of SMILES strings
         backend (str): software used to calculate QSPR descriptors, 'padel' or
             'alvadesc'
+        convert_mdl (bool): if `True`, converts SMILES strings to MDL 3D
+            format before calculating descriptors (PaDEL only)
     '''
 
     if targets is not None:
@@ -68,16 +76,38 @@ def create_db(smiles: list, db_name: str, targets: list=None,
             mols.append(smiles_to_descriptors(mol))
     elif backend == 'padel':
         for idx, mol in enumerate(smiles):
-            try:
-                mols.append(from_smiles(mol))
-            except RuntimeError:
-                warn('Could not calculate descriptors for {}, omitting'.format(
-                     mol), RuntimeWarning)
-                del smiles[idx]
-                if targets is not None:
-                    del targets[idx]
-                for string in list(extra_strings.keys()):
-                    del extra_strings[string][idx]
+            if convert_mdl is True:
+                if pybel is None:
+                    raise ImportError(
+                        'pybel (Python Open Babel wrapper) not installed, '
+                        'cannot convert SMILES to MDL'
+                    )
+                mdl = pybel.readstring('smi', mol)
+                mdl.make3D()
+                curr_time = datetime.now().strftime('%Y%m%d%H%M%S%f')[:-3]
+                mdl.write('mdl', '{}.mdl'.format(curr_time))
+                try:
+                    mols.append(from_mdl('{}.mdl'.format(curr_time))[0])
+                except RuntimeError:
+                    warn('Could not calculate descriptors for {}, omitting'
+                         .format(mol), RuntimeWarning)
+                    del smiles[idx]
+                    if targets is not None:
+                        del targets[idx]
+                    for string in list(extra_strings.keys()):
+                        del extra_strings[string][idx]
+                remove('{}.mdl'.format(curr_time))
+            else:
+                try:
+                    mols.append(from_smiles(mol))
+                except RuntimeError:
+                    warn('Could not calculate descriptors for {}, omitting'
+                         .format(mol), RuntimeWarning)
+                    del smiles[idx]
+                    if targets is not None:
+                        del targets[idx]
+                    for string in list(extra_strings.keys()):
+                        del extra_strings[string][idx]
     else:
         raise ValueError('Unknown backend software: {}'.format(backend))
 
