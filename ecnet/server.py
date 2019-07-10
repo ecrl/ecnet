@@ -19,10 +19,10 @@ from ecnet.tasks.training import train_project
 from ecnet.tasks.tuning import tune_hyperparameters
 from ecnet.utils.data_utils import DataFrame, save_results
 from ecnet.utils.logging import logger
-from ecnet.utils.server_utils import create_project, default_config,\
-    get_candidate_path, get_error, get_y, open_config, open_df, open_project,\
-    resave_df, resave_model, save_config, save_df, save_project, train_model,\
-    use_model, use_project
+from ecnet.utils.server_utils import check_config, create_project,\
+    default_config, get_candidate_path, get_error, get_y, open_config,\
+    open_df, open_project, resave_df, resave_model, save_config, save_df,\
+    save_project, train_model, use_model, use_project
 
 
 class Server:
@@ -51,6 +51,8 @@ class Server:
         if prj_file is not None:
             self._prj_name, self._num_pools, self._num_candidates, self._df,\
                 self._cf_file, self._vars = open_project(prj_file)
+            print(self._vars, self._num_pools, self._cf_file)
+            check_config(self._vars)
             self._sets = self._df.package_sets()
             logger.log('info', 'Opened project {}'.format(prj_file),
                        call_loc='INIT')
@@ -62,6 +64,7 @@ class Server:
         self._vars = {}
         try:
             self._vars.update(open_config(self._cf_file))
+            check_config(self._vars)
         except FileNotFoundError:
             logger.log('warn', '{} not found, generating default config'
                        .format(model_config), call_loc='INIT')
