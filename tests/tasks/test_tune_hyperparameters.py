@@ -24,10 +24,12 @@ class TestTune(unittest.TestCase):
         self.assertLessEqual(new_hp['epsilon'], 1)
         self.assertGreaterEqual(new_hp['learning_rate'], 0)
         self.assertLessEqual(new_hp['learning_rate'], 1)
+        self.assertGreaterEqual(new_hp['batch_size'], 1)
+        self.assertLessEqual(new_hp['batch_size'], len(df.learn_set))
         self.assertGreaterEqual(new_hp['hidden_layers'][0][0], 1)
-        self.assertLessEqual(new_hp['hidden_layers'][0][0], 50)
+        self.assertLessEqual(new_hp['hidden_layers'][0][0], 100)
         self.assertGreaterEqual(new_hp['hidden_layers'][1][0], 1)
-        self.assertLessEqual(new_hp['hidden_layers'][1][0], 50)
+        self.assertLessEqual(new_hp['hidden_layers'][1][0], 100)
 
 
 if __name__ == '__main__':

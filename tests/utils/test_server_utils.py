@@ -10,13 +10,23 @@ import ecnet.utils.data_utils as data_utils
 
 class TestServerUtils(unittest.TestCase):
 
+    def test_check_config(self):
+
+        print('\nUNIT TEST: check_config')
+        dc = server_utils.default_config()
+        del dc['batch_size']
+        self.assertFalse('batch_size' in list(dc.keys()))
+        dc = server_utils.check_config(dc)
+        self.assertTrue('batch_size' in list(dc.keys()))
+        self.assertEqual(dc['batch_size'], 32)
+
     def test_default_config(self):
 
         print('\nUNIT TEST: default_config')
         dc = server_utils.default_config()
         self.assertEqual(
             dc, {
-                'epochs': 10000,
+                'epochs': 3000,
                 'learning_rate': 0.001,
                 'beta_1': 0.9,
                 'beta_2': 0.999,
@@ -26,7 +36,8 @@ class TestServerUtils(unittest.TestCase):
                     [32, 'relu'],
                     [32, 'relu']
                 ],
-                'output_activation': 'linear'
+                'output_activation': 'linear',
+                'batch_size': 32
             }
         )
 
@@ -111,7 +122,7 @@ class TestServerUtils(unittest.TestCase):
         self.assertEqual(
             server_utils.open_config('config.yml'),
             {
-                'epochs': 10000,
+                'epochs': 3000,
                 'learning_rate': 0.001,
                 'beta_1': 0.9,
                 'beta_2': 0.999,
@@ -121,7 +132,8 @@ class TestServerUtils(unittest.TestCase):
                     [32, 'relu'],
                     [32, 'relu']
                 ],
-                'output_activation': 'linear'
+                'output_activation': 'linear',
+                'batch_size': 32
             }
         )
         remove('config.yml')
