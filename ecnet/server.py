@@ -51,7 +51,6 @@ class Server:
         if prj_file is not None:
             self._prj_name, self._num_pools, self._num_candidates, self._df,\
                 self._cf_file, self._vars = open_project(prj_file)
-            print(self._vars, self._num_pools, self._cf_file)
             check_config(self._vars)
             self._sets = self._df.package_sets()
             logger.log('info', 'Opened project {}'.format(prj_file),
