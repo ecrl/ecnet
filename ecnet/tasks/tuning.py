@@ -75,11 +75,12 @@ def tune_hyperparameters(df: DataFrame, vars: dict, num_employers: int,
         ('float', (0.0, 1.0)),
         ('float', (0.0, 1.0)),
         ('float', (0.0, 1.0)),
-        ('float', (0.0, 1.0))
+        ('float', (0.0, 1.0)),
+        ('int', (1, len(df.learn_set)))
     ]
 
     for _ in range(len(vars['hidden_layers'])):
-        value_ranges.append(('int', (1, 50)))
+        value_ranges.append(('int', (1, 100)))
 
     abc = ABC(
         tune_fitness_function,
@@ -105,7 +106,8 @@ def tune_hyperparameters(df: DataFrame, vars: dict, num_employers: int,
                 'decay': abc.best_performer[1][2],
                 'epsilon': abc.best_performer[1][3],
                 'learning_rate': abc.best_performer[1][4],
-                'hidden_layers': abc.best_performer[1][5:]
+                'batch_size': abc.best_performer[1][5],
+                'hidden_layers': abc.best_performer[1][6:]
             }
         ), call_loc='TUNE')
     params = abc.best_performer[1]
@@ -114,8 +116,9 @@ def tune_hyperparameters(df: DataFrame, vars: dict, num_employers: int,
     vars['decay'] = params[2]
     vars['epsilon'] = params[3]
     vars['learning_rate'] = params[4]
+    vars['batch_size'] = params[5]
     for l_idx in range(len(vars['hidden_layers'])):
-        vars['hidden_layers'][l_idx][0] = params[5 + l_idx]
+        vars['hidden_layers'][l_idx][0] = params[6 + l_idx]
     return vars
 
 
@@ -136,10 +139,11 @@ def tune_fitness_function(params: dict, **kwargs):
     vars['decay'] = params[2]
     vars['epsilon'] = params[3]
     vars['learning_rate'] = params[4]
+    vars['batch_size'] = params[5]
     vars['hidden_layers'] = kwargs['hidden_layers']
-    vars['epochs'] = 2000
+    vars['epochs'] = 3000
     for l_idx in range(len(vars['hidden_layers'])):
-        vars['hidden_layers'][l_idx][0] = params[5 + l_idx]
+        vars['hidden_layers'][l_idx][0] = params[6 + l_idx]
 
     df = kwargs['df']
     if kwargs['shuffle'] is not None:
