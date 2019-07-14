@@ -8,6 +8,9 @@ import ecnet.utils.server_utils as server_utils
 import ecnet.utils.data_utils as data_utils
 
 
+DB_LOC = 'cn_model_v1.0.csv'
+
+
 class TestServerUtils(unittest.TestCase):
 
     def test_check_config(self):
@@ -80,7 +83,7 @@ class TestServerUtils(unittest.TestCase):
     def test_get_x(self):
 
         print('\nUNIT TEST: get_x')
-        df = data_utils.DataFrame('cn_model_v1.0.csv')
+        df = data_utils.DataFrame(DB_LOC)
         df.create_sets(random=True)
         pd = df.package_sets()
         self.assertEqual(len(server_utils.get_x(pd, 'learn')), len(pd.learn_x))
@@ -98,7 +101,7 @@ class TestServerUtils(unittest.TestCase):
     def test_get_y(self):
 
         print('\nUNIT TEST: get_y')
-        df = data_utils.DataFrame('cn_model_v1.0.csv')
+        df = data_utils.DataFrame(DB_LOC)
         df.create_sets(random=True)
         pd = df.package_sets()
         self.assertEqual(len(server_utils.get_y(pd, 'learn')), len(pd.learn_y))
@@ -141,7 +144,7 @@ class TestServerUtils(unittest.TestCase):
     def test_open_save_df(self):
 
         print('\nUNIT TEST: open/save DataFrame')
-        df = data_utils.DataFrame('cn_model_v1.0.csv')
+        df = data_utils.DataFrame(DB_LOC)
         server_utils.save_df(df, 'test_df_saved.d')
         df = server_utils.open_df('test_df_saved.d')
         self.assertEqual(len(df), 482)
@@ -154,7 +157,7 @@ class TestServerUtils(unittest.TestCase):
     def test_train_model(self):
 
         print('\nUNIT TEST: train_model')
-        df = data_utils.DataFrame('cn_model_v1.0.csv')
+        df = data_utils.DataFrame(DB_LOC)
         df.create_sets(random=True)
         pd = df.package_sets()
         config = server_utils.default_config()
@@ -168,7 +171,7 @@ class TestServerUtils(unittest.TestCase):
     def test_use_model(self):
 
         print('\nUNIT TEST: use_model')
-        df = data_utils.DataFrame('cn_model_v1.0.csv')
+        df = data_utils.DataFrame(DB_LOC)
         df.create_sets(random=True)
         pd = df.package_sets()
         config = server_utils.default_config()
@@ -201,4 +204,5 @@ class TestServerUtils(unittest.TestCase):
 
 if __name__ == '__main__':
 
+    DB_LOC = join('../', 'cn_model_v1.0.csv')
     unittest.main()
