@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tools/plotting.py
-# v.3.2.1
+# v.3.2.2
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions/classes for creating various plots
@@ -36,6 +36,7 @@ class ParityPlot:
         plt.xlabel(x_label)
         plt.ylabel(y_label)
         self._max_val = 0
+        self._min_val = 0
         self._labels = None
 
     def add_series(self, x_vals, y_vals, name: str=None, color: str=None):
@@ -59,6 +60,12 @@ class ParityPlot:
         y_max = max(y_vals)
         if y_max > self._max_val:
             self._max_val = y_max
+        x_min = min(x_vals)
+        if x_min < self._min_val:
+            self._min_val = x_min
+        y_min = min(y_vals)
+        if y_min < self._min_val:
+            self._min_val = y_min
 
     def add_error_bars(self, error: float, label: str=None):
         ''' Adds error bars, +/- the error relative to the 1:1 parity line
@@ -103,8 +110,8 @@ class ParityPlot:
             direction = 1
         norm_offset = direction * sqrt(2 * offset * offset)
         plt.plot(
-            [0, self._max_val],
-            [0 + norm_offset, self._max_val + norm_offset],
+            [self._min_val, self._max_val],
+            [self._min_val + norm_offset, self._max_val + norm_offset],
             color='k',
             linestyle=':',
             zorder=0,

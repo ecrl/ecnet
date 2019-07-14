@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/models/mlp.py
-# v.3.2.1
+# v.3.2.2
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "MultilayerPerceptron" (feed-forward neural network) class
@@ -77,7 +77,7 @@ class MultilayerPerceptron:
     def fit(self, l_x: array, l_y: array, v_x: array=None, v_y: array=None,
             epochs: int=1500, lr: float=0.001, beta_1: float=0.9,
             beta_2: float=0.999, epsilon: float=0.0000001, decay: float=0.0,
-            v: int=0):
+            v: int=0, batch_size: int=32):
         '''Fits neural network to supplied inputs and targets
 
         Args:
@@ -95,6 +95,7 @@ class MultilayerPerceptron:
             epsilon (float): epsilon value for Adam optimizer
             decay (float): learning rate decay for Adam optimizer
             v (int): verbose training, `0` for no printing, `1` for printing
+            batch_size (int): number of learning samples per batch
         '''
 
         self._model.compile(
@@ -110,7 +111,7 @@ class MultilayerPerceptron:
         )
 
         if v_x is not None and v_y is not None:
-            self._model.fit(
+            history = self._model.fit(
                 l_x,
                 l_y,
                 validation_data=(v_x, v_y),
@@ -122,14 +123,17 @@ class MultilayerPerceptron:
                     restore_best_weights=True
                 )],
                 epochs=epochs,
-                verbose=v
+                verbose=v,
+                batch_size=batch_size
             )
+            epochs = len(history.history['loss'])
         else:
             self._model.fit(
                 l_x,
                 l_y,
                 epochs=epochs,
-                verbose=v
+                verbose=v,
+                batch_size=batch_size
             )
 
         logger.log('debug', 'Training complete after {} epochs'.format(epochs),

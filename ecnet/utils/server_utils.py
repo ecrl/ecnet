@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/utils/server_utils.py
-# v.3.2.1
+# v.3.2.2
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions used by ecnet.Server
@@ -25,6 +25,25 @@ from ecnet.utils.error_utils import calc_rmse, calc_mean_abs_error,\
 from ecnet.models.mlp import MultilayerPerceptron
 
 
+def check_config(config: dict) -> dict:
+    '''Compares loaded YML configuration to expected variables, sets any
+    missing variables to ECNet's default values
+
+    Args:
+        config (dict): currently loaded YML configuration
+
+    Returns:
+        dict: currently loaded YML configuration, with default values for
+            missing variables
+    '''
+
+    expected_vars = default_config()
+    for key in list(expected_vars.keys()):
+        if key not in list(config.keys()):
+            config[key] = expected_vars[key]
+    return config
+
+
 def create_project(prj_name: str, num_pools: int, num_candidates: int):
     '''Creates an ECNet project folder structure
 
@@ -45,7 +64,7 @@ def default_config() -> dict:
     '''Returns default NN architecture/learning parameters'''
 
     return {
-        'epochs': 10000,
+        'epochs': 3000,
         'learning_rate': 0.001,
         'beta_1': 0.9,
         'beta_2': 0.999,
@@ -55,7 +74,8 @@ def default_config() -> dict:
             [32, 'relu'],
             [32, 'relu']
         ],
-        'output_activation': 'linear'
+        'output_activation': 'linear',
+        'batch_size': 32
     }
 
 
@@ -237,7 +257,7 @@ def open_project(prj_file: str) -> tuple:
     for root, _, files in walk(prj_name):
         for file in files:
             if '.yml' in file:
-                vars = {}
+                vars = open_config(path.join(root, file))
                 return (
                     prj_name,
                     len([pool for pool in listdir(prj_name)
@@ -248,7 +268,7 @@ def open_project(prj_file: str) -> tuple:
                         ),
                     open_df(path.join(prj_name, 'data.d')),
                     file,
-                    vars.update(open_config(path.join(root, file)))
+                    vars
                 )
     raise FileNotFoundError('Unable to locate configuration file in {}'.format(
         prj_file
@@ -386,7 +406,8 @@ def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
             beta_1=vars['beta_1'],
             beta_2=vars['beta_2'],
             epsilon=vars['epsilon'],
-            decay=vars['decay']
+            decay=vars['decay'],
+            batch_size=vars['batch_size']
         )
     else:
         model.fit(
@@ -397,7 +418,8 @@ def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
             beta_1=vars['beta_1'],
             beta_2=vars['beta_2'],
             epsilon=vars['epsilon'],
-            decay=vars['decay']
+            decay=vars['decay'],
+            batch_size=vars['batch_size']
         )
     if save:
         model.save()

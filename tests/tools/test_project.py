@@ -1,8 +1,12 @@
 import unittest
 from os import remove
+from os.path import join
 
 from ecnet import Server
 from ecnet.tools.project import predict
+
+
+DB_LOC = 'cn_model_v2.0.csv'
 
 
 class TestUseProject(unittest.TestCase):
@@ -31,4 +35,5 @@ class TestUseProject(unittest.TestCase):
 
 if __name__ == '__main__':
 
+    DB_LOC = join('../', 'cn_model_v2.0.csv')
     unittest.main()

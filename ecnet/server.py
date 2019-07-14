@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/server.py
-# v.3.2.1
+# v.3.2.2
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "Server" class, which handles ECNet project creation, neural
@@ -14,15 +14,14 @@
 
 # ECNet imports
 from ecnet.tasks.limit_inputs import limit_rforest
-from ecnet.tasks.remove_outliers import remove_outliers
 from ecnet.tasks.training import train_project
 from ecnet.tasks.tuning import tune_hyperparameters
 from ecnet.utils.data_utils import DataFrame, save_results
 from ecnet.utils.logging import logger
-from ecnet.utils.server_utils import create_project, default_config,\
-    get_candidate_path, get_error, get_y, open_config, open_df, open_project,\
-    resave_df, resave_model, save_config, save_df, save_project, train_model,\
-    use_model, use_project
+from ecnet.utils.server_utils import check_config, create_project,\
+    default_config, get_candidate_path, get_error, get_y, open_config,\
+    open_df, open_project, resave_df, resave_model, save_config, save_df,\
+    save_project, train_model, use_model, use_project
 
 
 class Server:
@@ -51,6 +50,8 @@ class Server:
         if prj_file is not None:
             self._prj_name, self._num_pools, self._num_candidates, self._df,\
                 self._cf_file, self._vars = open_project(prj_file)
+            check_config(self._vars)
+            self._sets = self._df.package_sets()
             logger.log('info', 'Opened project {}'.format(prj_file),
                        call_loc='INIT')
             return
@@ -61,6 +62,7 @@ class Server:
         self._vars = {}
         try:
             self._vars.update(open_config(self._cf_file))
+            check_config(self._vars)
         except FileNotFoundError:
             logger.log('warn', '{} not found, generating default config'
                        .format(model_config), call_loc='INIT')
@@ -109,42 +111,31 @@ class Server:
         logger.log('debug', 'Number of candidates/pool: {}'.format(
                    num_candidates), call_loc='PROJECT')
 
-    def remove_outliers(self, leaf_size: int=30, output_filename: str=None):
-        '''Removes any outliers from the currently-loaded data using
-            unsupervised outlier detection using local outlier factor
-
-        Args:
-            leaf_size (int): used by nearest-neighbor algorithm as the number
-                of points at which to switch to brute force
-            output_filename (str): if not None, database w/o outliers is saved
-                here
-        '''
-
-        self._df = remove_outliers(self._df, leaf_size, self._num_processes)
-        self._sets = self._df.package_sets()
-        if output_filename is not None:
-            self._df.save(output_filename)
-            logger.log('info', 'Resulting database saved to {}'.format(
-                       output_filename), call_loc='OUTLIERS')
-
-    def limit_inputs(self, limit_num: int, num_estimators: int=1000,
-                     output_filename: str=None):
+    def limit_inputs(self, limit_num: int, num_estimators: int=None,
+                     output_filename: str=None, **kwargs) -> list:
         '''Selects `limit_num` influential input parameters using random
         forest regression
 
         Args:
             limit_num (int): desired number of inputs
-            num_estimators (int): number of trees in the RFR algorithm
+            num_estimators (int): number of trees in the RFR algorithm;
+                defaults to the total number of inputs
             output_filename (str): if not None, new limited database is saved
                 here
+            **kwargs: any argument accepted by
+                sklearn.ensemble.RandomForestRegressor
+
+        Returns:
+            list: [(feature, importance), ..., (feature, importance)]
         '''
 
-        self._df = limit_rforest(
+        result = limit_rforest(
             self._df,
             limit_num,
             num_estimators,
             self._num_processes
         )
+        self._df.set_inputs([r[0] for r in result])
         self._sets = self._df.package_sets()
         if output_filename is not None:
             self._df.save(output_filename)

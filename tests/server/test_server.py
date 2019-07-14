@@ -9,6 +9,9 @@ from ecnet.utils.logging import logger
 from ecnet.utils.data_utils import DataFrame, PackagedData
 
 
+DB_LOC = 'cn_model_v1.0.csv'
+
+
 class TestServer(unittest.TestCase):
 
     def test_init(self):
@@ -23,7 +26,7 @@ class TestServer(unittest.TestCase):
 
         print('\nUNIT TEST: Server.load_data')
         sv = Server()
-        sv.load_data('cn_model_v1.0.csv')
+        sv.load_data(DB_LOC)
         self.assertEqual(len(sv._df), 482)
         self.assertEqual(type(sv._sets), PackagedData)
         remove('config.yml')
@@ -47,7 +50,7 @@ class TestServer(unittest.TestCase):
 
         print('\nUNIT TEST: Server.train')
         sv = Server()
-        sv.load_data('cn_model_v1.0.csv', random=True, split=[0.7, 0.2, 0.1])
+        sv.load_data(DB_LOC, random=True, split=[0.7, 0.2, 0.1])
         sv.create_project('test_project', 2, 2)
         sv._vars['epochs'] = 100
         sv.train()
@@ -71,7 +74,7 @@ class TestServer(unittest.TestCase):
 
         print('\nUNIT TEST: Server.use')
         sv = Server()
-        sv.load_data('cn_model_v1.0.csv', random=True, split=[0.7, 0.2, 0.1])
+        sv.load_data(DB_LOC, random=True, split=[0.7, 0.2, 0.1])
         sv.create_project('test_project', 2, 2)
         sv._vars['epochs'] = 100
         sv.train()
@@ -84,7 +87,7 @@ class TestServer(unittest.TestCase):
 
         print('\nUNIT TEST: Server.save_project')
         sv = Server()
-        sv.load_data('cn_model_v1.0.csv', random=True, split=[0.7, 0.2, 0.1])
+        sv.load_data(DB_LOC, random=True, split=[0.7, 0.2, 0.1])
         sv.create_project('test_project', 2, 2)
         sv._vars['epochs'] = 100
         sv.train()
@@ -96,8 +99,9 @@ class TestServer(unittest.TestCase):
 
     def test_multiprocessing_train(self):
 
+        print('\nUNIT TEST: multiprocessing training')
         sv = Server(num_processes=8)
-        sv.load_data('cn_model_v1.0.csv')
+        sv.load_data(DB_LOC)
         sv.create_project('test_project', 2, 4)
         sv._vars['epochs'] = 100
         sv.train()
@@ -120,4 +124,5 @@ class TestServer(unittest.TestCase):
 
 if __name__ == '__main__':
 
+    DB_LOC = join('../', DB_LOC)
     unittest.main()

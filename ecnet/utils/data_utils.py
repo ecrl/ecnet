@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/utils/data_utils.py
-# v.3.2.1
+# v.3.2.2
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions/classes for loading data, saving data, saving results
@@ -315,7 +315,8 @@ class DataFrame:
         return pd
 
     def set_inputs(self, inputs: list):
-        '''Removes all input variables except those supplied
+        '''Removes all input variables except those supplied, updates sets
+        accordingly
 
         Args:
             inputs (list): input variable names, str
@@ -329,6 +330,7 @@ class DataFrame:
                 raise ValueError('{} not found in existing inputs'.format(inp))
 
         self._input_names = inputs
+        self.create_sets()
 
     def save(self, filename: str):
         '''Saves the current state of the DataFrame to a new CSV database

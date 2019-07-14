@@ -1,7 +1,11 @@
 import unittest
 from os import remove
+from os.path import join
 
 import ecnet.utils.data_utils as data_utils
+
+
+DB_LOC = 'cn_model_v1.0.csv'
 
 
 class TestDataUtils(unittest.TestCase):
@@ -9,7 +13,7 @@ class TestDataUtils(unittest.TestCase):
     def test_df_init(self):
 
         print('\nUNIT TEST: DataFrame init')
-        df = data_utils.DataFrame('cn_model_v1.0.csv')
+        df = data_utils.DataFrame(DB_LOC)
         self.assertEqual(len(df._string_names), 7)
         self.assertEqual(len(df._group_names), 1)
         self.assertEqual(len(df._target_names), 1)
@@ -19,7 +23,7 @@ class TestDataUtils(unittest.TestCase):
     def test_set_creation(self):
 
         print('\nUNIT TEST: DataFrame set creation')
-        df = data_utils.DataFrame('cn_model_v1.0.csv')
+        df = data_utils.DataFrame(DB_LOC)
 
         df.create_sets()
         self.assertEqual(len(df.learn_set), 329)
@@ -34,7 +38,7 @@ class TestDataUtils(unittest.TestCase):
     def test_normalize(self):
 
         print('\nUNIT TEST: DataFrame normalize')
-        df = data_utils.DataFrame('cn_model_v1.0.csv')
+        df = data_utils.DataFrame(DB_LOC)
         df.normalize()
         df.create_sets(random=True)
         pd = df.package_sets()
@@ -54,7 +58,7 @@ class TestDataUtils(unittest.TestCase):
     def test_shuffle(self):
 
         print('\nUNIT TEST: DataFrame shuffle')
-        df = data_utils.DataFrame('cn_model_v1.0.csv')
+        df = data_utils.DataFrame(DB_LOC)
 
         df.shuffle(sets='all', split=[0.7, 0.2, 0.1])
         self.assertEqual(len(df.learn_set), 337)
@@ -69,7 +73,7 @@ class TestDataUtils(unittest.TestCase):
     def test_package_sets(self):
 
         print('\nUNIT TEST: DataFrame package_sets')
-        df = data_utils.DataFrame('cn_model_v1.0.csv')
+        df = data_utils.DataFrame(DB_LOC)
         df.shuffle(sets='all', split=[0.7, 0.2, 0.1])
 
         pd = df.package_sets()
@@ -95,7 +99,7 @@ class TestDataUtils(unittest.TestCase):
     def test_set_inputs(self):
 
         print('\nUNIT TEST: DataFrame set_inputs')
-        df = data_utils.DataFrame('cn_model_v1.0.csv')
+        df = data_utils.DataFrame(DB_LOC)
         df.set_inputs(['PHI', 'piPC05'])
         self.assertEqual(len(df._input_names), 2)
         df.create_sets(random=True)
@@ -105,7 +109,7 @@ class TestDataUtils(unittest.TestCase):
     def test_save_df(self):
 
         print('\nUNIT TEST: DataFrame save')
-        df = data_utils.DataFrame('cn_model_v1.0.csv')
+        df = data_utils.DataFrame(DB_LOC)
         df.save('cn_test_save.csv')
         df_new = data_utils.DataFrame('cn_test_save.csv')
         self.assertEqual(
@@ -133,4 +137,5 @@ class TestDataUtils(unittest.TestCase):
 
 if __name__ == '__main__':
 
+    DB_LOC = join('../', 'cn_model_v1.0.csv')
     unittest.main()

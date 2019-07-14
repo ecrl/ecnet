@@ -8,7 +8,20 @@ import ecnet.utils.server_utils as server_utils
 import ecnet.utils.data_utils as data_utils
 
 
+DB_LOC = 'cn_model_v1.0.csv'
+
+
 class TestServerUtils(unittest.TestCase):
+
+    def test_check_config(self):
+
+        print('\nUNIT TEST: check_config')
+        dc = server_utils.default_config()
+        del dc['batch_size']
+        self.assertFalse('batch_size' in list(dc.keys()))
+        dc = server_utils.check_config(dc)
+        self.assertTrue('batch_size' in list(dc.keys()))
+        self.assertEqual(dc['batch_size'], 32)
 
     def test_default_config(self):
 
@@ -16,7 +29,7 @@ class TestServerUtils(unittest.TestCase):
         dc = server_utils.default_config()
         self.assertEqual(
             dc, {
-                'epochs': 10000,
+                'epochs': 3000,
                 'learning_rate': 0.001,
                 'beta_1': 0.9,
                 'beta_2': 0.999,
@@ -26,7 +39,8 @@ class TestServerUtils(unittest.TestCase):
                     [32, 'relu'],
                     [32, 'relu']
                 ],
-                'output_activation': 'linear'
+                'output_activation': 'linear',
+                'batch_size': 32
             }
         )
 
@@ -69,7 +83,7 @@ class TestServerUtils(unittest.TestCase):
     def test_get_x(self):
 
         print('\nUNIT TEST: get_x')
-        df = data_utils.DataFrame('cn_model_v1.0.csv')
+        df = data_utils.DataFrame(DB_LOC)
         df.create_sets(random=True)
         pd = df.package_sets()
         self.assertEqual(len(server_utils.get_x(pd, 'learn')), len(pd.learn_x))
@@ -87,7 +101,7 @@ class TestServerUtils(unittest.TestCase):
     def test_get_y(self):
 
         print('\nUNIT TEST: get_y')
-        df = data_utils.DataFrame('cn_model_v1.0.csv')
+        df = data_utils.DataFrame(DB_LOC)
         df.create_sets(random=True)
         pd = df.package_sets()
         self.assertEqual(len(server_utils.get_y(pd, 'learn')), len(pd.learn_y))
@@ -111,7 +125,7 @@ class TestServerUtils(unittest.TestCase):
         self.assertEqual(
             server_utils.open_config('config.yml'),
             {
-                'epochs': 10000,
+                'epochs': 3000,
                 'learning_rate': 0.001,
                 'beta_1': 0.9,
                 'beta_2': 0.999,
@@ -121,7 +135,8 @@ class TestServerUtils(unittest.TestCase):
                     [32, 'relu'],
                     [32, 'relu']
                 ],
-                'output_activation': 'linear'
+                'output_activation': 'linear',
+                'batch_size': 32
             }
         )
         remove('config.yml')
@@ -129,7 +144,7 @@ class TestServerUtils(unittest.TestCase):
     def test_open_save_df(self):
 
         print('\nUNIT TEST: open/save DataFrame')
-        df = data_utils.DataFrame('cn_model_v1.0.csv')
+        df = data_utils.DataFrame(DB_LOC)
         server_utils.save_df(df, 'test_df_saved.d')
         df = server_utils.open_df('test_df_saved.d')
         self.assertEqual(len(df), 482)
@@ -142,7 +157,7 @@ class TestServerUtils(unittest.TestCase):
     def test_train_model(self):
 
         print('\nUNIT TEST: train_model')
-        df = data_utils.DataFrame('cn_model_v1.0.csv')
+        df = data_utils.DataFrame(DB_LOC)
         df.create_sets(random=True)
         pd = df.package_sets()
         config = server_utils.default_config()
@@ -156,7 +171,7 @@ class TestServerUtils(unittest.TestCase):
     def test_use_model(self):
 
         print('\nUNIT TEST: use_model')
-        df = data_utils.DataFrame('cn_model_v1.0.csv')
+        df = data_utils.DataFrame(DB_LOC)
         df.create_sets(random=True)
         pd = df.package_sets()
         config = server_utils.default_config()
@@ -189,4 +204,5 @@ class TestServerUtils(unittest.TestCase):
 
 if __name__ == '__main__':
 
+    DB_LOC = join('../', 'cn_model_v1.0.csv')
     unittest.main()

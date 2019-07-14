@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='ecnet',
-    version='3.2.1',
+    version='3.2.2',
     description='UMass Lowell Energy and Combustion Research Laboratory Neural'
                 ' Network Software',
     url='http://github.com/tjkessler/ecnet',
@@ -15,14 +15,13 @@ setup(
     install_requires=[
         'alvadescpy==0.1.0',
         'colorlogging==0.3.5',
-        'ditto-lib==1.0.0',
         'ecabc==2.2.3',
         'keras==2.2.4',
         'matplotlib==3.1.0',
         'numpy==1.16.4',
-        'padelpy==0.1.5',
+        'padelpy==0.1.6',
         'pyyaml==5.1.1',
-        'sklearn',
+        'scikit-learn==0.21.2',
         'tensorflow==1.13.1'
     ],
     zip_safe=False
