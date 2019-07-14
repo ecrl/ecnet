@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/models/mlp.py
-# v.3.2.1
+# v.3.2.2
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "MultilayerPerceptron" (feed-forward neural network) class
