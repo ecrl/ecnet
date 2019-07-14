@@ -8,21 +8,20 @@
 # Contains functions for selecting influential input parameters
 #
 
+# Stdlib. imports
 from copy import deepcopy
 
 # 3rd party imports
-from ditto_lib.itemcollection import ItemCollection
-from ditto_lib.tasks.random_forest import random_forest_regressor
-from ditto_lib.utils.logging import logger as ditto_logger
-from ditto_lib.utils.dataframe import Attribute
+from sklearn.ensemble import RandomForestRegressor
+from numpy import concatenate, ravel
 
 # ECNet imports
 from ecnet.utils.data_utils import DataFrame
 from ecnet.utils.logging import logger
 
 
-def limit_rforest(df: DataFrame, limit_num: int, num_estimators: int=1000,
-                  num_processes: int=1) -> DataFrame:
+def limit_rforest(df: DataFrame, limit_num: int, num_estimators: int=None,
+                  num_processes: int=1, **kwargs) -> list:
     '''Uses random forest regression to select input parameters
 
     Args:
@@ -30,52 +29,38 @@ def limit_rforest(df: DataFrame, limit_num: int, num_estimators: int=1000,
         limit_num (int): desired number of input parameters
         num_estimators (int): number of trees used by RFR algorithm
         num_processes (int): number of parallel jobs for RFR algorithm
+        **kwargs: any argument accepted by
+            sklearn.ensemble.RandomForestRegressor
 
     Returns:
-        ecnet.utils.data_utils.DataFrame: limited data
+        list: [(feature, importance), ..., (feature, importance)]
     '''
 
     logger.log('info', 'Finding {} most influential input parameters'
                .format(limit_num), call_loc='LIMIT')
+
+    pd = df.package_sets()
+    X = concatenate((pd.learn_x, pd.valid_x, pd.test_x))
+    y = ravel(concatenate((pd.learn_y, pd.valid_y, pd.test_y)))
+
+    if num_estimators is None:
+        num_estimators = len(X[0])
+
     logger.log('debug', 'Number of estimators: {}'.format(num_estimators),
                call_loc='LIMIT')
 
-    ditto_logger.stream_level = logger.stream_level
-    if logger.file_level != 'disable':
-        ditto_logger.log_dir = logger.log_dir
-        ditto_logger.file_level = logger.file_level
-    ditto_logger.default_call_loc('LIMIT')
-    item_collection = ItemCollection(df._filename)
-    for inp_name in df._input_names:
-        item_collection.add_attribute(Attribute(inp_name))
-    for pt in df.data_points:
-        item_collection.add_item(
-            pt.id,
-            deepcopy([getattr(pt, i) for i in df._input_names])
-        )
-    for tar_name in df._target_names:
-        item_collection.add_attribute(Attribute(tar_name, is_descriptor=False))
-    for pt in df.data_points:
-        target_vals = [getattr(pt, t) for t in df._target_names]
-        for idx, tar in enumerate(target_vals):
-            item_collection.set_item_attribute(
-                pt.id, tar, df._target_names[idx]
-            )
-    item_collection.strip()
-    params = [param[0] for param in random_forest_regressor(
-        item_collection.dataframe,
-        target_attribute=df._target_names[0],
-        n_components=limit_num,
+    regr = RandomForestRegressor(
+        n_jobs=num_processes,
         n_estimators=num_estimators,
-        n_jobs=num_processes
-    )]
-    for idx, param in enumerate(params):
-        for tn in df._target_names:
-            if tn == param:
-                del params[idx]
-                break
-
-    logger.log('debug', 'Selected parameters: {}'.format(params),
-               call_loc='LIMIT')
-    df.set_inputs(params)
-    return df
+        **kwargs
+    )
+    regr.fit(X, y)
+    importances = regr.feature_importances_
+    result = []
+    for idx, name in enumerate(df._input_names):
+        result.append((name, importances[idx]))
+    result = sorted(result, key=lambda t: t[1], reverse=True)[:limit_num]
+    logger.log('debug', 'Selected parameters: {}'.format(
+        [r[0] for r in result]
+    ), call_loc='LIMIT')
+    return result
