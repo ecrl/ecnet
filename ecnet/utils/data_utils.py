@@ -315,7 +315,8 @@ class DataFrame:
         return pd
 
     def set_inputs(self, inputs: list):
-        '''Removes all input variables except those supplied
+        '''Removes all input variables except those supplied, updates sets
+        accordingly
 
         Args:
             inputs (list): input variable names, str
@@ -329,6 +330,7 @@ class DataFrame:
                 raise ValueError('{} not found in existing inputs'.format(inp))
 
         self._input_names = inputs
+        self.create_sets()
 
     def save(self, filename: str):
         '''Saves the current state of the DataFrame to a new CSV database
