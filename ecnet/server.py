@@ -141,6 +141,7 @@ class Server:
             self._df.save(output_filename)
             logger.log('info', 'Resulting database saved to {}'.format(
                        output_filename), call_loc='LIMIT')
+        return result
 
     def tune_hyperparameters(self, num_employers: int, num_iterations: int,
                              shuffle: bool=None, split: list=None,
