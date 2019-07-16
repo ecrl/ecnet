@@ -47,7 +47,7 @@ def limit_rforest(df: DataFrame, limit_num: int, num_estimators: int=None,
         y = concatenate((y, pd.valid_y))
     if len(pd.test_x) > 0:
         X = concatenate((X, pd.test_x))
-        y = concatenate((X, pd.test_y))
+        y = concatenate((y, pd.test_y))
     y = ravel(y)
 
     if num_estimators is None:
