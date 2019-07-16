@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tasks/training.py
-# v.3.2.2
+# v.3.2.3
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains function for project training (multiprocessed training)

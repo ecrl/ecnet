@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/server.py
-# v.3.2.2
+# v.3.2.3
 # Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "Server" class, which handles ECNet project creation, neural
@@ -141,6 +141,7 @@ class Server:
             self._df.save(output_filename)
             logger.log('info', 'Resulting database saved to {}'.format(
                        output_filename), call_loc='LIMIT')
+        return result
 
     def tune_hyperparameters(self, num_employers: int, num_iterations: int,
                              shuffle: bool=None, split: list=None,
