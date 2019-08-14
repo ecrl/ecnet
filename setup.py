@@ -5,11 +5,10 @@ setup(
     version='3.2.3',
     description='UMass Lowell Energy and Combustion Research Laboratory Neural'
                 ' Network Software',
-    url='http://github.com/tjkessler/ecnet',
-    author='Travis Kessler, Hernan Gelaf-Romer, Sanskriti Sharma',
-    author_email='travis.j.kessler@gmail.com,'
-                 ' Hernan_Gelafromer@student.uml.edu,'
-                 ' Sanskriti_Sharma@student.uml.edu',
+    url='https://github.com/ecrl/ecnet',
+    author='Travis Kessler, John Hunter Mack',
+    author_email='Travis_Kessler@student.uml.edu,'
+                 ' Hunter_Mack@uml.edu',
     license='MIT',
     packages=find_packages(),
     install_requires=[
