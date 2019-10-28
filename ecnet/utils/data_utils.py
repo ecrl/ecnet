@@ -58,7 +58,7 @@ class DataFrame:
         if '.csv' not in filename:
             filename += '.csv'
         try:
-            with open(filename, newline='') as file:
+            with open(filename, newline='', encoding='utf8') as file:
                 rows = list(reader(file))
         except FileNotFoundError:
             raise Exception('CSV database not found: {}'.format(filename))
