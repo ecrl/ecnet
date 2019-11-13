@@ -112,7 +112,8 @@ class Server:
                    num_candidates), call_loc='PROJECT')
 
     def limit_inputs(self, limit_num: int, num_estimators: int=None,
-                     output_filename: str=None, **kwargs) -> list:
+                     eval_set: str='learn', output_filename: str=None,
+                     **kwargs) -> list:
         '''Selects `limit_num` influential input parameters using random
         forest regression
 
@@ -122,6 +123,8 @@ class Server:
                 defaults to the total number of inputs
             output_filename (str): if not None, new limited database is saved
                 here
+            eval_set (str): set to perform RFR on (`learn`, `valid`, `train`,
+                `test`, None (all)) (default: `learn`)
             **kwargs: any argument accepted by
                 sklearn.ensemble.RandomForestRegressor
 
@@ -133,7 +136,9 @@ class Server:
             self._df,
             limit_num,
             num_estimators,
-            self._num_processes
+            self._num_processes,
+            eval_set,
+            **kwargs
         )
         self._df.set_inputs([r[0] for r in result])
         self._sets = self._df.package_sets()

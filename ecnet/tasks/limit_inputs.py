@@ -18,10 +18,12 @@ from numpy import concatenate, ravel
 # ECNet imports
 from ecnet.utils.data_utils import DataFrame
 from ecnet.utils.logging import logger
+from ecnet.utils.server_utils import get_x, get_y
 
 
 def limit_rforest(df: DataFrame, limit_num: int, num_estimators: int=None,
-                  num_processes: int=1, **kwargs) -> list:
+                  num_processes: int=1, eval_set: str='learn',
+                  **kwargs) -> list:
     '''Uses random forest regression to select input parameters
 
     Args:
@@ -29,6 +31,8 @@ def limit_rforest(df: DataFrame, limit_num: int, num_estimators: int=None,
         limit_num (int): desired number of input parameters
         num_estimators (int): number of trees used by RFR algorithm
         num_processes (int): number of parallel jobs for RFR algorithm
+        eval_set (str): set to perform RFR on (`learn`, `valid`, `train`,
+            `test`, None (all)) (default: `learn`)
         **kwargs: any argument accepted by
             sklearn.ensemble.RandomForestRegressor
 
@@ -40,15 +44,8 @@ def limit_rforest(df: DataFrame, limit_num: int, num_estimators: int=None,
                .format(limit_num), call_loc='LIMIT')
 
     pd = df.package_sets()
-    X = pd.learn_x
-    y = pd.learn_y
-    if len(pd.valid_x) > 0:
-        X = concatenate((X, pd.valid_x))
-        y = concatenate((y, pd.valid_y))
-    if len(pd.test_x) > 0:
-        X = concatenate((X, pd.test_x))
-        y = concatenate((y, pd.test_y))
-    y = ravel(y)
+    X = get_x(pd, eval_set)
+    y = ravel(get_y(pd, eval_set))
 
     if num_estimators is None:
         num_estimators = len(X[0])
