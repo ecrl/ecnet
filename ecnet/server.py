@@ -146,7 +146,7 @@ class Server:
     def tune_hyperparameters(self, num_employers: int, num_iterations: int,
                              shuffle: bool=None, split: list=None,
                              validate: bool=True, eval_set: str=None,
-                             eval_fn: str='rmse'):
+                             eval_fn: str='rmse', epochs: int=300):
         '''Tunes neural network learning hyperparameters using an artificial
         bee colony algorithm; tuned hyperparameters are saved to Server's
         model configuration file
@@ -162,6 +162,7 @@ class Server:
                 `train`, `test`, None (all sets)
             eval_fn (str): error function used to evaluate bee fitness;
                 `rmse`, `mean_abs_error`, `med_abs_error`
+            epochs (int): number of training epochs per bee ANN (def: 300)
         '''
 
         self._vars = tune_hyperparameters(
@@ -174,7 +175,8 @@ class Server:
             split,
             validate,
             eval_set,
-            eval_fn
+            eval_fn,
+            epochs
         )
         save_config(self._vars, self._cf_file)
 
