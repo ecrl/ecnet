@@ -65,10 +65,10 @@ def default_config() -> dict:
 
     return {
         'epochs': 3000,
-        'learning_rate': 0.001,
+        'learning_rate': 0.01,
         'beta_1': 0.9,
         'beta_2': 0.999,
-        'epsilon': 0.0000001,
+        'epsilon': 1e-8,
         'decay': 0.0,
         'hidden_layers': [
             [32, 'relu'],
