@@ -6,9 +6,8 @@ from ecnet.utils.error_utils import calc_med_abs_error, calc_r2
 from ecnet.utils.logging import logger
 from ecnet.utils.server_utils import default_config, save_config, train_model,\
     use_model
-from workflow_utils import find_optimal_num_inputs, prop_range_from_split
-# from ecnet.workflows.workflow_utils import find_optimal_num_inputs,\
-#     prop_range_from_split
+from ecnet.workflows.workflow_utils import find_optimal_num_inputs,\
+    prop_range_from_split
 
 from datetime import datetime
 
@@ -159,8 +158,3 @@ def create_model(prop_abvr: str, smiles: list=None, targets: list=None,
         parity_plot._add_label('Learning $R^2$', learn_r2)
         parity_plot.save(db_name.replace('.csv', '_parity.png'))
         logger.log('info', 'Created parity plot', 'WORKFLOW')
-
-
-if __name__ == '__main__':
-
-    create_model('CN', db_name='cn_database_v1.0.csv', num_processes=4)
