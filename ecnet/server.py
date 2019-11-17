@@ -187,7 +187,7 @@ class Server:
 
     def train(self, shuffle: str=None, split: list=None, retrain: bool=False,
               validate: bool=False, selection_set: str=None,
-              selection_fn: str='rmse'):
+              selection_fn: str='rmse', filename: str='model.h5'):
         '''Trains neural network(s) using currently-loaded data; single NN if
         no project is created, all candidates if created
 
@@ -203,6 +203,7 @@ class Server:
                 set; `learn`, `valid`, `train`, `test`, None (all data)
             selection_fn (str): candidates are selected based on this error
                 metric; `rmse`, `mean_abs_error`, `med_abs_error`
+            filename (str): if project not created, saves Keras h5 model here
         '''
 
         if self._prj_name is None:
@@ -213,7 +214,8 @@ class Server:
                 selection_set,
                 selection_fn,
                 retrain,
-                validate=validate
+                filename,
+                validate
             )
 
         else:
