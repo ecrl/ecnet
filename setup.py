@@ -22,7 +22,7 @@ setup(
         'padelpy==0.1.6',
         'pyyaml==5.1.1',
         'scikit-learn==0.21.2',
-        'tensorflow==1.13.1'
+        'tensorflow==1.15.0'
     ],
     zip_safe=False
 )
