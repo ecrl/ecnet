@@ -187,7 +187,7 @@ class Server:
 
     def train(self, shuffle: str=None, split: list=None, retrain: bool=False,
               validate: bool=False, selection_set: str=None,
-              selection_fn: str='rmse', filename: str='model.h5'):
+              selection_fn: str='rmse', model_filename: str='model.h5'):
         '''Trains neural network(s) using currently-loaded data; single NN if
         no project is created, all candidates if created
 
@@ -203,7 +203,8 @@ class Server:
                 set; `learn`, `valid`, `train`, `test`, None (all data)
             selection_fn (str): candidates are selected based on this error
                 metric; `rmse`, `mean_abs_error`, `med_abs_error`
-            filename (str): if project not created, saves Keras h5 model here
+            model_filename (str): if project not created, saves Keras h5 model
+                here
         '''
 
         if self._prj_name is None:
@@ -214,7 +215,7 @@ class Server:
                 selection_set,
                 selection_fn,
                 retrain,
-                filename,
+                model_filename,
                 validate
             )
 
@@ -235,7 +236,8 @@ class Server:
                 self._num_processes
             )
 
-    def use(self, dset: str=None, output_filename: str=None) -> list:
+    def use(self, dset: str=None, output_filename: str=None,
+            model_filename: str='model.h5') -> list:
         '''Uses trained neural network(s) to predict for specified set; single
         NN if no project created, best pool candidates if created
 
@@ -243,13 +245,14 @@ class Server:
             dset (str): set to predict for; `learn`, `valid`, `train`, `test`,
                 None (all sets)
             output_filename (str): if supplied, saves results to this CSV file
+            model_filename (str): if supplied, use specified .h5 model file
 
         Returns:
             list: list of results for specified set
         '''
 
         if self._prj_name is None:
-            results = use_model(self._sets, dset)
+            results = use_model(self._sets, dset, model_filename)
 
         else:
             results = use_project(
@@ -264,7 +267,8 @@ class Server:
                        call_loc='USE')
         return results
 
-    def errors(self, *args, dset: str=None) -> dict:
+    def errors(self, *args, dset: str=None,
+               model_filename: str='model.h5') -> dict:
         '''Obtains various errors for specified set
 
         Args:
@@ -272,6 +276,8 @@ class Server:
                 `med_abs_error`, `r2`
             dset (str): set to obtain errors for; `learn`, `valid`, `train`,
                 `test`, None (all sets)
+            model_filename (str): if specified, uses .h5 model file for error
+                calculations
 
         Returns:
             dict: {'error_fn', value ...} with supplied errors
@@ -280,7 +286,7 @@ class Server:
         for err in args:
             logger.log('debug', 'Calculating {} for {} set'.format(err, dset),
                        call_loc='ERRORS')
-        preds = self.use(dset)
+        preds = self.use(dset, model_filename=model_filename)
         y_vals = get_y(self._sets, dset)
         errors = {}
         for err in args:
