@@ -187,7 +187,8 @@ class Server:
 
     def train(self, shuffle: str=None, split: list=None, retrain: bool=False,
               validate: bool=False, selection_set: str=None,
-              selection_fn: str='rmse', model_filename: str='model.ecnet'):
+              selection_fn: str='rmse', model_filename: str='model.ecnet',
+              verbose=0):
         '''Trains neural network(s) using currently-loaded data; single NN if
         no project is created, all candidates if created
 
@@ -205,6 +206,8 @@ class Server:
                 metric; `rmse`, `mean_abs_error`, `med_abs_error`
             model_filename (str): if project not created, saves `.ecnet` file
                 here
+            verbose (int): 1 to display loss at each epoch, 0 otherwise (single
+                model only)
         '''
 
         if self._prj_name is None:
@@ -216,7 +219,8 @@ class Server:
                 selection_fn,
                 retrain,
                 model_filename,
-                validate
+                validate,
+                verbose=verbose
             )
 
         else:

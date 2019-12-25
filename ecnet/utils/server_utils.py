@@ -367,7 +367,7 @@ def save_project(prj_name: str, filename: str, config_filename: str,
 
 def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
                 retrain: bool=False, filename: str='model.ecnet',
-                validate: bool=True, save: bool=True) -> float:
+                validate: bool=True, save: bool=True, verbose: int=0) -> float:
     '''Trains neural network
 
     Args:
@@ -380,6 +380,8 @@ def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
         retrain (bool): if True, opens model for additional training
         filename (str): path to .ecnet model file, loads from this if retraining
         save (bool): if True, saves model to `filename`
+        verbose (int): 1 to display loss at each epoch, 0 otherwise (single
+                model only)
 
     Returns:
         float: error of evaluated set
@@ -407,7 +409,8 @@ def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
             beta_2=vars['beta_2'],
             epsilon=vars['epsilon'],
             decay=vars['decay'],
-            batch_size=vars['batch_size']
+            batch_size=vars['batch_size'],
+            v=verbose
         )
     else:
         model.fit(
@@ -419,7 +422,8 @@ def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
             beta_2=vars['beta_2'],
             epsilon=vars['epsilon'],
             decay=vars['decay'],
-            batch_size=vars['batch_size']
+            batch_size=vars['batch_size'],
+            v=verbose
         )
     if save:
         model.save()
