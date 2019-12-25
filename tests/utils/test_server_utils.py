@@ -30,10 +30,10 @@ class TestServerUtils(unittest.TestCase):
         self.assertEqual(
             dc, {
                 'epochs': 3000,
-                'learning_rate': 0.001,
+                'learning_rate': 0.01,
                 'beta_1': 0.9,
                 'beta_2': 0.999,
-                'epsilon': 0.0000001,
+                'epsilon': 1e-8,
                 'decay': 0.0,
                 'hidden_layers': [
                     [32, 'relu'],
@@ -56,12 +56,12 @@ class TestServerUtils(unittest.TestCase):
         )
         self.assertEqual(
             server_utils.get_candidate_path(prj_name, pool, candidate, True),
-            join('test_project', 'pool_1', 'candidate_2', 'model.h5')
+            join('test_project', 'pool_1', 'candidate_2', 'model.ecnet')
         )
         self.assertEqual(
             server_utils.get_candidate_path(prj_name, pool, candidate,
                                             p_best=True),
-            join('test_project', 'pool_1', 'model.h5')
+            join('test_project', 'pool_1', 'model.ecnet')
         )
 
     def test_get_error(self):
@@ -126,10 +126,10 @@ class TestServerUtils(unittest.TestCase):
             server_utils.open_config('config.yml'),
             {
                 'epochs': 3000,
-                'learning_rate': 0.001,
+                'learning_rate': 0.01,
                 'beta_1': 0.9,
                 'beta_2': 0.999,
-                'epsilon': 0.0000001,
+                'epsilon': 1e-8,
                 'decay': 0.0,
                 'hidden_layers': [
                     [32, 'relu'],
@@ -163,10 +163,10 @@ class TestServerUtils(unittest.TestCase):
         config = server_utils.default_config()
         config['epochs'] = 100
         r_squared = server_utils.train_model(
-            pd, config, 'test', 'r2', filename='test_train.h5'
+            pd, config, 'test', 'r2', filename='test_train.ecnet'
         )
-        self.assertTrue(exists('test_train.h5'))
-        remove('test_train.h5')
+        self.assertTrue(exists('test_train.ecnet'))
+        remove('test_train.ecnet')
 
     def test_use_model(self):
 
@@ -177,29 +177,29 @@ class TestServerUtils(unittest.TestCase):
         config = server_utils.default_config()
         config['epochs'] = 100
         _ = server_utils.train_model(
-            pd, config, 'test', 'rmse', filename='test_use.h5'
+            pd, config, 'test', 'rmse', filename='test_use.ecnet'
         )
         self.assertEqual(
-            len(server_utils.use_model(pd, 'learn', 'test_use.h5')),
+            len(server_utils.use_model(pd, 'learn', 'test_use.ecnet')),
             len(pd.learn_y)
         )
         self.assertEqual(
-            len(server_utils.use_model(pd, 'valid', 'test_use.h5')),
+            len(server_utils.use_model(pd, 'valid', 'test_use.ecnet')),
             len(pd.valid_y)
         )
         self.assertEqual(
-            len(server_utils.use_model(pd, 'test', 'test_use.h5')),
+            len(server_utils.use_model(pd, 'test', 'test_use.ecnet')),
             len(pd.test_y)
         )
         self.assertEqual(
-            len(server_utils.use_model(pd, 'train', 'test_use.h5')),
+            len(server_utils.use_model(pd, 'train', 'test_use.ecnet')),
             len(pd.learn_y) + len(pd.valid_y)
         )
         self.assertEqual(
-            len(server_utils.use_model(pd, None, 'test_use.h5')),
+            len(server_utils.use_model(pd, None, 'test_use.ecnet')),
             len(pd.learn_y) + len(pd.valid_y) + len(pd.test_y)
         )
-        remove('test_use.h5')
+        remove('test_use.ecnet')
 
 
 if __name__ == '__main__':
