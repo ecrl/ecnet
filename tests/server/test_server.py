@@ -58,14 +58,14 @@ class TestServer(unittest.TestCase):
             self.assertTrue(exists(join(
                 'test_project',
                 'pool_{}'.format(pool),
-                'model.h5'
+                'model.ecnet'
             )))
             for candidate in range(2):
                 self.assertTrue(exists(join(
                     'test_project',
                     'pool_{}'.format(pool),
                     'candidate_{}'.format(candidate),
-                    'model.h5'
+                    'model.ecnet'
                 )))
         remove('config.yml')
         rmtree('test_project')
@@ -109,14 +109,14 @@ class TestServer(unittest.TestCase):
             self.assertTrue(exists(join(
                 'test_project',
                 'pool_{}'.format(pool),
-                'model.h5'
+                'model.ecnet'
             )))
             for candidate in range(4):
                 self.assertTrue(exists(join(
                     'test_project',
                     'pool_{}'.format(pool),
                     'candidate_{}'.format(candidate),
-                    'model.h5'
+                    'model.ecnet'
                 )))
         remove('config.yml')
         rmtree('test_project')
