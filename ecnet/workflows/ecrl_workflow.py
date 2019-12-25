@@ -116,13 +116,13 @@ def create_model(prop_abvr: str, smiles: list=None, targets: list=None,
     df.create_sets()
     sets = df.package_sets()
     _ = train_model(sets, config, None, 'rmse', False,
-                    db_name.replace('.csv', '.h5'), True, True)
+                    db_name.replace('.csv', '.ecnet'), True, True)
     logger.log('info', 'Generated ANN', 'WORKFLOW')
 
     logger.log('info', 'Measuring ANN performance...', 'WORKFLOW')
-    preds_learn = use_model(sets, 'learn', db_name.replace('.csv', '.h5'))
-    preds_valid = use_model(sets, 'valid', db_name.replace('.csv', '.h5'))
-    preds_test = use_model(sets, 'test', db_name.replace('.csv', '.h5'))
+    preds_learn = use_model(sets, 'learn', db_name.replace('.csv', '.ecnet'))
+    preds_valid = use_model(sets, 'valid', db_name.replace('.csv', '.ecnet'))
+    preds_test = use_model(sets, 'test', db_name.replace('.csv', '.ecnet'))
     learn_mae = calc_med_abs_error(preds_learn, sets.learn_y)
     learn_r2 = calc_r2(preds_learn, sets.learn_y)
     valid_mae = calc_med_abs_error(preds_valid, sets.valid_y)

@@ -81,13 +81,13 @@ def default_config() -> dict:
 
 def get_candidate_path(prj: str, pool: int, candidate: int=None,
                        model: bool=False, p_best: bool=False) -> str:
-    '''Get path to various states of model.h5 files
+    '''Get path to various states of model.ecnet files
 
     Args:
         prj (str): project name
         pool (int): pool number
         candidate (int): candidate number
-        model (bool): if True, appends `model.h5` to path
+        model (bool): if True, appends `model.ecnet` to path
         p_best (bool): if True, removes candidate folder from path
 
     Returns:
@@ -99,13 +99,13 @@ def get_candidate_path(prj: str, pool: int, candidate: int=None,
             prj,
             'pool_{}'.format(pool),
             'candidate_{}'.format(candidate),
-            'model.h5'
+            'model.ecnet'
         )
     elif p_best:
         return path.join(
             prj,
             'pool_{}'.format(pool),
-            'model.h5'
+            'model.ecnet'
         )
     else:
         return path.join(
@@ -287,7 +287,7 @@ def resave_df(old: str, new: str):
 
 
 def resave_model(old: str, new: str):
-    '''Resaves .h5 model file
+    '''Resaves .ecnet model file
 
     Args:
         old (str): path to existing file
@@ -366,7 +366,7 @@ def save_project(prj_name: str, filename: str, config_filename: str,
 
 
 def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
-                retrain: bool=False, filename: str='model.h5',
+                retrain: bool=False, filename: str='model.ecnet',
                 validate: bool=True, save: bool=True) -> float:
     '''Trains neural network
 
@@ -378,7 +378,7 @@ def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
         eval_fn (str): error function to evaluate the model; `rmse`,
             `mean_abs_error`, `med_abs_error`
         retrain (bool): if True, opens model for additional training
-        filename (str): path to .h5 model file, loads from this if retraining
+        filename (str): path to .ecnet model file, loads from this if retraining
         save (bool): if True, saves model to `filename`
 
     Returns:
@@ -431,14 +431,14 @@ def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
 
 
 def use_model(sets: PackagedData, dset: str,
-              filename: str='model.h5') -> array:
+              filename: str='model.ecnet') -> array:
     '''Uses existing model to predict data
 
     Args:
         sets (ecnet.utils.data_utils.PackagedData): data sets
         dset (str): set to predict for; `learn`, `valid`, `train`, `test`,
             None (all sets)
-        filename (str): path to existing .h5 model file
+        filename (str): path to existing .ecnet model file
 
     Returns:
         numpy.array: predicted data
