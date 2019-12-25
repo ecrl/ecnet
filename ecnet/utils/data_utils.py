@@ -371,7 +371,7 @@ class DataFrame:
             data_rows.append(data_row)
         rows.extend(sorted(data_rows, key=lambda x: x[0]))
 
-        with open(filename, 'w') as csv_file:
+        with open(filename, 'w', encoding='utf8') as csv_file:
             wr = writer(csv_file, quoting=QUOTE_ALL, lineterminator='\n')
             for row in rows:
                 wr.writerow(row)
@@ -437,7 +437,7 @@ def save_results(results: list, dset: str, df: DataFrame, filename: str):
         data_rows.append(data_row)
     rows.extend(sorted(data_rows, key=lambda x: x[0]))
 
-    with open(filename, 'w') as csv_file:
+    with open(filename, 'w', encoding='utf8') as csv_file:
         wr = writer(csv_file, quoting=QUOTE_ALL, lineterminator='\n')
         for row in rows:
             wr.writerow(row)
