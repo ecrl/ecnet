@@ -2,6 +2,7 @@ from setuptools import setup, find_packages
 from platform import system, mac_ver
 
 install_requires = [
+    'torch',
     'alvadescpy==0.1.0',
     'colorlogging==0.3.5',
     'ecabc==2.2.3',
@@ -14,18 +15,12 @@ install_requires = [
 
 s = system()
 if s == 'Windows':
-    install_requires.append(
-        'torch @ https://download.pytorch.org/whl/cpu/torch-1.3.1%2Bcpu-cp37-cp37m-win_amd64.whl'
-    )
+    dependency_links = ['https://download.pytorch.org/whl/cpu/torch-1.3.1%2Bcpu-cp37-cp37m-win_amd64.whl']
 elif s == 'Linux':
     if mac_ver()[0] != '':
-        install_requires.append(
-            'torch @ https://download.pytorch.org/whl/cpu/torch-1.3.1-cp37-none-macosx_10_7_x86_64.whl'
-        )
+        dependency_links = ['https://download.pytorch.org/whl/cpu/torch-1.3.1-cp37-none-macosx_10_7_x86_64.whl']
     else:
-        install_requires.append(
-            'torch @ https://download.pytorch.org/whl/cpu/torch-1.3.1%2Bcpu-cp37-cp37m-linux_x86_64.whl'
-        )
+        dependency_links = ['https://download.pytorch.org/whl/cpu/torch-1.3.1%2Bcpu-cp37-cp37m-linux_x86_64.whl']
 else:
     raise OSError('Unsupported OS: {}'.format(s))
 
@@ -42,5 +37,6 @@ setup(
     packages=find_packages(),
     python_requires='~=3.7',
     install_requires=install_requires,
+    dependency_links=dependency_links,
     zip_safe=False
 )
