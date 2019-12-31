@@ -188,7 +188,7 @@ class Server:
     def train(self, shuffle: str=None, split: list=None, retrain: bool=False,
               validate: bool=False, selection_set: str=None,
               selection_fn: str='rmse', model_filename: str='model.ecnet',
-              verbose=0):
+              verbose=0) -> list:
         '''Trains neural network(s) using currently-loaded data; single NN if
         no project is created, all candidates if created
 
@@ -208,11 +208,15 @@ class Server:
                 here
             verbose (int): 1 to display loss at each epoch, 0 otherwise (single
                 model only)
+
+        Returns:
+            list: if training single model, returns list of learn/valid losses,
+                else None
         '''
 
         if self._prj_name is None:
             logger.log('info', 'Training single model', call_loc='TRAIN')
-            train_model(
+            _, losses = train_model(
                 self._sets,
                 self._vars,
                 selection_set,
@@ -222,6 +226,7 @@ class Server:
                 validate,
                 verbose=verbose
             )
+            return losses
 
         else:
             train_project(
@@ -239,6 +244,7 @@ class Server:
                 selection_fn,
                 self._num_processes
             )
+            return None
 
     def use(self, dset: str=None, output_filename: str=None,
             model_filename: str='model.ecnet') -> list:

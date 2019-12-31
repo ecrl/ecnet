@@ -75,7 +75,8 @@ def default_config() -> dict:
             [32, 'relu']
         ],
         'output_activation': 'linear',
-        'batch_size': 32
+        'batch_size': 32,
+        'patience': 128
     }
 
 
@@ -367,7 +368,7 @@ def save_project(prj_name: str, filename: str, config_filename: str,
 
 def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
                 retrain: bool=False, filename: str='model.ecnet',
-                validate: bool=True, save: bool=True, verbose: int=0) -> float:
+                validate: bool=True, save: bool=True, verbose: int=0) -> tuple:
     '''Trains neural network
 
     Args:
@@ -384,7 +385,7 @@ def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
                 model only)
 
     Returns:
-        float: error of evaluated set
+        tuple: (error of evaluated set, list of learn/valid losses)
     '''
 
     model = MultilayerPerceptron(filename=filename)
@@ -398,7 +399,7 @@ def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
                 model.add_layer(layer[0], layer[1])
         model.add_layer(len(sets.learn_y[0]), vars['output_activation'])
     if validate:
-        model.fit(
+        losses = model.fit(
             sets.learn_x,
             sets.learn_y,
             sets.valid_x,
@@ -410,10 +411,11 @@ def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
             epsilon=vars['epsilon'],
             decay=vars['decay'],
             batch_size=vars['batch_size'],
-            v=verbose
+            v=verbose,
+            patience=vars['patience']
         )
     else:
-        model.fit(
+        losses = model.fit(
             sets.learn_x,
             sets.learn_y,
             epochs=vars['epochs'],
@@ -423,15 +425,16 @@ def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
             epsilon=vars['epsilon'],
             decay=vars['decay'],
             batch_size=vars['batch_size'],
-            v=verbose
+            v=verbose,
+            patience=vars['patience']
         )
     if save:
         model.save()
-    return get_error(
+    return (get_error(
         model.use(get_x(sets, eval_set)),
         get_y(sets, eval_set),
         eval_fn
-    )
+    ), losses)
 
 
 def use_model(sets: PackagedData, dset: str,

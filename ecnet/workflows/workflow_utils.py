@@ -90,13 +90,13 @@ def find_optimal_num_inputs(db_name: str, eval_set: str,
             errors.append([d_idx, train_model(
                 sets, conf, eval_set, 'med_abs_error', False, '_.ecnet',
                 False, False
-            )])
+            )[0]])
 
     if num_processes > 1:
         train_pool.close()
         train_pool.join()
         for idx, err in enumerate(errors):
-            errors[idx][1] = err[1].get()
+            errors[idx][1] = err[1].get()[0]
 
     min_error = errors[0][1]
     opt_num_desc = 1

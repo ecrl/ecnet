@@ -73,8 +73,10 @@ def tune_hyperparameters(df: DataFrame, vars: dict, num_employers: int,
     }
 
     value_ranges = [
-        ('float', (1e-9, 1e-4)),
-        ('float', (1e-5, 0.1))
+        ('float', (1e-9, 1e-4)),    # Learning rate decay
+        ('float', (1e-5, 0.1)),     # Learning rate
+        ('int', (1, len(df))),      # Batch size
+        ('int', (1, 1600))          # Patience
     ]
 
     for _ in range(len(vars['hidden_layers'])):
@@ -101,14 +103,18 @@ def tune_hyperparameters(df: DataFrame, vars: dict, num_employers: int,
             abc.best_performer[2], {
                 'decay': abc.best_performer[1][0],
                 'learning_rate': abc.best_performer[1][1],
-                'hidden_layers': abc.best_performer[1][2:]
+                'batch_size': abc.best_performer[1][2],
+                'patience': abc.best_performer[1][3],
+                'hidden_layers': abc.best_performer[1][4:]
             }
         ), call_loc='TUNE')
     params = abc.best_performer[1]
     vars['decay'] = params[0]
     vars['learning_rate'] = params[1]
+    vars['batch_size'] = params[2]
+    vars['patience'] = params[3]
     for l_idx in range(len(vars['hidden_layers'])):
-        vars['hidden_layers'][l_idx][0] = params[2 + l_idx]
+        vars['hidden_layers'][l_idx][0] = params[4 + l_idx]
     return vars
 
 
@@ -126,10 +132,12 @@ def tune_fitness_function(params: dict, **kwargs):
     vars = default_config()
     vars['decay'] = params[0]
     vars['learning_rate'] = params[1]
+    vars['batch_size'] = params[2]
+    vars['patience'] = params[3]
     vars['hidden_layers'] = kwargs['hidden_layers']
     vars['epochs'] = kwargs['epochs']
     for l_idx in range(len(vars['hidden_layers'])):
-        vars['hidden_layers'][l_idx][0] = params[2 + l_idx]
+        vars['hidden_layers'][l_idx][0] = params[4 + l_idx]
 
     df = kwargs['df']
     if kwargs['shuffle'] is not None:
@@ -137,4 +145,4 @@ def tune_fitness_function(params: dict, **kwargs):
     sets = df.package_sets()
 
     return train_model(sets, vars, kwargs['eval_set'], kwargs['eval_fn'],
-                       validate=kwargs['validate'], save=False)
+                       validate=kwargs['validate'], save=False)[0]

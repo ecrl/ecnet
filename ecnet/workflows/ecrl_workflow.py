@@ -108,6 +108,9 @@ def create_model(prop_abvr: str, smiles: list=None, targets: list=None,
     logger.log('info', '\tLearning rate: {}'.format(config['learning_rate']),
                'WORKFLOW')
     logger.log('info', '\tLR decay: {}'.format(config['decay']), 'WORKFLOW')
+    logger.log('info', '\tBatch size: {}'.format(config['batch_size']),
+               'WORKFLOW')
+    logger.log('info', '\tPatience: {}'.format(config['patience']), 'WORKFLOW')
     logger.log('info', '\tHidden layers: {}'.format(config['hidden_layers']),
                'WORKFLOW')
 
@@ -115,9 +118,21 @@ def create_model(prop_abvr: str, smiles: list=None, targets: list=None,
     logger.log('info', 'Generating ANN...', 'WORKFLOW')
     df.create_sets()
     sets = df.package_sets()
-    _ = train_model(sets, config, None, 'rmse', False,
-                    db_name.replace('.csv', '.ecnet'), True, True)
+    _, losses = train_model(sets, config, None, 'rmse', False,
+                            db_name.replace('.csv', '.ecnet'), True, True)
     logger.log('info', 'Generated ANN', 'WORKFLOW')
+    if create_plots:
+        learn_losses = [l[0] for l in losses]
+        valid_losses = [l[1] for l in losses]
+        x_vals = [i for i in range(len(learn_losses))]
+        plt.clf()
+        plt.rcParams['font.family'] = 'Times New Roman'
+        plt.plot(x_vals, learn_losses, c='blue', label='Learning Set')
+        plt.plot(x_vals, valid_losses, c='red', label='Validation Set')
+        plt.xlabel('Training Iterations (Epochs)')
+        plt.ylabel('Loss (Mean Squared Error)')
+        plt.legend(loc='lower left')
+        plt.savefig(db_name.replace('.csv', '_loss_graph.png'))
 
     logger.log('info', 'Measuring ANN performance...', 'WORKFLOW')
     preds_learn = use_model(sets, 'learn', db_name.replace('.csv', '.ecnet'))
@@ -141,7 +156,7 @@ def create_model(prop_abvr: str, smiles: list=None, targets: list=None,
         logger.log('info', 'Creating parity plot...', 'WORKFLOW')
         plt.clf()
         parity_plot = ParityPlot(
-            '{} Parity Plot'.format(prop_abvr),
+            '',
             'Experimental {} Value'.format(prop_abvr),
             'Predicted {} Value'.format(prop_abvr)
         )
