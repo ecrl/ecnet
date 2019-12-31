@@ -40,7 +40,8 @@ class TestServerUtils(unittest.TestCase):
                     [32, 'relu']
                 ],
                 'output_activation': 'linear',
-                'batch_size': 32
+                'batch_size': 32,
+                'patience': 128
             }
         )
 
@@ -136,7 +137,8 @@ class TestServerUtils(unittest.TestCase):
                     [32, 'relu']
                 ],
                 'output_activation': 'linear',
-                'batch_size': 32
+                'batch_size': 32,
+                'patience': 128
             }
         )
         remove('config.yml')
@@ -162,7 +164,7 @@ class TestServerUtils(unittest.TestCase):
         pd = df.package_sets()
         config = server_utils.default_config()
         config['epochs'] = 100
-        r_squared = server_utils.train_model(
+        _ = server_utils.train_model(
             pd, config, 'test', 'r2', filename='test_train.ecnet'
         )
         self.assertTrue(exists('test_train.ecnet'))
