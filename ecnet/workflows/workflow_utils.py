@@ -59,6 +59,7 @@ def find_optimal_num_inputs(db_name: str, eval_set: str,
     conf['epochs'] = 300
     df = DataFrame(db_name)
     df.create_sets()
+    conf['batch_size'] = len(df.learn_set)
     desc = limit_rforest(df, len(df._input_names), num_processes=num_processes,
                          eval_set=eval_set)
     desc = [d[0] for d in desc]
