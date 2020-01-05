@@ -41,6 +41,7 @@ class MultilayerPerceptron:
     def __init__(self, filename: str='model.h5'):
         '''MultilayerPerceptron object: fits neural network to supplied inputs
         and targets
+
         Args:
             filename (str): path to model save location (.h5 extension)
         '''
@@ -58,6 +59,7 @@ class MultilayerPerceptron:
     def add_layer(self, num_neurons: int, activation: str,
                   input_dim: int=None):
         '''Adds a fully-connected layer to the model
+
         Args:
             num_neurons (int): number of neurons for the layer
             activation (str): activation function for the layer (see Keras
@@ -75,8 +77,9 @@ class MultilayerPerceptron:
     def fit(self, l_x: array, l_y: array, v_x: array=None, v_y: array=None,
             epochs: int=1500, lr: float=0.001, beta_1: float=0.9,
             beta_2: float=0.999, epsilon: float=0.0000001, decay: float=0.0,
-            v: int=0, batch_size: int=32, patience: int=128):
+            v: int=0, batch_size: int=32, patience: int=128) -> tuple:
         '''Fits neural network to supplied inputs and targets
+
         Args:
             l_x (numpy.array): learning input data
             l_y (numpy.array): learning target data
@@ -93,6 +96,11 @@ class MultilayerPerceptron:
             decay (float): learning rate decay for Adam optimizer
             v (int): verbose training, `0` for no printing, `1` for printing
             batch_size (int): number of learning samples per batch
+
+        Returns:
+            tuple: (learn losses iterable, valid losses iterable); both
+                iterables are the same size; if not validating, valid losses
+                iterable populated with `None`
         '''
 
         self._model.compile(
@@ -123,24 +131,31 @@ class MultilayerPerceptron:
                 verbose=v,
                 batch_size=batch_size
             )
-            epochs = len(history.history['loss'])
+            learn_loss = history.history['loss']
+            valid_loss = history.history['val_loss']
+            epochs = len(learn_loss)
         else:
-            self._model.fit(
+            history = self._model.fit(
                 l_x,
                 l_y,
                 epochs=epochs,
                 verbose=v,
                 batch_size=batch_size
             )
+            learn_loss = history.history['loss']
+            valid_loss = [None for _ in range(len(learn_loss))]
 
         logger.log('debug', 'Training complete after {} epochs'.format(epochs),
                    call_loc='MLP')
+        return (learn_loss, valid_loss)
 
     def use(self, x: array) -> array:
         '''Uses neural network to predict values for supplied data
+
         Args:
             x (numpy.array): input data to predict for
         Returns
+
             numpy.array: predictions
         '''
 
@@ -167,6 +182,7 @@ class MultilayerPerceptron:
 
     def load(self, filename: str=None):
         '''Loads neural network from .h5 file
+
         Args:
             filename (str): path to .h5 model file
         '''
