@@ -72,7 +72,7 @@ def train_project(prj_name: str, num_pools: int, num_candidates: int,
                 candidate,
                 model=True
             )
-            save_df(df, filename.replace('model.ecnet', 'data.d'))
+            save_df(df, filename.replace('model.h5', 'data.d'))
 
             if num_processes > 1:
                 pool_errors[pool].append(train_pool.apply_async(
@@ -108,6 +108,6 @@ def train_project(prj_name: str, num_pools: int, num_candidates: int,
         pool_fp = get_candidate_path(prj_name, p_idx, p_best=True)
         resave_model(candidate_fp, pool_fp)
         resave_df(
-            candidate_fp.replace('model.ecnet', 'data.d'),
-            pool_fp.replace('model.ecnet', 'data.d')
+            candidate_fp.replace('model.h5', 'data.d'),
+            pool_fp.replace('model.h5', 'data.d')
         )

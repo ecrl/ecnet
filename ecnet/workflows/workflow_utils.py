@@ -83,13 +83,13 @@ def find_optimal_num_inputs(db_name: str, eval_set: str,
         if num_processes > 1:
             errors.append([d_idx, train_pool.apply_async(
                 train_model, [
-                    sets, conf, eval_set, 'med_abs_error', False, '_.ecnet',
+                    sets, conf, eval_set, 'med_abs_error', False, '_.h5',
                     False, False
                 ]
             )])
         else:
             errors.append([d_idx, train_model(
-                sets, conf, eval_set, 'med_abs_error', False, '_.ecnet',
+                sets, conf, eval_set, 'med_abs_error', False, '_.h5',
                 False, False
             )[0]])
 

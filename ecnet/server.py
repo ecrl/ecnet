@@ -187,7 +187,7 @@ class Server:
 
     def train(self, shuffle: str=None, split: list=None, retrain: bool=False,
               validate: bool=False, selection_set: str=None,
-              selection_fn: str='rmse', model_filename: str='model.ecnet',
+              selection_fn: str='rmse', model_filename: str='model.h5',
               verbose=0) -> list:
         '''Trains neural network(s) using currently-loaded data; single NN if
         no project is created, all candidates if created
@@ -204,7 +204,7 @@ class Server:
                 set; `learn`, `valid`, `train`, `test`, None (all data)
             selection_fn (str): candidates are selected based on this error
                 metric; `rmse`, `mean_abs_error`, `med_abs_error`
-            model_filename (str): if project not created, saves `.ecnet` file
+            model_filename (str): if project not created, saves `.h5` file
                 here
             verbose (int): 1 to display loss at each epoch, 0 otherwise (single
                 model only)
@@ -247,7 +247,7 @@ class Server:
             return None
 
     def use(self, dset: str=None, output_filename: str=None,
-            model_filename: str='model.ecnet') -> list:
+            model_filename: str='model.h5') -> list:
         '''Uses trained neural network(s) to predict for specified set; single
         NN if no project created, best pool candidates if created
 
@@ -255,7 +255,7 @@ class Server:
             dset (str): set to predict for; `learn`, `valid`, `train`, `test`,
                 None (all sets)
             output_filename (str): if supplied, saves results to this CSV file
-            model_filename (str): if supplied, use specified .ecnet model file
+            model_filename (str): if supplied, use specified .h5 model file
 
         Returns:
             list: list of results for specified set
@@ -278,7 +278,7 @@ class Server:
         return results
 
     def errors(self, *args, dset: str=None,
-               model_filename: str='model.ecnet') -> dict:
+               model_filename: str='model.h5') -> dict:
         '''Obtains various errors for specified set
 
         Args:
@@ -286,7 +286,7 @@ class Server:
                 `med_abs_error`, `r2`
             dset (str): set to obtain errors for; `learn`, `valid`, `train`,
                 `test`, None (all sets)
-            model_filename (str): if specified, uses .ecnet model file for error
+            model_filename (str): if specified, uses .h5 model file for error
                 calculations
 
         Returns:

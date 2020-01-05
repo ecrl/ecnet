@@ -27,7 +27,7 @@ class TestMLP(unittest.TestCase):
         results = mlp_saved.use(array([[1, 1, 1], [0, 0, 0]]))
         self.assertAlmostEqual(results[0][0], 1, 3)
         self.assertAlmostEqual(results[1][0], 0, 3)
-        remove('model.ecnet')
+        remove('model.h5')
 
 
 if __name__ == '__main__':
