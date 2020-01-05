@@ -73,10 +73,10 @@ def tune_hyperparameters(df: DataFrame, vars: dict, num_employers: int,
     }
 
     value_ranges = [
-        ('float', (1e-9, 1e-4)),    # Learning rate decay
-        ('float', (1e-5, 0.1)),     # Learning rate
-        ('int', (1, len(df))),      # Batch size
-        ('int', (64, 1024))         # Patience
+        ('float', (1e-9, 1e-4)),            # Learning rate decay
+        ('float', (1e-5, 0.1)),             # Learning rate
+        ('int', (1, len(df.learn_set))),    # Batch size
+        ('int', (64, 1024))                 # Patience
     ]
 
     for _ in range(len(vars['hidden_layers'])):
