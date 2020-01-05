@@ -1,4 +1,22 @@
 from setuptools import setup, find_packages
+from sys import argv
+
+install_requires = [
+    'alvadescpy==0.1.0',
+    'colorlogging==0.3.5',
+    'ecabc==2.2.3',
+    'keras==2.3.1',
+    'matplotlib==3.1.2',
+    'numpy==1.16.4',
+    'padelpy==0.1.6',
+    'pyyaml==5.1.1',
+    'scikit-learn==0.21.2'
+]
+
+if '--omit_tf' in argv:
+    argv.remove('--omit_tf')
+else:
+    install_requires.append('tensorflow==1.15.0')
 
 setup(
     name='ecnet',
@@ -12,17 +30,6 @@ setup(
     license='MIT',
     packages=find_packages(),
     python_requires='~=3.7',
-    install_requires=[
-        'alvadescpy==0.1.0',
-        'colorlogging==0.3.5',
-        'ecabc==2.2.3',
-        'keras==2.3.1',
-        'matplotlib==3.1.2',
-        'numpy==1.16.4',
-        'padelpy==0.1.6',
-        'pyyaml==5.1.1',
-        'scikit-learn==0.21.2',
-        'tensorflow==1.15.0'
-    ],
+    install_requires=install_requires,
     zip_safe=False
 )
