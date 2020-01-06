@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tasks/limit_inputs.py
-# v.3.2.3
-# Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
+# v.3.3.0
+# Developed in 2020 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions for selecting influential input parameters
 #
@@ -21,8 +21,8 @@ from ecnet.utils.logging import logger
 from ecnet.utils.server_utils import get_x, get_y
 
 
-def limit_rforest(df: DataFrame, limit_num: int, num_estimators: int=None,
-                  num_processes: int=1, eval_set: str='learn',
+def limit_rforest(df: DataFrame, limit_num: int, num_estimators: int = None,
+                  num_processes: int = 1, eval_set: str = 'learn',
                   **kwargs) -> list:
     '''Uses random forest regression to select input parameters
 

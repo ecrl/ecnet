@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tasks/tuning.py
-# v.3.2.3
-# Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
+# v.3.3.0
+# Developed in 2020 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions/fitness functions for tuning hyperparameters
 #
@@ -22,10 +22,10 @@ from ecnet.utils.server_utils import default_config, train_model
 
 
 def tune_hyperparameters(df: DataFrame, vars: dict, num_employers: int,
-                         num_iterations: int, num_processes: int=1,
-                         shuffle: str=None, split: list=None,
-                         validate: bool=True, eval_set: str=None,
-                         eval_fn: str='rmse', epochs: int=300) -> dict:
+                         num_iterations: int, num_processes: int = 1,
+                         shuffle: str = None, split: list = None,
+                         validate: bool = True, eval_set: str = None,
+                         eval_fn: str = 'rmse', epochs: int = 300) -> dict:
     '''Tunes neural network learning/architecture hyperparameters
 
     Args:

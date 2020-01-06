@@ -2,18 +2,19 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/models/mlp.py
-# v.3.2.3
-# Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
+# v.3.3.0
+# Developed in 2020 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "MultilayerPerceptron" (feed-forward neural network) class
 #
 
+# Stdlib imports
 from os import environ
 from re import compile, IGNORECASE
 
+# 3rd party imports
 from h5py import File
 from numpy import array, string_, zeros
-
 from tensorflow import config, Tensor
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.layers import Dense
@@ -21,6 +22,7 @@ from tensorflow.keras.losses import MeanSquaredError
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 
+# ECNet imports
 from ecnet.utils.logging import logger
 
 environ['TF_CPP_MIN_LOG_LEVEL'] = '2'

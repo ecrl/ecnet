@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tools/plotting.py
-# v.3.2.3
-# Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
+# v.3.3.0
+# Developed in 2020 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions/classes for creating various plots
 #
@@ -18,9 +18,10 @@ from matplotlib.offsetbox import AnchoredText
 
 class ParityPlot:
 
-    def __init__(self, title: str='Parity Plot',
-                 x_label: str='Experimental Value',
-                 y_label: str='Predicted Value', font: str='Times New Roman'):
+    def __init__(self, title: str = 'Parity Plot',
+                 x_label: str = 'Experimental Value',
+                 y_label: str = 'Predicted Value',
+                 font: str = 'Times New Roman'):
         ''' ParityPlot: creates a plot of predicted values vs. experimental
         data relative to a 1:1 parity line
 
@@ -39,7 +40,7 @@ class ParityPlot:
         self._min_val = 0
         self._labels = None
 
-    def add_series(self, x_vals, y_vals, name: str=None, color: str=None):
+    def add_series(self, x_vals, y_vals, name: str = None, color: str = None):
         ''' Adds data to the plot
 
         Args:
@@ -67,7 +68,7 @@ class ParityPlot:
         if y_min < self._min_val:
             self._min_val = y_min
 
-    def add_error_bars(self, error: float, label: str=None):
+    def add_error_bars(self, error: float, label: str = None):
         ''' Adds error bars, +/- the error relative to the 1:1 parity line
 
         Args:
@@ -96,7 +97,7 @@ class ParityPlot:
         self._add_parity_line()
         plt.savefig(filename)
 
-    def _add_parity_line(self, offset: float=0.0):
+    def _add_parity_line(self, offset: float = 0.0):
         ''' Adds a 1:1 parity line
 
         Args:

@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/utils/data_utils.py
-# v.3.2.3
-# Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
+# v.3.3.0
+# Developed in 2020 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions/classes for loading data, saving data, saving results
 #
@@ -33,8 +33,8 @@ class DataPoint:
 class PackagedData:
 
     def __init__(self):
-        '''PackagedData object: contains lists of input and target data for data
-        set assignments
+        '''PackagedData object: contains lists of input and target data for
+        data set assignments
         '''
 
         self.learn_x = []
@@ -112,7 +112,7 @@ class DataFrame:
 
         return len(self.data_points)
 
-    def create_sets(self, random: bool=False, split: list=[0.7, 0.2, 0.1]):
+    def create_sets(self, random: bool = False, split: list = [0.7, 0.2, 0.1]):
         '''Creates learning, validation and test sets
 
         Args:
@@ -167,9 +167,9 @@ class DataFrame:
         logger.log('debug', 'Number of entries in test set: {}'.format(
                    len(self.test_set)), call_loc='DF')
 
-    def create_sorted_sets(self, sort_str: str, split: list=[0.7, 0.2, 0.1]):
-        '''Creates random learn, validate and test sets, ensuring data points with
-        the supplied sort string are split proportionally between the sets
+    def create_sorted_sets(self, sort_str: str, split: list = [0.7, 0.2, 0.1]):
+        '''Creates random learn, validate and test sets, ensuring data points
+        with the supplied sort string are split proportionally between the sets
 
         Args:
             sort_str (str): database STRING value used to sort data points
@@ -239,7 +239,7 @@ class DataFrame:
                         (float(getattr(pt, inp)) - v_min) / (v_max - v_min)
                     )
 
-    def shuffle(self, sets: str='all', split: list=[0.7, 0.2, 0.1]):
+    def shuffle(self, sets: str = 'all', split: list = [0.7, 0.2, 0.1]):
         '''Shuffles learning, validation and test sets or learning and
         validation sets
 

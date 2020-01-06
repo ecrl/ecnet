@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/utils/server_utils.py
-# v.3.2.3
-# Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
+# v.3.3.0
+# Developed in 2020 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions used by ecnet.Server
 #
@@ -80,8 +80,8 @@ def default_config() -> dict:
     }
 
 
-def get_candidate_path(prj: str, pool: int, candidate: int=None,
-                       model: bool=False, p_best: bool=False) -> str:
+def get_candidate_path(prj: str, pool: int, candidate: int = None,
+                       model: bool = False, p_best: bool = False) -> str:
     '''Get path to various states of model.h5 files
 
     Args:
@@ -367,8 +367,9 @@ def save_project(prj_name: str, filename: str, config_filename: str,
 
 
 def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
-                retrain: bool=False, filename: str='model.h5',
-                validate: bool=True, save: bool=True, verbose: int=0) -> tuple:
+                retrain: bool = False, filename: str = 'model.h5',
+                validate: bool = True, save: bool = True,
+                verbose: int = 0) -> tuple:
     '''Trains neural network
 
     Args:
@@ -385,7 +386,7 @@ def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
                 model only)
 
     Returns:
-        tuple: (error of evaluated set, list of learn/valid losses)
+        tuple: (error of evaluated set, tuple of learn/valid losses)
     '''
 
     model = MultilayerPerceptron(filename=filename)
@@ -438,7 +439,7 @@ def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
 
 
 def use_model(sets: PackagedData, dset: str,
-              filename: str='model.h5') -> array:
+              filename: str = 'model.h5') -> array:
     '''Uses existing model to predict data
 
     Args:

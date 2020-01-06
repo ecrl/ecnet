@@ -1,9 +1,21 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# ecnet/workflows/workflow_utils.py
+# v.3.3.0
+# Developed in 2020 by Travis Kessler <travis.j.kessler@gmail.com>
+#
+# Functions used by the ECRL workflow
+#
+
+# Stdlib imports
+from multiprocessing import Pool, set_start_method
+from os import name
+
+# ECNet imports
 from ecnet.utils.data_utils import DataFrame
 from ecnet.utils.server_utils import default_config, train_model
 from ecnet.tasks.limit_inputs import limit_rforest
-
-from multiprocessing import Pool, set_start_method
-from os import name
 
 
 def prop_range_from_split(db_name: str, data_split: list):

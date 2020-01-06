@@ -1,25 +1,37 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# ecnet/workflows/ecrl_workflow.py
+# v.3.3.0
+# Developed in 2020 by Travis Kessler <travis.j.kessler@gmail.com>
+#
+# General workflow used by the UMass Lowell Energy and Combustion Research
+# Laboratory
+#
+
+# Stdlib imports
+from datetime import datetime
+
+# 3rd party imports
+from matplotlib import pyplot as plt
+
+# ECNet imports
 from ecnet import Server
 from ecnet.tasks.tuning import tune_hyperparameters
 from ecnet.tools.database import create_db
 from ecnet.tools.plotting import ParityPlot
 from ecnet.utils.data_utils import DataFrame
-from ecnet.utils.error_utils import calc_med_abs_error, calc_r2
 from ecnet.utils.logging import logger
-from ecnet.utils.server_utils import default_config, save_config, train_model,\
-    use_model
+from ecnet.utils.server_utils import default_config, save_config
 from ecnet.workflows.workflow_utils import find_optimal_num_inputs,\
     prop_range_from_split
 
-from datetime import datetime
 
-from matplotlib import pyplot as plt
-
-
-def create_model(prop_abvr: str, smiles: list=None, targets: list=None,
-                 db_name: str=None, qspr_backend: str='padel',
-                 create_plots: bool=True, data_split: list=[0.7, 0.2, 0.1],
-                 log_level: str='info', log_to_file: bool=True,
-                 num_processes: int=1):
+def create_model(prop_abvr: str, smiles: list = None, targets: list = None,
+                 db_name: str = None, qspr_backend: str = 'padel',
+                 create_plots: bool = True, data_split: list = [0.7, 0.2, 0.1],
+                 log_level: str = 'info', log_to_file: bool = True,
+                 num_processes: int = 1):
     ''' create_model: ECRL's database/model creation workflow for all
     publications
 
