@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tasks/training.py
-# v.3.2.3
-# Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
+# v.3.3.0
+# Developed in 2020 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains function for project training (multiprocessed training)
 #
@@ -83,7 +83,7 @@ def train_project(prj_name: str, num_pools: int, num_candidates: int,
                 pool_errors[pool].append(train_model(
                     sets, vars, selection_set, selection_fn, retrain, filename,
                     validate
-                ))
+                )[0])
 
             if shuffle is not None:
                 df.shuffle(sets=shuffle, split=split)
@@ -93,7 +93,7 @@ def train_project(prj_name: str, num_pools: int, num_candidates: int,
         train_pool.close()
         train_pool.join()
         for p_idx, pool in enumerate(pool_errors):
-            pool_errors[p_idx] = [e.get() for e in pool]
+            pool_errors[p_idx] = [e.get()[0] for e in pool]
 
     logger.log('debug', 'Pool errors: {}'.format(pool_errors),
                call_loc='TRAIN')

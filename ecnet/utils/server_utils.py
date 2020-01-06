@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/utils/server_utils.py
-# v.3.2.3
-# Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
+# v.3.3.0
+# Developed in 2020 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions used by ecnet.Server
 #
@@ -65,22 +65,23 @@ def default_config() -> dict:
 
     return {
         'epochs': 3000,
-        'learning_rate': 0.001,
+        'learning_rate': 0.01,
         'beta_1': 0.9,
         'beta_2': 0.999,
-        'epsilon': 0.0000001,
+        'epsilon': 1e-8,
         'decay': 0.0,
         'hidden_layers': [
             [32, 'relu'],
             [32, 'relu']
         ],
         'output_activation': 'linear',
-        'batch_size': 32
+        'batch_size': 32,
+        'patience': 128
     }
 
 
-def get_candidate_path(prj: str, pool: int, candidate: int=None,
-                       model: bool=False, p_best: bool=False) -> str:
+def get_candidate_path(prj: str, pool: int, candidate: int = None,
+                       model: bool = False, p_best: bool = False) -> str:
     '''Get path to various states of model.h5 files
 
     Args:
@@ -366,8 +367,9 @@ def save_project(prj_name: str, filename: str, config_filename: str,
 
 
 def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
-                retrain: bool=False, filename: str='model.h5',
-                validate: bool=True, save: bool=True) -> float:
+                retrain: bool = False, filename: str = 'model.h5',
+                validate: bool = True, save: bool = True,
+                verbose: int = 0) -> tuple:
     '''Trains neural network
 
     Args:
@@ -380,9 +382,11 @@ def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
         retrain (bool): if True, opens model for additional training
         filename (str): path to .h5 model file, loads from this if retraining
         save (bool): if True, saves model to `filename`
+        verbose (int): 1 to display loss at each epoch, 0 otherwise (single
+                model only)
 
     Returns:
-        float: error of evaluated set
+        tuple: (error of evaluated set, tuple of learn/valid losses)
     '''
 
     model = MultilayerPerceptron(filename=filename)
@@ -396,7 +400,7 @@ def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
                 model.add_layer(layer[0], layer[1])
         model.add_layer(len(sets.learn_y[0]), vars['output_activation'])
     if validate:
-        model.fit(
+        losses = model.fit(
             sets.learn_x,
             sets.learn_y,
             sets.valid_x,
@@ -407,10 +411,12 @@ def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
             beta_2=vars['beta_2'],
             epsilon=vars['epsilon'],
             decay=vars['decay'],
-            batch_size=vars['batch_size']
+            batch_size=vars['batch_size'],
+            v=verbose,
+            patience=vars['patience']
         )
     else:
-        model.fit(
+        losses = model.fit(
             sets.learn_x,
             sets.learn_y,
             epochs=vars['epochs'],
@@ -419,19 +425,21 @@ def train_model(sets: PackagedData, vars: dict, eval_set: str, eval_fn: str,
             beta_2=vars['beta_2'],
             epsilon=vars['epsilon'],
             decay=vars['decay'],
-            batch_size=vars['batch_size']
+            batch_size=vars['batch_size'],
+            v=verbose,
+            patience=vars['patience']
         )
     if save:
         model.save()
-    return get_error(
+    return (get_error(
         model.use(get_x(sets, eval_set)),
         get_y(sets, eval_set),
         eval_fn
-    )
+    ), losses)
 
 
 def use_model(sets: PackagedData, dset: str,
-              filename: str='model.h5') -> array:
+              filename: str = 'model.h5') -> array:
     '''Uses existing model to predict data
 
     Args:

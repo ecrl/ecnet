@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tools/database.py
-# v.3.2.3
-# Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
+# v.3.3.0
+# Developed in 2020 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions for creating ECNet-formatted databases
 #
@@ -20,7 +20,7 @@ from padelpy import from_mdl, from_smiles
 
 try:
     import pybel
-except:
+except ImportError:
     pybel = None
 
 
@@ -35,9 +35,9 @@ class _Molecule:
         self.inputs = None
 
 
-def create_db(smiles: list, db_name: str, targets: list=None,
-              id_prefix: str='', extra_strings: dict={}, backend: str='padel',
-              convert_mdl: bool=False):
+def create_db(smiles: list, db_name: str, targets: list = None,
+              id_prefix: str = '', extra_strings: dict = {},
+              backend: str = 'padel', convert_mdl: bool = False):
     ''' create_db: creates an ECNet-formatted database from SMILES strings
     using either PaDEL-Descriptor or alvaDesc software; using alvaDesc
     requires a valid installation/license of alvaDesc

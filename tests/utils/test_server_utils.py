@@ -30,17 +30,18 @@ class TestServerUtils(unittest.TestCase):
         self.assertEqual(
             dc, {
                 'epochs': 3000,
-                'learning_rate': 0.001,
+                'learning_rate': 0.01,
                 'beta_1': 0.9,
                 'beta_2': 0.999,
-                'epsilon': 0.0000001,
+                'epsilon': 1e-8,
                 'decay': 0.0,
                 'hidden_layers': [
                     [32, 'relu'],
                     [32, 'relu']
                 ],
                 'output_activation': 'linear',
-                'batch_size': 32
+                'batch_size': 32,
+                'patience': 128
             }
         )
 
@@ -126,17 +127,18 @@ class TestServerUtils(unittest.TestCase):
             server_utils.open_config('config.yml'),
             {
                 'epochs': 3000,
-                'learning_rate': 0.001,
+                'learning_rate': 0.01,
                 'beta_1': 0.9,
                 'beta_2': 0.999,
-                'epsilon': 0.0000001,
+                'epsilon': 1e-8,
                 'decay': 0.0,
                 'hidden_layers': [
                     [32, 'relu'],
                     [32, 'relu']
                 ],
                 'output_activation': 'linear',
-                'batch_size': 32
+                'batch_size': 32,
+                'patience': 128
             }
         )
         remove('config.yml')
@@ -162,7 +164,7 @@ class TestServerUtils(unittest.TestCase):
         pd = df.package_sets()
         config = server_utils.default_config()
         config['epochs'] = 100
-        r_squared = server_utils.train_model(
+        _ = server_utils.train_model(
             pd, config, 'test', 'r2', filename='test_train.h5'
         )
         self.assertTrue(exists('test_train.h5'))

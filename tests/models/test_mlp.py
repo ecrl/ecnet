@@ -15,7 +15,8 @@ class TestMLP(unittest.TestCase):
         mlp.add_layer(9, 'relu', 3)
         mlp.add_layer(6, 'relu')
         mlp.add_layer(1, 'linear')
-        mlp.fit(array([[1, 1, 1], [0, 0, 0]]), array([[1], [0]]), epochs=20000)
+        mlp.fit(array([[1, 1, 1], [0, 0, 0]]), array([[1], [0]]), epochs=2000,
+                lr=0.01)
 
         results = mlp.use(array([[1, 1, 1], [0, 0, 0]]))
         self.assertAlmostEqual(results[0][0], 1, 3)

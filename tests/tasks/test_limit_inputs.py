@@ -23,6 +23,38 @@ class TestLimit(unittest.TestCase):
         df.set_inputs([r[0] for r in result])
         self.assertEqual(len(df._input_names), 2)
 
+    def test_limit_sets(self):
+
+        print('\nUNIT TEST: limit_sets')
+        df = DataFrame(DB_LOC)
+        df.create_sets()
+        result = limit_rforest(df, 2, eval_set='valid')
+        self.assertEqual(len(result), 2)
+        self.assertEqual(len(result[0]), 2)
+        df.set_inputs([r[0] for r in result])
+        self.assertEqual(len(df._input_names), 2)
+        df = DataFrame(DB_LOC)
+        df.create_sets()
+        result = limit_rforest(df, 2, eval_set='train')
+        self.assertEqual(len(result), 2)
+        self.assertEqual(len(result[0]), 2)
+        df.set_inputs([r[0] for r in result])
+        self.assertEqual(len(df._input_names), 2)
+        df = DataFrame(DB_LOC)
+        df.create_sets()
+        result = limit_rforest(df, 2, eval_set='test')
+        self.assertEqual(len(result), 2)
+        self.assertEqual(len(result[0]), 2)
+        df.set_inputs([r[0] for r in result])
+        self.assertEqual(len(df._input_names), 2)
+        df = DataFrame(DB_LOC)
+        df.create_sets()
+        result = limit_rforest(df, 2, eval_set=None)
+        self.assertEqual(len(result), 2)
+        self.assertEqual(len(result[0]), 2)
+        df.set_inputs([r[0] for r in result])
+        self.assertEqual(len(df._input_names), 2)
+
     def test_server_limit(self):
 
         print('\nUNIT TEST: limit_rforest (Server)')

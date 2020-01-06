@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tools/project.py
-# v.3.2.3
-# Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
+# v.3.3.0
+# Developed in 2020 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions for predicting data using pre-existing .prj files
 #
@@ -20,8 +20,8 @@ from ecnet.utils.logging import logger
 from ecnet.tools.database import create_db
 
 
-def predict(smiles: list, prj_file: str, results_file: str=None,
-            backend: str='padel') -> list:
+def predict(smiles: list, prj_file: str, results_file: str = None,
+            backend: str = 'padel') -> list:
     ''' predict: predicts values for supplied molecules (SMILES strings) using
     pre-existing ECNet project (.prj) file
 

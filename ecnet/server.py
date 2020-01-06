@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/server.py
-# v.3.2.3
-# Developed in 2019 by Travis Kessler <travis.j.kessler@gmail.com>
+# v.3.3.0
+# Developed in 2020 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains the "Server" class, which handles ECNet project creation, neural
 # network model creation, data hand-off to models, prediction error
@@ -26,8 +26,8 @@ from ecnet.utils.server_utils import check_config, create_project,\
 
 class Server:
 
-    def __init__(self, model_config: str='config.yml', prj_file: str=None,
-                 num_processes: int=1):
+    def __init__(self, model_config: str = 'config.yml', prj_file: str = None,
+                 num_processes: int = 1):
         '''Server object: handles data loading, model creation, data-to-model
         hand-off, data input parameter selection, hyperparameter tuning
 
@@ -69,8 +69,8 @@ class Server:
             self._vars = default_config()
             save_config(self._vars, self._cf_file)
 
-    def load_data(self, filename: str, random: bool=False, split: list=None,
-                  normalize: bool=False):
+    def load_data(self, filename: str, random: bool = False,
+                  split: list = None, normalize: bool = False):
         '''Loads data from an ECNet-formatted CSV database
 
         Args:
@@ -90,8 +90,8 @@ class Server:
         self._df.create_sets(random, split)
         self._sets = self._df.package_sets()
 
-    def create_project(self, project_name: str, num_pools: int=1,
-                       num_candidates: int=1):
+    def create_project(self, project_name: str, num_pools: int = 1,
+                       num_candidates: int = 1):
         '''Creates folder hierarchy for a new project
 
         Args:
@@ -111,8 +111,9 @@ class Server:
         logger.log('debug', 'Number of candidates/pool: {}'.format(
                    num_candidates), call_loc='PROJECT')
 
-    def limit_inputs(self, limit_num: int, num_estimators: int=None,
-                     output_filename: str=None, **kwargs) -> list:
+    def limit_inputs(self, limit_num: int, num_estimators: int = None,
+                     eval_set: str = 'learn', output_filename: str = None,
+                     **kwargs) -> list:
         '''Selects `limit_num` influential input parameters using random
         forest regression
 
@@ -122,6 +123,8 @@ class Server:
                 defaults to the total number of inputs
             output_filename (str): if not None, new limited database is saved
                 here
+            eval_set (str): set to perform RFR on (`learn`, `valid`, `train`,
+                `test`, None (all)) (default: `learn`)
             **kwargs: any argument accepted by
                 sklearn.ensemble.RandomForestRegressor
 
@@ -133,7 +136,9 @@ class Server:
             self._df,
             limit_num,
             num_estimators,
-            self._num_processes
+            self._num_processes,
+            eval_set,
+            **kwargs
         )
         self._df.set_inputs([r[0] for r in result])
         self._sets = self._df.package_sets()
@@ -144,9 +149,9 @@ class Server:
         return result
 
     def tune_hyperparameters(self, num_employers: int, num_iterations: int,
-                             shuffle: bool=None, split: list=None,
-                             validate: bool=True, eval_set: str=None,
-                             eval_fn: str='rmse'):
+                             shuffle: bool = None, split: list = None,
+                             validate: bool = True, eval_set: str = None,
+                             eval_fn: str = 'rmse', epochs: int = 300):
         '''Tunes neural network learning hyperparameters using an artificial
         bee colony algorithm; tuned hyperparameters are saved to Server's
         model configuration file
@@ -162,6 +167,7 @@ class Server:
                 `train`, `test`, None (all sets)
             eval_fn (str): error function used to evaluate bee fitness;
                 `rmse`, `mean_abs_error`, `med_abs_error`
+            epochs (int): number of training epochs per bee ANN (def: 300)
         '''
 
         self._vars = tune_hyperparameters(
@@ -174,13 +180,15 @@ class Server:
             split,
             validate,
             eval_set,
-            eval_fn
+            eval_fn,
+            epochs
         )
         save_config(self._vars, self._cf_file)
 
-    def train(self, shuffle: str=None, split: list=None, retrain: bool=False,
-              validate: bool=False, selection_set: str=None,
-              selection_fn: str='rmse'):
+    def train(self, shuffle: str = None, split: list = None,
+              retrain: bool = False, validate: bool = False,
+              selection_set: str = None, selection_fn: str = 'rmse',
+              model_filename: str = 'model.h5', verbose: int = 0) -> tuple:
         '''Trains neural network(s) using currently-loaded data; single NN if
         no project is created, all candidates if created
 
@@ -196,18 +204,29 @@ class Server:
                 set; `learn`, `valid`, `train`, `test`, None (all data)
             selection_fn (str): candidates are selected based on this error
                 metric; `rmse`, `mean_abs_error`, `med_abs_error`
+            model_filename (str): if project not created, saves `.h5` file
+                here
+            verbose (int): 1 to display loss at each epoch, 0 otherwise (single
+                model only)
+
+        Returns:
+            tuple: if training single model, returns tuple of learn/valid
+                losses, else None
         '''
 
         if self._prj_name is None:
             logger.log('info', 'Training single model', call_loc='TRAIN')
-            train_model(
+            _, losses = train_model(
                 self._sets,
                 self._vars,
                 selection_set,
                 selection_fn,
                 retrain,
-                validate=validate
+                model_filename,
+                validate,
+                verbose=verbose
             )
+            return losses
 
         else:
             train_project(
@@ -225,8 +244,10 @@ class Server:
                 selection_fn,
                 self._num_processes
             )
+            return None
 
-    def use(self, dset: str=None, output_filename: str=None) -> list:
+    def use(self, dset: str = None, output_filename: str = None,
+            model_filename: str = 'model.h5') -> list:
         '''Uses trained neural network(s) to predict for specified set; single
         NN if no project created, best pool candidates if created
 
@@ -234,13 +255,14 @@ class Server:
             dset (str): set to predict for; `learn`, `valid`, `train`, `test`,
                 None (all sets)
             output_filename (str): if supplied, saves results to this CSV file
+            model_filename (str): if supplied, use specified .h5 model file
 
         Returns:
             list: list of results for specified set
         '''
 
         if self._prj_name is None:
-            results = use_model(self._sets, dset)
+            results = use_model(self._sets, dset, model_filename)
 
         else:
             results = use_project(
@@ -255,7 +277,8 @@ class Server:
                        call_loc='USE')
         return results
 
-    def errors(self, *args, dset: str=None) -> dict:
+    def errors(self, *args, dset: str = None,
+               model_filename: str = 'model.h5') -> dict:
         '''Obtains various errors for specified set
 
         Args:
@@ -263,6 +286,8 @@ class Server:
                 `med_abs_error`, `r2`
             dset (str): set to obtain errors for; `learn`, `valid`, `train`,
                 `test`, None (all sets)
+            model_filename (str): if specified, uses .h5 model file for error
+                calculations
 
         Returns:
             dict: {'error_fn', value ...} with supplied errors
@@ -271,7 +296,7 @@ class Server:
         for err in args:
             logger.log('debug', 'Calculating {} for {} set'.format(err, dset),
                        call_loc='ERRORS')
-        preds = self.use(dset)
+        preds = self.use(dset, model_filename=model_filename)
         y_vals = get_y(self._sets, dset)
         errors = {}
         for err in args:
@@ -279,8 +304,8 @@ class Server:
         logger.log('debug', 'Errors: {}'.format(errors), call_loc='ERRORS')
         return errors
 
-    def save_project(self, filename: str=None, clean_up: bool=True,
-                     del_candidates: bool=False):
+    def save_project(self, filename: str = None, clean_up: bool = True,
+                     del_candidates: bool = False):
         '''Saves current state of project to a .prj file
 
         Args:
