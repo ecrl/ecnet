@@ -23,7 +23,7 @@ from tensorflow.keras.optimizers import Adam
 
 from ecnet.utils.logging import logger
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 config.experimental_run_functions_eagerly(True)
 H5_EXT = compile(r'.*\.h5', flags=IGNORECASE)
 
