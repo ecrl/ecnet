@@ -5,7 +5,6 @@ install_requires = [
     'alvadescpy==0.1.0',
     'colorlogging==0.3.5',
     'ecabc==2.2.3',
-    'keras==2.3.1',
     'matplotlib==3.1.2',
     'numpy==1.16.4',
     'padelpy==0.1.6',
@@ -16,7 +15,7 @@ install_requires = [
 if '--omit_tf' in argv:
     argv.remove('--omit_tf')
 else:
-    install_requires.append('tensorflow==1.15.0')
+    install_requires.append('tensorflow==2.0.0')
 
 setup(
     name='ecnet',
