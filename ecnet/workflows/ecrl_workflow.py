@@ -112,8 +112,9 @@ def create_model(prop_abvr: str, smiles: list = None, targets: list = None,
     logger.log('info', 'Tuning ANN hyperparameters...', 'WORKFLOW')
     config = default_config()
     config = tune_hyperparameters(df, config, 25, 10, num_processes,
-                                  eval_set='valid', eval_fn='med_abs_error',
-                                  epochs=300, validate=False)
+                                  shuffle='train', split=[0.7, 0.2, 0.1],
+                                  validate=True, eval_set='valid',
+                                  eval_fn='med_abs_error', epochs=300)
     config['epochs'] = default_config()['epochs']
     config_filename = db_name.replace('.csv', '.yml')
     save_config(config, config_filename)
@@ -131,9 +132,9 @@ def create_model(prop_abvr: str, smiles: list = None, targets: list = None,
     logger.log('info', 'Generating ANN...', 'WORKFLOW')
     sv = Server(db_name.replace('.csv', '.yml'), num_processes=num_processes)
     sv.load_data(db_name.replace('.csv', '_opt.csv'))
-    sv.create_project(db_name.replace('.csv', ''), 5, 25)
-    sv.train(validate=True, selection_set='valid',
-             selection_fn='med_abs_error')
+    sv.create_project(db_name.replace('.csv', ''), 5, 75)
+    sv.train(validate=True, selection_set='valid', shuffle='train',
+             split=[0.7, 0.2, 0.1], selection_fn='med_abs_error')
     logger.log('info', 'ANN Generated', 'WORKFLOW')
     logger.log('info', 'Measuring ANN performance...', 'WORKFLOW')
     preds_learn = sv.use(dset='learn')
