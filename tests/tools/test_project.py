@@ -24,11 +24,7 @@ class TestUseProject(unittest.TestCase):
         results = predict(['CCC', 'CCCC'], 'test_project.prj', 'results.csv')
 
         self.assertEqual(len(results), 2)
-        with open('results.csv', 'r') as res_file:
-            self.assertGreater(len(res_file.read()), 0)
-        res_file.close()
 
-        remove('results.csv')
         remove('test_project.prj')
         remove('config.yml')
 
