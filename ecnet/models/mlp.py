@@ -13,13 +13,12 @@ from os import environ
 from re import compile, IGNORECASE
 
 # 3rd party imports
-from h5py import File
-from numpy import array, string_, zeros
-from tensorflow import config, Tensor
+from numpy import array
+from tensorflow import config
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.losses import MeanSquaredError
-from tensorflow.keras.models import Model
+from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.optimizers import Adam
 
 # ECNet imports
@@ -45,7 +44,7 @@ def check_h5(filename: str):
         )
 
 
-class MultilayerPerceptron(Model):
+class MultilayerPerceptron:
 
     def __init__(self, filename: str = 'model.h5'):
         ''' MultilayerPerceptron: Feed-forward neural network; variable number
@@ -56,10 +55,9 @@ class MultilayerPerceptron(Model):
             filename (str): filename/path for the model (default: `model.h5`)
         '''
 
-        super(MultilayerPerceptron, self).__init__()
         check_h5(filename)
         self._filename = filename
-        self._layers = []
+        self._model = Sequential()
 
     def add_layer(self, num_neurons: int, activation: str,
                   input_dim: int = None):
@@ -76,29 +74,15 @@ class MultilayerPerceptron(Model):
                neurons), should be kept as `None` (default value)
         '''
 
-        if len(self._layers) == 0:
+        if len(self._model.layers) == 0:
             if input_dim is None:
                 raise ValueError('First layer must have input_dim specified')
 
-        self._layers.append(Dense(
+        self._model.add(Dense(
             units=num_neurons,
             activation=activation,
-            input_shape=(input_dim,)
+            input_dim=input_dim
         ))
-
-    def call(self, x: Tensor) -> Tensor:
-        ''' call: used by Model.fit (parent) to perform feed-forward operations
-
-        Args:
-            x (tf.Tensor): data fed into first layer
-
-        Returns:
-            tf.Tensor: data resulting from last layer
-        '''
-
-        for layer in self._layers:
-            x = layer(x)
-        return x
 
     def fit(self, l_x: array, l_y: array, v_x: array = None, v_y: array = None,
             epochs: int = 1500, lr: float = 0.001, beta_1: float = 0.9,
@@ -134,25 +118,25 @@ class MultilayerPerceptron(Model):
                 epoch
         '''
 
-        self.compile(optimizer=Adam(lr=lr, beta_1=beta_1, beta_2=beta_2,
-                                    epsilon=epsilon,
-                                    decay=decay),
-                     loss=MeanSquaredError())
+        self._model.compile(optimizer=Adam(lr=lr, beta_1=beta_1, beta_2=beta_2,
+                                           epsilon=epsilon,
+                                           decay=decay),
+                            loss=MeanSquaredError())
 
         if v_x is not None and v_y is not None:
 
             callback = EarlyStopping(monitor='val_loss', patience=patience,
                                      restore_best_weights=True)
-            history = super().fit(l_x, l_y, batch_size=batch_size,
-                                  epochs=epochs, verbose=v,
-                                  callbacks=[callback],
-                                  validation_data=(v_x, v_y))
+            history = self._model.fit(l_x, l_y, batch_size=batch_size,
+                                      epochs=epochs, verbose=v,
+                                      callbacks=[callback],
+                                      validation_data=(v_x, v_y))
             return (history.history['loss'], history.history['val_loss'])
 
         else:
 
-            history = super().fit(l_x, l_y, batch_size=batch_size,
-                                  epochs=epochs, verbose=v)
+            history = self._model.fit(l_x, l_y, batch_size=batch_size,
+                                      epochs=epochs, verbose=v)
             return (history.history['loss'], [None for _ in range(epochs)])
 
     def use(self, x: array) -> array:
@@ -165,7 +149,7 @@ class MultilayerPerceptron(Model):
             np.array: predicted values
         '''
 
-        return self.predict(x)
+        return self._model.predict(x)
 
     def save(self, filename: str = None):
         ''' save: saves the model weights, architecture to either the filename/
@@ -178,15 +162,7 @@ class MultilayerPerceptron(Model):
         if filename is None:
             filename = self._filename
         check_h5(filename)
-        self.save_weights(filename, save_format='h5')
-        input_size = self.layers[0].get_config()['batch_input_shape'][1]
-        layer_sizes = [l.get_config()['units'] for l in self.layers]
-        layer_activ = [l.get_config()['activation'] for l in self.layers]
-        with File(filename, 'a') as hf:
-            hf['mlp_input_size'] = input_size
-            hf['mlp_layer_sizes'] = layer_sizes
-            hf['mlp_layer_activ'] = string_(layer_activ)
-        hf.close()
+        self._model.save(filename, include_optimizer=False)
         logger.log('debug', 'Model saved to {}'.format(filename),
                    call_loc='MLP')
 
@@ -201,16 +177,6 @@ class MultilayerPerceptron(Model):
 
         if filename is None:
             filename = self._filename
-        with File(filename, 'r') as hf:
-            input_size = hf.get('mlp_input_size').value
-            layer_sizes = hf.get('mlp_layer_sizes').value
-            layer_activ = hf.get('mlp_layer_activ').value
-        hf.close()
-        self.add_layer(layer_sizes[0], layer_activ[0].decode('ascii'),
-                       input_size)
-        for idx, layer in enumerate(layer_sizes[1:]):
-            self.add_layer(layer, layer_activ[idx].decode('ascii'))
-        self.build(input_shape=(None, input_size))
-        self.load_weights(filename)
+        self._model = load_model(filename, compile=False)
         logger.log('debug', 'Model loaded from {}'.format(filename),
                    call_loc='MLP')
