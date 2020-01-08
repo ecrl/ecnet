@@ -14,6 +14,7 @@ from datetime import datetime
 
 # 3rd party imports
 from matplotlib import pyplot as plt
+from numpy import concatenate
 
 # ECNet imports
 from ecnet import Server
@@ -137,17 +138,13 @@ def create_model(prop_abvr: str, smiles: list = None, targets: list = None,
              split=[0.7, 0.2, 0.1], selection_fn='med_abs_error')
     logger.log('info', 'ANN Generated', 'WORKFLOW')
     logger.log('info', 'Measuring ANN performance...', 'WORKFLOW')
-    preds_learn = sv.use(dset='learn')
-    preds_valid = sv.use(dset='valid')
     preds_test = sv.use(dset='test')
-    learn_errors = sv.errors('r2', 'med_abs_error', dset='learn')
-    valid_errors = sv.errors('r2', 'med_abs_error', dset='valid')
+    preds_train = sv.use(dset='train')
     test_errors = sv.errors('r2', 'med_abs_error', dset='test')
+    train_errors = sv.errors('r2', 'med_abs_error', dset='train')
     logger.log('info', 'Measured ANN performance', 'WORKFLOW')
-    logger.log('info', '\tLearning set:\t R2: {}\t MAE: {}'.format(
-        learn_errors['r2'], learn_errors['med_abs_error']), 'WORKFLOW')
-    logger.log('info', '\tValidation set:\t R2: {}\t MAE: {}'.format(
-        valid_errors['r2'], valid_errors['med_abs_error']), 'WORKFLOW')
+    logger.log('info', '\tTraining set:\t R2: {}\t MAE: {}'.format(
+        train_errors['r2'], train_errors['med_abs_error']), 'WORKFLOW')
     logger.log('info', '\tTesting set:\t R2: {}\t MAE: {}'.format(
         test_errors['r2'], test_errors['med_abs_error']), 'WORKFLOW')
     sv.save_project(del_candidates=True)
@@ -160,16 +157,13 @@ def create_model(prop_abvr: str, smiles: list = None, targets: list = None,
             'Experimental {} Value'.format(prop_abvr),
             'Predicted {} Value'.format(prop_abvr)
         )
-        parity_plot.add_series(sv._sets.learn_y, preds_learn, 'Learning Set',
-                               'blue')
-        parity_plot.add_series(sv._sets.valid_y, preds_valid, 'Validation Set',
-                               'green')
+        parity_plot.add_series(concatenate(
+            (sv._sets.learn_y, sv._sets.valid_y)
+        ), preds_train, 'Training Set', 'blue')
         parity_plot.add_series(sv._sets.test_y, preds_test, 'Test Set', 'red')
         parity_plot.add_error_bars(test_errors['med_abs_error'], 'Test MAE')
         parity_plot._add_label('Test $R^2$', test_errors['r2'])
-        parity_plot._add_label('Validation MAE', valid_errors['med_abs_error'])
-        parity_plot._add_label('Validation $R^2$', valid_errors['r2'])
-        parity_plot._add_label('Learning MAE', learn_errors['med_abs_error'])
-        parity_plot._add_label('Learning $R^2$', learn_errors['r2'])
+        parity_plot._add_label('Training MAE', train_errors['med_abs_error'])
+        parity_plot._add_label('Training $R^2$', train_errors['r2'])
         parity_plot.save(db_name.replace('.csv', '_parity.png'))
         logger.log('info', 'Created parity plot', 'WORKFLOW')
