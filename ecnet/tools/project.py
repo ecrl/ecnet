@@ -10,7 +10,7 @@
 
 # Stdlib imports
 from os import walk
-from os.path import join
+from os.path import basename, join
 from re import compile, IGNORECASE
 from tempfile import TemporaryDirectory
 from warnings import warn
@@ -45,11 +45,11 @@ class TrainedProject:
 
         with ZipFile(filename, 'r') as zf:
             prj_zip = zf.namelist()
-            if '{}/data.d'.format(filename.replace('.prj', '')) not in prj_zip:
-                raise Exception('`data.d` not found in .prj file')
             with TemporaryDirectory() as tmpdirname:
                 zf.extractall(tmpdirname)
-                prj_dirname = join(tmpdirname, filename.replace('.prj', ''))
+                prj_dirname = join(tmpdirname, basename(
+                    filename.replace('.prj', '')
+                ))
                 self._df = open_df(join(prj_dirname, 'data.d'))
                 for root, _, files in walk(prj_dirname):
                     for f in files:
