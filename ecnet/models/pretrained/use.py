@@ -19,12 +19,28 @@ _BASEDIR = join(dirname(abspath(__file__)), 'prj')
 
 _TRAINED_MODELS = {
     'CN_alvadesc': join(_BASEDIR, 'cn_model_v2.0.prj'),
-    'CN_padel': join(_BASEDIR, 'cn_model_v2.1.prj')
+    'CN_padel': join(_BASEDIR, 'cn_model_v2.1.prj'),
+    'CP_alvadesc': join(_BASEDIR, 'cp_model_v1.0.prj'),
+    'CP_padel': join(_BASEDIR, 'cp_model_v1.1.prj'),
+    'KV_padel': join(_BASEDIR, 'kv_model_v1.1.prj'),
+    'OS_alvadesc': join(_BASEDIR, 'os_model_v1.0.prj'),
+    'PP_alvadesc': join(_BASEDIR, 'pp_model_v1.0.prj'),
+    'PP_padel': join(_BASEDIR, 'pp_model_v1.1.prj'),
+    'RON_alvadesc': join(_BASEDIR, 'ron_model_v1.0.prj'),
+    'YSI_padel': join(_BASEDIR, 'ysi_model_v2.1.prj')
 }
 
 _TEST_MED_ABS_ERRORS = {
-    'CN_alvadesc': 5.0,
-    'CN_padel': 6.0
+    'CN_alvadesc': 6.6711,
+    'CN_padel': 6.3840,
+    'CP_alvadesc': 0.6421,
+    'CP_padel': 1.2351,
+    'KV_padel': 0.1991,
+    'OS_alvadesc': 2.0616,
+    'PP_alvadesc': 3.9422,
+    'PP_padel': 9.6152,
+    'RON_alvadesc': 3.8861,
+    'YSI_padel': 4.6917
 }
 
 
