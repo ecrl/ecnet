@@ -37,11 +37,13 @@ _TEST_MED_ABS_ERRORS = {
     'CN_padel': 6.3840,
     'CP_alvadesc': 0.6421,
     'CP_padel': 1.2351,
+    'KV_alvadesc': 0.0618,
     'KV_padel': 0.1991,
     'OS_alvadesc': 2.0616,
     'PP_alvadesc': 3.9422,
     'PP_padel': 9.6152,
     'RON_alvadesc': 3.8861,
+    'YSI_alvadesc': 3.6471,
     'YSI_padel': 4.6917
 }
 
