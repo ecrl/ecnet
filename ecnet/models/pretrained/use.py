@@ -22,11 +22,13 @@ _TRAINED_MODELS = {
     'CN_padel': join(_BASEDIR, 'cn_model_v2.1.prj'),
     'CP_alvadesc': join(_BASEDIR, 'cp_model_v1.0.prj'),
     'CP_padel': join(_BASEDIR, 'cp_model_v1.1.prj'),
+    'KV_alvadesc': join(_BASEDIR, 'kv_model_v1.1.prj'),
     'KV_padel': join(_BASEDIR, 'kv_model_v1.1.prj'),
     'OS_alvadesc': join(_BASEDIR, 'os_model_v1.0.prj'),
     'PP_alvadesc': join(_BASEDIR, 'pp_model_v1.0.prj'),
     'PP_padel': join(_BASEDIR, 'pp_model_v1.1.prj'),
     'RON_alvadesc': join(_BASEDIR, 'ron_model_v1.0.prj'),
+    'YSI_alvadesc': join(_BASEDIR, 'ysi_model_v2.1.prj'),
     'YSI_padel': join(_BASEDIR, 'ysi_model_v2.1.prj')
 }
 
