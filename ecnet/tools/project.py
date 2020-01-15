@@ -76,6 +76,10 @@ class TrainedProject:
 
         if backend == 'alvadesc':
             mols = [smiles_to_descriptors(s) for s in smiles]
+            for mol in mols:
+                for key in list(mol.keys()):
+                    if mol[key] == 'na':
+                        mol[key] = 0
         elif backend == 'padel':
             mols = [from_smiles(s) for s in smiles]
         else:
