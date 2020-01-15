@@ -28,7 +28,7 @@ _TRAINED_MODELS = {
     'PP_alvadesc': join(_BASEDIR, 'pp_model_v1.0.prj'),
     'PP_padel': join(_BASEDIR, 'pp_model_v1.1.prj'),
     'RON_alvadesc': join(_BASEDIR, 'ron_model_v1.0.prj'),
-    'YSI_alvadesc': join(_BASEDIR, 'ysi_model_v2.1.prj'),
+    'YSI_alvadesc': join(_BASEDIR, 'ysi_model_v2.0.prj'),
     'YSI_padel': join(_BASEDIR, 'ysi_model_v2.1.prj')
 }
 
