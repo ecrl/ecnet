@@ -316,11 +316,27 @@ def save_df(df: DataFrame, filename: str):
     '''Saves DataFrame to pickled file
 
     Args:
+        df (DataFrame): dataframe to save
         filename (str): path to save location
     '''
 
     with open(filename, 'wb') as data_file:
         pdump(df, data_file)
+    data_file.close()
+
+
+def save_df_input_names(df: DataFrame, filename: str):
+    '''Saves DataFrame input names to text file
+
+    Args:
+        df (DataFrame): dataframe with input names to save
+        filename (str): path to save location
+    '''
+
+    with open(filename, 'w') as data_file:
+        for name in df._input_names:
+            data_file.write(name)
+            data_file.write('\n')
     data_file.close()
 
 
@@ -347,6 +363,7 @@ def save_project(prj_name: str, filename: str, config_filename: str,
 
     save_config(vars, path.join(prj_name, config_filename))
     save_df(df, path.join(prj_name, 'data.d'))
+    save_df_input_names(df, path.join(prj_name, 'inp.txt'))
     save_path = prj_name
     if filename is not None:
         save_path = filename
