@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/tasks/tuning.py
-# v.3.3.0
+# v.3.3.1
 # Developed in 2020 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Contains functions/fitness functions for tuning hyperparameters

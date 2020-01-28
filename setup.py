@@ -19,7 +19,7 @@ else:
 
 setup(
     name='ecnet',
-    version='3.3.0',
+    version='3.3.1',
     description='UMass Lowell Energy and Combustion Research Laboratory Neural'
                 ' Network Software',
     url='https://github.com/ecrl/ecnet',
