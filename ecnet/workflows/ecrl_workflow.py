@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/workflows/ecrl_workflow.py
-# v.3.3.0
+# v.3.3.1
 # Developed in 2020 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # General workflow used by the UMass Lowell Energy and Combustion Research
@@ -14,6 +14,7 @@ from datetime import datetime
 
 # 3rd party imports
 from matplotlib import pyplot as plt
+from numpy import concatenate
 
 # ECNet imports
 from ecnet import Server
@@ -112,8 +113,9 @@ def create_model(prop_abvr: str, smiles: list = None, targets: list = None,
     logger.log('info', 'Tuning ANN hyperparameters...', 'WORKFLOW')
     config = default_config()
     config = tune_hyperparameters(df, config, 25, 10, num_processes,
-                                  eval_set='valid', eval_fn='med_abs_error',
-                                  epochs=300, validate=False)
+                                  shuffle='train', split=[0.7, 0.2, 0.1],
+                                  validate=True, eval_set='valid',
+                                  eval_fn='med_abs_error', epochs=300)
     config['epochs'] = default_config()['epochs']
     config_filename = db_name.replace('.csv', '.yml')
     save_config(config, config_filename)
@@ -131,22 +133,18 @@ def create_model(prop_abvr: str, smiles: list = None, targets: list = None,
     logger.log('info', 'Generating ANN...', 'WORKFLOW')
     sv = Server(db_name.replace('.csv', '.yml'), num_processes=num_processes)
     sv.load_data(db_name.replace('.csv', '_opt.csv'))
-    sv.create_project(db_name.replace('.csv', ''), 5, 25)
-    sv.train(validate=True, selection_set='valid',
-             selection_fn='med_abs_error')
+    sv.create_project(db_name.replace('.csv', ''), 5, 75)
+    sv.train(validate=True, selection_set='valid', shuffle='train',
+             split=[0.7, 0.2, 0.1], selection_fn='med_abs_error')
     logger.log('info', 'ANN Generated', 'WORKFLOW')
     logger.log('info', 'Measuring ANN performance...', 'WORKFLOW')
-    preds_learn = sv.use(dset='learn')
-    preds_valid = sv.use(dset='valid')
     preds_test = sv.use(dset='test')
-    learn_errors = sv.errors('r2', 'med_abs_error', dset='learn')
-    valid_errors = sv.errors('r2', 'med_abs_error', dset='valid')
+    preds_train = sv.use(dset='train')
     test_errors = sv.errors('r2', 'med_abs_error', dset='test')
+    train_errors = sv.errors('r2', 'med_abs_error', dset='train')
     logger.log('info', 'Measured ANN performance', 'WORKFLOW')
-    logger.log('info', '\tLearning set:\t R2: {}\t MAE: {}'.format(
-        learn_errors['r2'], learn_errors['med_abs_error']), 'WORKFLOW')
-    logger.log('info', '\tValidation set:\t R2: {}\t MAE: {}'.format(
-        valid_errors['r2'], valid_errors['med_abs_error']), 'WORKFLOW')
+    logger.log('info', '\tTraining set:\t R2: {}\t MAE: {}'.format(
+        train_errors['r2'], train_errors['med_abs_error']), 'WORKFLOW')
     logger.log('info', '\tTesting set:\t R2: {}\t MAE: {}'.format(
         test_errors['r2'], test_errors['med_abs_error']), 'WORKFLOW')
     sv.save_project(del_candidates=True)
@@ -159,16 +157,13 @@ def create_model(prop_abvr: str, smiles: list = None, targets: list = None,
             'Experimental {} Value'.format(prop_abvr),
             'Predicted {} Value'.format(prop_abvr)
         )
-        parity_plot.add_series(sv._sets.learn_y, preds_learn, 'Learning Set',
-                               'blue')
-        parity_plot.add_series(sv._sets.valid_y, preds_valid, 'Validation Set',
-                               'green')
+        parity_plot.add_series(concatenate(
+            (sv._sets.learn_y, sv._sets.valid_y)
+        ), preds_train, 'Training Set', 'blue')
         parity_plot.add_series(sv._sets.test_y, preds_test, 'Test Set', 'red')
         parity_plot.add_error_bars(test_errors['med_abs_error'], 'Test MAE')
         parity_plot._add_label('Test $R^2$', test_errors['r2'])
-        parity_plot._add_label('Validation MAE', valid_errors['med_abs_error'])
-        parity_plot._add_label('Validation $R^2$', valid_errors['r2'])
-        parity_plot._add_label('Learning MAE', learn_errors['med_abs_error'])
-        parity_plot._add_label('Learning $R^2$', learn_errors['r2'])
+        parity_plot._add_label('Training MAE', train_errors['med_abs_error'])
+        parity_plot._add_label('Training $R^2$', train_errors['r2'])
         parity_plot.save(db_name.replace('.csv', '_parity.png'))
         logger.log('info', 'Created parity plot', 'WORKFLOW')
