@@ -3,7 +3,6 @@ import unittest
 from ecnet.utils.logging import logger
 
 from models.test_mlp import TestMLP
-from models.test_pretrained import TestPretrained
 from tasks.test_limit_inputs import TestLimit
 from tasks.test_tune_hyperparameters import TestTune
 from tools.test_database import TestDatabase
