@@ -4,7 +4,7 @@ from sys import argv
 install_requires = [
     'alvadescpy==0.1.0',
     'colorlogging==0.3.5',
-    'ecabc==2.2.3',
+    'ecabc==3.0.0',
     'matplotlib==3.1.2',
     'numpy==1.16.4',
     'padelpy==0.1.6',
@@ -19,7 +19,7 @@ else:
 
 setup(
     name='ecnet',
-    version='3.3.1',
+    version='3.3.2',
     description='UMass Lowell Energy and Combustion Research Laboratory Neural'
                 ' Network Software',
     url='https://github.com/ecrl/ecnet',

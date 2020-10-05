@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # ecnet/workflows/workflow_utils.py
-# v.3.3.1
+# v.3.3.2
 # Developed in 2020 by Travis Kessler <travis.j.kessler@gmail.com>
 #
 # Functions used by the ECRL workflow
