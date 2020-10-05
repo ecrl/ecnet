@@ -32,7 +32,7 @@ author = 'Travis Kessler'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '3.3.1'
+release = '3.3.2'
 
 
 # -- General configuration ---------------------------------------------------
