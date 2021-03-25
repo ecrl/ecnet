@@ -8,7 +8,7 @@ install_requires = [
     'matplotlib==3.1.2',
     'numpy==1.16.4',
     'padelpy==0.1.6',
-    'pyyaml==5.1.1',
+    'pyyaml==5.4',
     'scikit-learn==0.21.2'
 ]
 
