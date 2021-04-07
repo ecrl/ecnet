@@ -11,9 +11,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Subset, DataLoader
 from sklearn.model_selection import train_test_split
+from re import compile
 
 from .datasets.structs import QSPRDataset
 from .callbacks import CallbackOperator, LRDecayLinear, Validator
+
+_TORCH_MODEL_FN = compile(r'.*\.pt')
 
 
 class ECNet(nn.Module):
@@ -222,3 +225,28 @@ class ECNet(nn.Module):
         """
 
         return F.mse_loss(pred, target)
+
+    def save(self, model_filename: str):
+        r"""
+        Saves the model for later use
+
+        Args:
+            model_filename (str): filename/path to save model
+        """
+
+        if _TORCH_MODEL_FN.match(model_filename) is None:
+            raise ValueError('Models must be saved with a `.pt` extension')
+        torch.save(self, model_filename)
+
+
+def load_model(model_filename: str) -> ECNet:
+    r"""
+    Loads a model for use
+
+    Args:
+        model_filename (str): filename/path to load model from
+    """
+
+    model = torch.load(model_filename)
+    model.eval()
+    return model

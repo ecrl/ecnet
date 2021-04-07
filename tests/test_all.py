@@ -8,6 +8,7 @@ from ecnet.datasets.load_data import _open_smiles_file, _open_target_file, _get_
     _DATA_PATH, _get_file_data, _load_set
 from ecnet.callbacks import LRDecayLinear, Validator
 from ecnet import ECNet
+from ecnet.model import load_model
 from ecnet.tasks.feature_selection import select_rfr
 from ecnet.tasks.parameter_tuning import tune_batch_size, tune_model_architecture,\
     tune_training_parameters, CONFIG
@@ -194,6 +195,29 @@ class TestModel(unittest.TestCase):
         tr_loss, val_loss = net.fit(smiles, targets, backend=_BACKEND, epochs=_EPOCHS)
         self.assertEqual(len(tr_loss), len(val_loss))
         self.assertEqual(len(tr_loss), _EPOCHS)
+
+    def test_save_load(self):
+
+        _EPOCHS = 10
+        net = ECNet(_N_DESC, 1, 512, 2)
+        smiles = ['CCC', 'CCCC', 'CCCCC']
+        targets = [[3.0], [4.0], [5.0]]
+        ds = QSPRDataset(smiles, targets, backend=_BACKEND)
+        tr_loss, val_loss = net.fit(dataset=ds, epochs=_EPOCHS)
+        with self.assertRaises(ValueError):
+            net.save('_test.badext')
+        net.save('_test.pt')
+        val_0 = net(ds[0]['desc_vals'])
+        with self.assertRaises(FileNotFoundError):
+            net = load_model('badfile.pt')
+        net = load_model('_test.pt')
+        val_0_new = net(ds[0]['desc_vals'])
+        self.assertEqual(val_0, val_0_new)
+
+    def tearDown(self):
+
+        if os.path.exists('_test.pt'):
+            os.remove('_test.pt')
 
 
 class TestTasks(unittest.TestCase):
