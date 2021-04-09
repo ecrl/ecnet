@@ -2,7 +2,7 @@ r"""Functions for predicting blend properties"""
 from typing import List
 from math import log, exp
 
-from .equations import _linear_blend_ave, _celsius_to_rankine, _rankine_to_celsius
+from .equations import linear_blend_ave, celsius_to_rankine, rankine_to_celsius
 
 
 def cetane_number(values: List[float], vol_fractions: List[float]) -> float:
@@ -18,7 +18,7 @@ def cetane_number(values: List[float], vol_fractions: List[float]) -> float:
         float: blended CN
     """
 
-    return _linear_blend_ave(values, vol_fractions)
+    return linear_blend_ave(values, vol_fractions)
 
 
 def cloud_point(values: List[float], vol_fractions: List[float]) -> float:
@@ -44,8 +44,8 @@ def cloud_point(values: List[float], vol_fractions: List[float]) -> float:
 
     cp_sum = 0.0
     for idx, val in enumerate(values):
-        cp_sum += (vol_fractions[idx] * _celsius_to_rankine(val)**13.45)
-    return _rankine_to_celsius(cp_sum**(1 / 13.45))
+        cp_sum += (vol_fractions[idx] * celsius_to_rankine(val)**13.45)
+    return rankine_to_celsius(cp_sum**(1 / 13.45))
 
 
 def kinematic_viscosity(values: List[float], vol_fractions: List[float]) -> float:
@@ -85,7 +85,7 @@ def lower_heating_value(values: List[float], vol_fractions: List[float]) -> floa
         float: blended LHV
     """
 
-    return _linear_blend_ave(values, vol_fractions)
+    return linear_blend_ave(values, vol_fractions)
 
 
 def yield_sooting_index(values: List[float], vol_fractions: List[float]) -> float:
@@ -101,4 +101,4 @@ def yield_sooting_index(values: List[float], vol_fractions: List[float]) -> floa
         float: blended YSI
     """
 
-    return _linear_blend_ave(values, vol_fractions)
+    return linear_blend_ave(values, vol_fractions)
