@@ -12,7 +12,7 @@ setup(
     install_requires=[
         'torch==1.8.0',
         'sklearn',
-        'padelpy==0.1.8',
+        'padelpy==0.1.9',
         'alvadescpy==0.1.2',
         'ecabc==3.0.0'
     ],
