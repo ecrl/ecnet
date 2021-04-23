@@ -277,10 +277,6 @@ class TestTasks(unittest.TestCase):
                 continue
             self.assertTrue(res[k] >= CONFIG['training_params_range'][k][0])
             self.assertTrue(res[k] <= CONFIG['training_params_range'][k][1])
-        self.assertTrue(res['betas'][0] >= CONFIG['training_params_range']['beta_1'][0])
-        self.assertTrue(res['betas'][0] <= CONFIG['training_params_range']['beta_1'][1])
-        self.assertTrue(res['betas'][1] >= CONFIG['training_params_range']['beta_2'][0])
-        self.assertTrue(res['betas'][1] <= CONFIG['training_params_range']['beta_2'][1])
 
 
 if __name__ == '__main__':
