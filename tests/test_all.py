@@ -13,7 +13,7 @@ from ecnet.tasks.feature_selection import select_rfr
 from ecnet.tasks.parameter_tuning import tune_batch_size, tune_model_architecture,\
     tune_training_parameters, CONFIG
 
-_PROPS = ['bp', 'cn', 'cp', 'kv', 'lhv', 'mon', 'pp', 'ron', 'ysi']
+_PROPS = ['bp', 'cn', 'cp', 'kv', 'lhv', 'mon', 'pp', 'ron', 'ysi', 'mp']
 _BACKEND = 'padel'
 _N_DESC = 1875
 _N_PROCESSES = 4

@@ -46,7 +46,7 @@ def _open_target_file(target_fn: str) -> List[List[float]]:
 def _get_prop_paths(prop: str) -> Tuple[str, str]:
     r"""
     Args:
-        prop (str): any in ['bp', 'cn', 'cp', 'kv', 'lhv', 'mon', 'pp', 'ron', 'ysi']
+        prop (str): any in ['bp', 'cn', 'cp', 'kv', 'lhv', 'mon', 'pp', 'ron', 'ysi', 'mp']
 
     Returns:
         tuple[str, str]: (path to smiles file (str), path to targets file (str))
@@ -61,7 +61,7 @@ def _get_prop_paths(prop: str) -> Tuple[str, str]:
 def _get_file_data(prop: str) -> Tuple[List[str], List[List[float]]]:
     r"""
     Args:
-        prop (str): any in ['bp', 'cn', 'cp', 'kv', 'lhv', 'mon', 'pp', 'ron', 'ysi']
+        prop (str): any in ['bp', 'cn', 'cp', 'kv', 'lhv', 'mon', 'pp', 'ron', 'ysi', 'mp']
 
     Returns:
         tuple[list[str], list[list[float]]]: (smiles, targets)
@@ -76,7 +76,7 @@ def _get_file_data(prop: str) -> Tuple[List[str], List[List[float]]]:
 def _load_set(prop: str, backend: str) -> QSPRDatasetFromFile:
     r"""
     Args:
-        prop (str): any in ['bp', 'cn', 'cp', 'kv', 'lhv', 'mon', 'pp', 'ron', 'ysi']
+        prop (str): any in ['bp', 'cn', 'cp', 'kv', 'lhv', 'mon', 'pp', 'ron', 'ysi', 'mp']
 
     Returns:
         QSPRDatasetFromFile: loaded set
@@ -193,6 +193,14 @@ def load_mon(as_dataset: bool = False, backend: str = 'padel') -> Union[
     if not as_dataset:
         return _get_file_data('mon')
     return _load_set('mon', backend)
+
+
+def load_mp(as_dataset: bool = False, backend: str = 'padel') -> Union[
+            Tuple[List[str], List[List[float]]], QSPRDatasetFromFile]:
+
+    if not as_dataset:
+        return _get_file_data('mp')
+    return _load_set('mp', backend)
 
 
 def load_pp(as_dataset: bool = False, backend: str = 'padel') -> Union[
