@@ -206,11 +206,11 @@ class ECNet(nn.Module):
             torch.tensor: output of final model layer
         """
 
-        for i in range(len(self.model)):
+        for i in range(len(self.model) - 1):
             x = self.model[i](x)
             x = F.relu(x)
             x = F.dropout(x, p=self._dropout, training=self.training)
-        return x
+        return self.model[-1](x)
 
     def loss(self, pred: torch.tensor, target: torch.tensor) -> torch.tensor:
         r"""
