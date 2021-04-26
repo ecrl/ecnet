@@ -32,8 +32,8 @@ def select_rfr(dataset: QSPRDataset, total_importance: float = 0.95,
     tot_imp = 0.0
     for idx, i in enumerate(importances):
         tot_imp += i[0]
+        idx_cutoff = idx
         if tot_imp >= total_importance:
-            idx_cutoff = idx
             break
     desc_imp = [i[0] for i in importances][:idx_cutoff]
     desc_idx = [i[1] for i in importances][:idx_cutoff]
