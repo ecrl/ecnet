@@ -14,8 +14,8 @@
 ECNet leverages [QSPR descriptors](https://en.wikipedia.org/wiki/Quantitative_structure%E2%80%93activity_relationship) for use as input variables, specifically [PaDEL-Descriptor](http://www.yapcwsoft.com/dd/padeldescriptor/) and [alvaDesc](https://www.alvascience.com/alvadesc/). Using alvaDesc requires a valid license.
 
 Future plans for ECNet include:
-- Implementation of RDKit for training using molecular fingerprints
-- Leveraging additional QSPR-generation software (e.g. [Mordred](https://github.com/mordred-descriptor/mordred))
+- Implementating RDKit to train using molecular fingerprints
+- Leveraging additional QSPR-generation software packages (e.g. [Mordred](https://github.com/mordred-descriptor/mordred))
 - A graphical user interface
 
 # Installation and Usage
