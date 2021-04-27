@@ -16,7 +16,7 @@ from ecnet.tasks.parameter_tuning import tune_batch_size, tune_model_architectur
 _PROPS = ['bp', 'cn', 'cp', 'kv', 'lhv', 'mon', 'pp', 'ron', 'ysi', 'mp']
 _BACKEND = 'padel'
 _N_DESC = 1875
-_N_PROCESSES = 4
+_N_PROCESSES = 1
 
 
 class TestDatasetUtils(unittest.TestCase):
@@ -257,7 +257,7 @@ class TestTasks(unittest.TestCase):
         targets = [[5.0]]
         ds_eval = QSPRDataset(smiles, targets, backend=_BACKEND)
         model = ECNet(_N_DESC, 1, 5, 1)
-        res = tune_batch_size(5, 5, _N_PROCESSES, model=model, train_ds=ds_train, eval_ds=ds_eval)
+        res = tune_batch_size(1, 1, _N_PROCESSES, model=model, train_ds=ds_train, eval_ds=ds_eval)
         self.assertTrue(1 <= res['batch_size'] <= len(ds_train.target_vals))
 
     def test_tune_model_architecture(self):
@@ -270,7 +270,7 @@ class TestTasks(unittest.TestCase):
         targets = [[5.0]]
         ds_eval = QSPRDataset(smiles, targets, backend=_BACKEND)
         model = ECNet(_N_DESC, 1, 5, 1)
-        res = tune_model_architecture(5, 5, _N_PROCESSES, model=model, train_ds=ds_train,
+        res = tune_model_architecture(1, 1, _N_PROCESSES, model=model, train_ds=ds_train,
                                       eval_ds=ds_eval)
         for k in list(res.keys()):
             self.assertTrue(res[k] >= CONFIG['architecture_params_range'][k][0])
@@ -286,7 +286,7 @@ class TestTasks(unittest.TestCase):
         targets = [[5.0]]
         ds_eval = QSPRDataset(smiles, targets, backend=_BACKEND)
         model = ECNet(_N_DESC, 1, 5, 1)
-        res = tune_training_parameters(5, 5, _N_PROCESSES, model=model, train_ds=ds_train,
+        res = tune_training_parameters(1, 1, _N_PROCESSES, model=model, train_ds=ds_train,
                                        eval_ds=ds_eval)
         for k in list(res.keys()):
             if k == 'betas':
