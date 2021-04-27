@@ -23,6 +23,7 @@ class TestDatasetUtils(unittest.TestCase):
 
     def test_qspr_generation(self):
 
+        print('UNIT TEST: QSPR generation')
         smiles = ['CCC', 'CCCC', 'CCCCC']
         desc, keys = _qspr_from_padel(smiles)
         self.assertEqual(len(keys), 1875)
@@ -35,6 +36,7 @@ class TestDatasetLoading(unittest.TestCase):
 
     def test_open_smiles_file(self):
 
+        print('UNIT TEST: Open .smiles file')
         smiles = 'CCC\nCCCC\nCCCCC'
         with open('_temp.smiles', 'w') as smi_file:
             smi_file.write(smiles)
@@ -47,6 +49,7 @@ class TestDatasetLoading(unittest.TestCase):
 
     def test_open_target_file(self):
 
+        print('UNIT TEST: Open .target file')
         target_vals = '3.0\n4.0\n5.0'
         with open('_temp.target', 'w') as tar_file:
             tar_file.write(target_vals)
@@ -60,6 +63,7 @@ class TestDatasetLoading(unittest.TestCase):
 
     def test_get_prop_paths(self):
 
+        print('UNIT TEST: Get property filepaths')
         for p in _PROPS:
             smiles_fn, target_fn = _get_prop_paths(p)
             self.assertEqual(
@@ -71,6 +75,7 @@ class TestDatasetLoading(unittest.TestCase):
 
     def test_get_file_data(self):
 
+        print('UNIT TEST: Get file data')
         for p in _PROPS:
             smiles, targets = _get_file_data(p)
             self.assertEqual(len(smiles), len(targets))
@@ -90,6 +95,7 @@ class TestDatasetStructs(unittest.TestCase):
 
     def test_qsprdataset(self):
 
+        print('UNIT TEST: Create QSPRDataset')
         smiles = ['CCC', 'CCCC', 'CCCCC']
         targets = [[3.0], [4.0], [5.0]]
         ds = QSPRDataset(smiles, targets, backend=_BACKEND)
@@ -103,6 +109,7 @@ class TestDatasetStructs(unittest.TestCase):
 
     def test_qsprdatasetfromfile(self):
 
+        print('UNIT TEST: Create QSPRDatasetFromFile')
         smiles = 'CCC\nCCCC\nCCCCC'
         with open('_temp.smiles', 'w') as smi_file:
             smi_file.write(smiles)
@@ -120,6 +127,7 @@ class TestDatasetStructs(unittest.TestCase):
 
     def test_qsprdatasetfromvalues(self):
 
+        print('UNIT TEST: Create QSPRDatasetFromValues')
         desc_vals = [
             [0.0, 0.1, 0.2, 0.3],
             [0.0, 0.2, 0.3, 0.1],
@@ -145,6 +153,7 @@ class TestCallbacks(unittest.TestCase):
 
     def test_lrlineardecay(self):
 
+        print('UNIT TEST: LR Decay')
         model = torch.nn.Sequential(
             torch.nn.Linear(3, 5),
             torch.nn.ReLU(),
@@ -172,6 +181,7 @@ class TestModel(unittest.TestCase):
 
     def test_construct(self):
 
+        print('UNIT TEST: Construct model')
         _INPUT_DIM = 3
         _OUTPUT_DIM = 1
         _HIDDEN_DIM = 5
@@ -188,6 +198,7 @@ class TestModel(unittest.TestCase):
 
     def test_fit(self):
 
+        print('UNIT TEST: Fit model')
         _EPOCHS = 10
         net = ECNet(_N_DESC, 1, 512, 2)
         smiles = ['CCC', 'CCCC', 'CCCCC']
@@ -198,6 +209,7 @@ class TestModel(unittest.TestCase):
 
     def test_save_load(self):
 
+        print('UNIT TEST: Model save/load')
         _EPOCHS = 10
         net = ECNet(_N_DESC, 1, 512, 2)
         smiles = ['CCC', 'CCCC', 'CCCCC']
@@ -224,6 +236,7 @@ class TestTasks(unittest.TestCase):
 
     def test_feature_selection(self):
 
+        print('UNIT TEST: Feature selection')
         smiles = ['CCC', 'CCCC', 'CCCCC']
         targets = [[3.0], [4.0], [5.0]]
         ds = QSPRDataset(smiles, targets, backend=_BACKEND)
@@ -236,6 +249,7 @@ class TestTasks(unittest.TestCase):
 
     def test_tune_batch_size(self):
 
+        print('UNIT TEST: Tune batch size')
         smiles = ['CCC', 'CCCC', 'CCCCCC']
         targets = [[3.0], [4.0], [6.0]]
         ds_train = QSPRDataset(smiles, targets, backend=_BACKEND)
@@ -248,6 +262,7 @@ class TestTasks(unittest.TestCase):
 
     def test_tune_model_architecture(self):
 
+        print('UNIT TEST: Tune model architecture')
         smiles = ['CCC', 'CCCC', 'CCCCCC']
         targets = [[3.0], [4.0], [6.0]]
         ds_train = QSPRDataset(smiles, targets, backend=_BACKEND)
@@ -263,6 +278,7 @@ class TestTasks(unittest.TestCase):
 
     def test_tune_training_hps(self):
 
+        print('UNIT TEST: Tune model hyper-parameters')
         smiles = ['CCC', 'CCCC', 'CCCCCC']
         targets = [[3.0], [4.0], [6.0]]
         ds_train = QSPRDataset(smiles, targets, backend=_BACKEND)
