@@ -1,6 +1,6 @@
 [![UML Energy & Combustion Research Laboratory](http://faculty.uml.edu/Hunter_Mack/uploads/9/7/1/3/97138798/1481826668_2.png)](http://faculty.uml.edu/Hunter_Mack/)
 
-# ECNet: scalable, retrainable and deployable machine learning projects for fuel property prediction
+# ECNet: machine learning models for fuel property prediction
 
 [![GitHub version](https://badge.fury.io/gh/ecrl%2FECNet.svg)](https://badge.fury.io/gh/ecrl%2FECNet)
 [![PyPI version](https://badge.fury.io/py/ecnet.svg)](https://badge.fury.io/py/ecnet)
@@ -9,26 +9,20 @@
 [![Documentation Status](https://readthedocs.org/projects/ecnet/badge/?version=latest)](https://ecnet.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://dev.azure.com/uml-ecrl/package-management/_apis/build/status/ECRL.ECNet?branchName=master)](https://dev.azure.com/uml-ecrl/package-management/_build/latest?definitionId=1&branchName=master)
 	
-**ECNet** is an open source Python package for creating scalable, retrainable and deployable machine learning projects with a focus on fuel property prediction. An ECNet __project__ is considered a collection of __pools__, where each pool contains a neural network that has been selected from a group of __candidate__ neural networks. Candidates are selected to represent pools based on their ability to optimize certain learning criteria (for example, performing optimially on unseen data). Each pool contributes a prediction derived from input data, and these predictions are averaged to calculate the project's final prediction. Using multiple pools allows a project to learn from a variety of learning and validation sets, which can reduce the project's prediction error. Projects can be saved and reused at a later time allowing additional training and deployable predictive models.
+**ECNet** is an open source Python package for creating machine learning models to predict fuel properties. ECNet comes bundled with a variety of fuel property datasets, including cetane number, yield sooting index, and research/motor octane number. ECNet was built using the [PyTorch](https://pytorch.org/) library, allowing easy implementation of our models in your existing ML pipelines.
 
-[T. Sennott et al.](https://doi.org/10.1115/ICEF2013-19185) have shown that neural networks can be applied to cetane number prediction with relatively little error. ECNet provides scientists an open source tool for predicting key fuel properties of potential next-generation biofuels, reducing the need for costly fuel synthesis and experimentation.
-
-<p align="center">
-  <img align="center" src="docs/img/workflow_diagram.png" width="50%" height="50%">
-</p>
-
-Using ECNet, [T. Kessler et al.](https://doi.org/10.1016/j.fuel.2017.06.015) have increased the generalizability of neural networks to predict the cetane number for a variety of molecular classes represented in our [cetane number database](https://github.com/ECRL/ECNet/tree/master/databases), and have increased the accuracy of neural networks for predicting the cetane number of underrepresented molecular classes through targeted database expansion.
+ECNet leverages [QSPR descriptors](https://en.wikipedia.org/wiki/Quantitative_structure%E2%80%93activity_relationship) for use as input variables, specifically [PaDEL-Descriptor](http://www.yapcwsoft.com/dd/padeldescriptor/) and [alvaDesc](https://www.alvascience.com/alvadesc/). Using alvaDesc requires a valid license.
 
 Future plans for ECNet include:
-- distributed candidate training for GPU's
-- a graphical user interface
-- implementing neural network neuron diagnostics - maybe it's not a black box after all 🤔
+- Implementating RDKit to train using molecular fingerprints
+- Leveraging additional QSPR-generation software packages (e.g. [Mordred](https://github.com/mordred-descriptor/mordred))
+- A graphical user interface
 
 # Installation and Usage
 
-Please refer to our [documentation page](https://ecnet.readthedocs.io/en/latest/) for installation instructions, a quick-start guide, and how-to's for various tools ECNet provides.
+Please refer to our [documentation page](https://ecnet.readthedocs.io/en/latest/) for installation instructions and full API documentation. You can also view some [example scripts](https://github.com/ecrl/ecnet/examples) we put together.
 
-# Contributing, Reporting Issues and Other Support:
+# Contributing, Reporting Issues, and Other Support:
 
 To contribute to ECNet, make a pull request. Contributions should include tests for new features added, as well as extensive documentation.
 
