@@ -20,7 +20,7 @@ Future plans for ECNet include:
 
 # Installation and Usage
 
-Please refer to our [documentation page](https://ecnet.readthedocs.io/en/latest/) for installation instructions and full API documentation. You can also view some [example scripts](https://github.com/ecrl/ecnet/examples) we put together.
+Please refer to our [documentation page](https://ecnet.readthedocs.io/en/latest/) for installation instructions and full API documentation. You can also view some [example scripts](https://github.com/ECRL/ECNet/tree/master/examples) we put together.
 
 # Contributing, Reporting Issues, and Other Support:
 
