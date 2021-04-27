@@ -11,7 +11,7 @@ _DATA_PATH = path.join(
 
 
 def _open_smiles_file(smiles_fn: str) -> List[str]:
-    r"""
+    """
     Args:
         smiles_fn (str): filename/path for SMILES file
 
@@ -27,7 +27,7 @@ def _open_smiles_file(smiles_fn: str) -> List[str]:
 
 
 def _open_target_file(target_fn: str) -> List[List[float]]:
-    r"""
+    """
     Args:
         target_fn (str): filename/path for target values file
 
@@ -44,7 +44,7 @@ def _open_target_file(target_fn: str) -> List[List[float]]:
 
 
 def _get_prop_paths(prop: str) -> Tuple[str, str]:
-    r"""
+    """
     Args:
         prop (str): any in ['bp', 'cn', 'cp', 'kv', 'lhv', 'mon', 'pp', 'ron', 'ysi', 'mp']
 
@@ -59,7 +59,7 @@ def _get_prop_paths(prop: str) -> Tuple[str, str]:
 
 
 def _get_file_data(prop: str) -> Tuple[List[str], List[List[float]]]:
-    r"""
+    """
     Args:
         prop (str): any in ['bp', 'cn', 'cp', 'kv', 'lhv', 'mon', 'pp', 'ron', 'ysi', 'mp']
 
@@ -74,7 +74,7 @@ def _get_file_data(prop: str) -> Tuple[List[str], List[List[float]]]:
 
 
 def _load_set(prop: str, backend: str) -> QSPRDatasetFromFile:
-    r"""
+    """
     Args:
         prop (str): any in ['bp', 'cn', 'cp', 'kv', 'lhv', 'mon', 'pp', 'ron', 'ysi', 'mp']
 
@@ -89,9 +89,11 @@ def _load_set(prop: str, backend: str) -> QSPRDatasetFromFile:
 
 def load_bp(as_dataset: bool = False, backend: str = 'padel') -> Union[
             Tuple[List[str], List[List[float]]], QSPRDatasetFromFile]:
-    r"""
+    """
+    Loads boiling point data; target values given in Celsius
+
     Args:
-        as_dataset (bool, optional) if True, return QSPRDatasetFromFile object housing data;
+        as_dataset (bool, optional): if True, return QSPRDatasetFromFile object housing data;
             otherwise, return tuple of smiles and target values
         backend (str, optional): any in ['padel', 'alvadesc']
 
@@ -107,9 +109,11 @@ def load_bp(as_dataset: bool = False, backend: str = 'padel') -> Union[
 
 def load_cn(as_dataset: bool = False, backend: str = 'padel') -> Union[
             Tuple[List[str], List[List[float]]], QSPRDatasetFromFile]:
-    r"""
+    """
+    Loads cetane number data; target values given in CN units
+
     Args:
-        as_dataset (bool, optional) if True, return QSPRDatasetFromFile object housing data;
+        as_dataset (bool, optional): if True, return QSPRDatasetFromFile object housing data;
             otherwise, return tuple of smiles and target values
         backend (str, optional): any in ['padel', 'alvadesc']
 
@@ -125,9 +129,11 @@ def load_cn(as_dataset: bool = False, backend: str = 'padel') -> Union[
 
 def load_cp(as_dataset: bool = False, backend: str = 'padel') -> Union[
             Tuple[List[str], List[List[float]]], QSPRDatasetFromFile]:
-    r"""
+    """
+    Loads cloud point data; target values given in Celsius
+
     Args:
-        as_dataset (bool, optional) if True, return QSPRDatasetFromFile object housing data;
+        as_dataset (bool, optional): if True, return QSPRDatasetFromFile object housing data;
             otherwise, return tuple of smiles and target values
         backend (str, optional): any in ['padel', 'alvadesc']
 
@@ -143,9 +149,11 @@ def load_cp(as_dataset: bool = False, backend: str = 'padel') -> Union[
 
 def load_kv(as_dataset: bool = False, backend: str = 'padel') -> Union[
             Tuple[List[str], List[List[float]]], QSPRDatasetFromFile]:
-    r"""
+    """
+    Loads kinematic viscosity data; target values given in mm^2/s (cSt) at 313 deg. K
+
     Args:
-        as_dataset (bool, optional) if True, return QSPRDatasetFromFile object housing data;
+        as_dataset (bool, optional): if True, return QSPRDatasetFromFile object housing data;
             otherwise, return tuple of smiles and target values
         backend (str, optional): any in ['padel', 'alvadesc']
 
@@ -161,9 +169,11 @@ def load_kv(as_dataset: bool = False, backend: str = 'padel') -> Union[
 
 def load_lhv(as_dataset: bool = False, backend: str = 'padel') -> Union[
              Tuple[List[str], List[List[float]]], QSPRDatasetFromFile]:
-    r"""
+    """
+    Loads lower heating value data; target values given in MJ/kg = kJ/g
+
     Args:
-        as_dataset (bool, optional) if True, return QSPRDatasetFromFile object housing data;
+        as_dataset (bool, optional): if True, return QSPRDatasetFromFile object housing data;
             otherwise, return tuple of smiles and target values
         backend (str, optional): any in ['padel', 'alvadesc']
 
@@ -179,9 +189,11 @@ def load_lhv(as_dataset: bool = False, backend: str = 'padel') -> Union[
 
 def load_mon(as_dataset: bool = False, backend: str = 'padel') -> Union[
              Tuple[List[str], List[List[float]]], QSPRDatasetFromFile]:
-    r"""
+    """
+    Loads motor octane number data; target values given in MON units
+
     Args:
-        as_dataset (bool, optional) if True, return QSPRDatasetFromFile object housing data;
+        as_dataset (bool, optional): if True, return QSPRDatasetFromFile object housing data;
             otherwise, return tuple of smiles and target values
         backend (str, optional): any in ['padel', 'alvadesc']
 
@@ -197,6 +209,18 @@ def load_mon(as_dataset: bool = False, backend: str = 'padel') -> Union[
 
 def load_mp(as_dataset: bool = False, backend: str = 'padel') -> Union[
             Tuple[List[str], List[List[float]]], QSPRDatasetFromFile]:
+    """
+    Loads melting point data; target values given in Celsius
+
+    Args:
+        as_dataset (bool, optional): if True, return QSPRDatasetFromFile object housing data;
+            otherwise, return tuple of smiles and target values
+        backend (str, optional): any in ['padel', 'alvadesc']
+
+    Returns:
+        Union[Tuple[List[str], List[List[float]]], QSPRDatasetFromFile]: either tuple of (smiles,
+            target vals) or QSPRDatasetFromFile
+    """
 
     if not as_dataset:
         return _get_file_data('mp')
@@ -205,9 +229,11 @@ def load_mp(as_dataset: bool = False, backend: str = 'padel') -> Union[
 
 def load_pp(as_dataset: bool = False, backend: str = 'padel') -> Union[
             Tuple[List[str], List[List[float]]], QSPRDatasetFromFile]:
-    r"""
+    """
+    Loads pour point data; target values given in Celsius
+
     Args:
-        as_dataset (bool, optional) if True, return QSPRDatasetFromFile object housing data;
+        as_dataset (bool, optional): if True, return QSPRDatasetFromFile object housing data;
             otherwise, return tuple of smiles and target values
         backend (str, optional): any in ['padel', 'alvadesc']
 
@@ -223,9 +249,11 @@ def load_pp(as_dataset: bool = False, backend: str = 'padel') -> Union[
 
 def load_ron(as_dataset: bool = False, backend: str = 'padel') -> Union[
              Tuple[List[str], List[List[float]]], QSPRDatasetFromFile]:
-    r"""
+    """
+    Loads research octane number data; target values given in RON units
+
     Args:
-        as_dataset (bool, optional) if True, return QSPRDatasetFromFile object housing data;
+        as_dataset (bool, optional): if True, return QSPRDatasetFromFile object housing data;
             otherwise, return tuple of smiles and target values
         backend (str, optional): any in ['padel', 'alvadesc']
 
@@ -241,9 +269,11 @@ def load_ron(as_dataset: bool = False, backend: str = 'padel') -> Union[
 
 def load_ysi(as_dataset: bool = False, backend: str = 'padel') -> Union[
              Tuple[List[str], List[List[float]]], QSPRDatasetFromFile]:
-    r"""
+    """
+    Loads yield sooting index data; target values given in unified YSI units
+
     Args:
-        as_dataset (bool, optional) if True, return QSPRDatasetFromFile object housing data;
+        as_dataset (bool, optional): if True, return QSPRDatasetFromFile object housing data;
             otherwise, return tuple of smiles and target values
         backend (str, optional): any in ['padel', 'alvadesc']
 

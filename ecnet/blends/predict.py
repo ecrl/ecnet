@@ -6,7 +6,7 @@ from .equations import linear_blend_ave, celsius_to_rankine, rankine_to_celsius
 
 
 def cetane_number(values: List[float], vol_fractions: List[float]) -> float:
-    r"""
+    """
     Calculates blended CN from individual CNs, volume fractions of each individual CN in blend;
     blend assumed proportionally linear: NREL/SR-540-36805
 
@@ -22,17 +22,17 @@ def cetane_number(values: List[float], vol_fractions: List[float]) -> float:
 
 
 def cloud_point(values: List[float], vol_fractions: List[float]) -> float:
-    r"""
+    """
     Calculates blended CP from individual CPs, volume fractions of each individual CP in blend;
     from paper "Predictions of pour, cloud and cold filter plugging point for future diesel
     fuels with application to diesel blending models" by Semwal et al.
 
-    $
-    CP_{b}^{13.45} = \sum_{i}^{N} V_{i} CP_{i}^{13.45}
-    $
+    $$
+    CP_{b}^{13.45} = \\sum_{i}^{N} V_{i} CP_{i}^{13.45}
+    $$
 
-    Where V_i is the ith components weight percent, CP_i is the ith component's CP, in Rankine,
-    and CP_b is the blend's CP, in Rankine
+    Where $$V_i$$ is the ith components weight percent, $$CP_i$$ is the ith component's CP, in
+    Rankine, and $$CP_b$$ is the blend's CP, in Rankine
 
     Args:
         values (list[float]): CP values, in Celsius
@@ -49,17 +49,17 @@ def cloud_point(values: List[float], vol_fractions: List[float]) -> float:
 
 
 def kinematic_viscosity(values: List[float], vol_fractions: List[float]) -> float:
-    r"""
+    """
     Calculates blended KV from individual KVs, volume fractions of each individual KV in blend;
     equation 8 from paper "Estimation of the kinematic viscosities of bio-oil/alcohol blends:
     Kinematic viscosity-temperature formula and mixing rules" by Ding et al.
 
-    $
-    1 / ln(2000 * kv_{blend}) = \sum_{i}^{N} \frac{V_i}{ln(2000 * kv_i)}
-    $
+    $$
+    1 / ln(2000 * kv_{blend}) = \\sum_{i}^{N} \\frac{V_i}{ln(2000 * kv_i)}
+    $$
 
-    Where V_i is the volume fraction of the ith component, kv_i is the kinematic viscosity of the
-    ith component, and kv_{blend} is the kinematic viscosity of the blend
+    Where $$V_i$$ is the volume fraction of the ith component, $$kv_i$$ is the kinematic viscosity
+    of the ith component, and $$kv_{blend}$$ is the kinematic viscosity of the blend
 
     Args:
         values (list[float]): KV values, in cSt
@@ -73,7 +73,7 @@ def kinematic_viscosity(values: List[float], vol_fractions: List[float]) -> floa
 
 
 def lower_heating_value(values: List[float], vol_fractions: List[float]) -> float:
-    r"""
+    """
     Calculates blended LHV from individual LHVs, volume fractions of each individual LHV in blend;
     blend assumed proportionally linear: https://doi.org/10.1016/j.ejpe.2015.11.002
 
@@ -89,7 +89,7 @@ def lower_heating_value(values: List[float], vol_fractions: List[float]) -> floa
 
 
 def yield_sooting_index(values: List[float], vol_fractions: List[float]) -> float:
-    r"""
+    """
     Calculates blended YSI from individual YSIs, volume fractions of each individual YSI in blend;
     blend assumed proportionally linear: https://doi.org/10.1016/j.fuel.2020.119522
 

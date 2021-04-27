@@ -5,6 +5,8 @@ from copy import deepcopy
 from ..model import ECNet
 from ..datasets.structs import QSPRDataset
 
+from typing import Iterable
+
 
 CONFIG = {
     'training_params_range': {
@@ -20,6 +22,15 @@ CONFIG = {
 
 
 def _get_kwargs(**kwargs):
+    """
+    Returns dictionary of relevant training parameters from **kwargs
+
+    Args:
+        **kwargs: key word arguments
+
+    Returns:
+        dict: relevant relevant kwargs, else default values
+    """
 
     return {
         'model': kwargs.get('model'),
@@ -41,6 +52,15 @@ def _get_kwargs(**kwargs):
 
 
 def _evaluate_model(trial_spec: dict) -> float:
+    """
+    Training sub-function for cost functions _cost_batch_size, _cost_arch, _cost_train_hp;
+
+    Args:
+        trial_spec (dict): all relevant parameters for this training trial
+
+    Returns:
+        float: median absolute error for dataset being evaluated (trial_spec['eval_ds'])
+    """
 
     model = deepcopy(trial_spec['model'])
     model._hidden_dim = trial_spec['hidden_dim']
@@ -63,7 +83,17 @@ def _evaluate_model(trial_spec: dict) -> float:
     return median_absolute_error(y_eval, yhat_eval)
 
 
-def _cost_batch_size(vals, **kwargs):
+def _cost_batch_size(vals: Iterable[float], **kwargs) -> float:
+    """
+    Cost function for tuning batch size
+
+    Args:
+        vals (iterable[float]): values passed to cost function from ABC; just contains batch size
+        **kwargs: user-defined training arguments, datasets to be passed to _evaluate_model
+
+    Returns:
+        float: median absolute error for dataset being evaluated (**kwarg: eval_ds)
+    """
 
     trial_spec = _get_kwargs(**kwargs)
     trial_spec['batch_size'] = vals[0]
@@ -71,6 +101,18 @@ def _cost_batch_size(vals, **kwargs):
 
 
 def tune_batch_size(n_bees: int, n_iter: int, n_processes: int = 1, **kwargs) -> dict:
+    """
+    Tunes the batch size during training
+
+    Args:
+        n_bees (int): number of employer bees to use in ABC algorithm
+        n_iter (int): number of iterations, or "search cycles", for ABC algorithm
+        n_processes (int): if > 1, uses multiprocessing when evaluating at an iteration
+        **kwargs: arguments passed to _cost_batch_size
+
+    Returns:
+        dict: {'batch_size': tuned batch size}
+    """
 
     abc = ABC(n_bees, _cost_batch_size, num_processes=n_processes, obj_fn_args=kwargs)
     abc.add_param(1, len(kwargs.get('train_ds').desc_vals), name='batch_size')
@@ -81,6 +123,19 @@ def tune_batch_size(n_bees: int, n_iter: int, n_processes: int = 1, **kwargs) ->
 
 
 def _cost_arch(vals, **kwargs):
+    """
+    Cost function for tuning NN architecture
+
+    Args:
+        vals (iterable[float]): values passed to cost function from ABC; contains:
+            - hidden_dim
+            - n_nidden
+            - dropout
+        **kwargs: user-defined training arguments, datasets to be passed to _evaluate_model
+
+    Returns:
+        float: median absolute error for dataset being evaluated (**kwarg: eval_ds)
+    """
 
     trial_spec = _get_kwargs(**kwargs)
     trial_spec['hidden_dim'] = vals[0]
@@ -90,6 +145,18 @@ def _cost_arch(vals, **kwargs):
 
 
 def tune_model_architecture(n_bees: int, n_iter: int, n_processes: int = 1, **kwargs) -> dict:
+    """
+    Tunes the NN's architecture
+
+    Args:
+        n_bees (int): number of employer bees to use in ABC algorithm
+        n_iter (int): number of iterations, or "search cycles", for ABC algorithm
+        n_processes (int): if > 1, uses multiprocessing when evaluating at an iteration
+        **kwargs: arguments passed to _cost_batch_size
+
+    Returns:
+        dict: {'batch_size': opt_val, 'n_hidden': opt_val, 'dropout': opt_val}
+    """
 
     abc = ABC(n_bees, _cost_arch, num_processes=n_processes, obj_fn_args=kwargs)
     abc.add_param(CONFIG['architecture_params_range']['hidden_dim'][0],
@@ -109,6 +176,18 @@ def tune_model_architecture(n_bees: int, n_iter: int, n_processes: int = 1, **kw
 
 
 def _cost_train_hp(vals, **kwargs):
+    """
+    Cost function for tuning NN training parameters (Adam optim. hyper-parameters)
+
+    Args:
+        vals (iterable[float]): values passed to cost function from ABC; contains:
+            - lr (learning rate)
+            - lr_decay (learning rate decay)
+        **kwargs: user-defined training arguments, datasets to be passed to _evaluate_model
+
+    Returns:
+        float: median absolute error for dataset being evaluated (**kwarg: eval_ds)
+    """
 
     trial_spec = _get_kwargs(**kwargs)
     trial_spec['lr'] = vals[0]
@@ -117,6 +196,18 @@ def _cost_train_hp(vals, **kwargs):
 
 
 def tune_training_parameters(n_bees: int, n_iter: int, n_processes: int = 1, **kwargs) -> dict:
+    """
+    Tunes the NN's training parameters (Adam optim. fn.)
+
+    Args:
+        n_bees (int): number of employer bees to use in ABC algorithm
+        n_iter (int): number of iterations, or "search cycles", for ABC algorithm
+        n_processes (int): if > 1, uses multiprocessing when evaluating at an iteration
+        **kwargs: arguments passed to _cost_batch_size
+
+    Returns:
+        dict: {'lr': opt_val, 'lr_decay': opt_val}
+    """
 
     abc = ABC(n_bees, _cost_train_hp, num_processes=n_processes, obj_fn_args=kwargs)
     abc.add_param(CONFIG['training_params_range']['lr'][0],

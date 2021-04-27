@@ -4,7 +4,7 @@ from math import sqrt
 
 
 def celsius_to_rankine(temp: float) -> float:
-    r"""
+    """
     Converts temperature in celsius to temperature in rankine
 
     Args:
@@ -18,7 +18,7 @@ def celsius_to_rankine(temp: float) -> float:
 
 
 def linear_blend_ave(values: List[float], proportions: List[float]) -> float:
-    r"""
+    """
     Calculates the linear combination of multiple values given discrete
     proportions for each value
 
@@ -38,11 +38,11 @@ def linear_blend_ave(values: List[float], proportions: List[float]) -> float:
 
 
 def linear_blend_err(errors: List[float], proportions: List[float]) -> float:
-    r"""
+    """
     Calculates the linear combination of multiple errors given discrete
     proportions for each value
 
-    $ f = aA $ -> $ error^2 = a^2 * error_A^2 $ -> $ error^2 = \sum_i^N (1) (prop_i * error_i)^2 $
+    $$ f = aA \\rightarrow error^2 = a^2 * error_A^2 \\rightarrow error^2 \\rightarrow \\sum $$
 
     Args:
         errors (list[float]): list of error values
@@ -61,10 +61,11 @@ def linear_blend_err(errors: List[float], proportions: List[float]) -> float:
 
 def exponential_blend_err(values: List[float], result: float, errors: List[float],
                           proportions: List[float], a: float, b: float) -> float:
-    r"""
-    Calculates the error of a blend whose equation is defined as $f = aA^b$
+    """
+    Calculates the error of a blend whose equation is defined as $$ f = aA^b $$
 
-    $ f = aA^b $ -> $ err_f^2 = (abA^{b-1}err_A)^2 = (fberr_A / A)^2$ -> sum of errors
+    $$ f = aA^b \\rightarrow err_f^2 = (abA^{b-1}err_A)^2 = (fberr_A / A)^2
+    \\rightarrow \\sum $$
 
     Args:
         values (list[float]): predicted values
@@ -85,11 +86,11 @@ def exponential_blend_err(values: List[float], result: float, errors: List[float
 
 
 def kv_error(values: List[float], errors: List[float], proportions: List[float]) -> float:
-    r"""
-    Calculates the error of a KV blend whose equation is in the form $f=aln(bA)$
+    """
+    Calculates the error of a KV blend whose equation is in the form $$ f=aln(bA) $$
 
-    $f = aln(bA)$ -> $err_f^2 = (a * err_A / A)^2$ -> sum
-    for KV, a = 1.0, b = 2000
+    $$ f = aln(bA) \\rightarrow err_f^2 = (a * err_A / A)^2 \\rightarrow \\sum $$
+    for KV, $$a = 1.0, b = 2000$$
 
     Args:
         values (list[float]): predicted values
@@ -107,7 +108,7 @@ def kv_error(values: List[float], errors: List[float], proportions: List[float])
 
 
 def rankine_to_celsius(temp: float) -> float:
-    r"""
+    """
     Converts temperature in rankine to temperature in celsius
 
     Args:

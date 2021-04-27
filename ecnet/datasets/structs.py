@@ -11,7 +11,7 @@ class QSPRDataset(Dataset):
 
     def __init__(self, smiles: List[str], target_vals: Iterable[Iterable[float]],
                  backend: str = 'padel'):
-        r"""
+        """
         QSPRDataset: creates a torch.utils.data.Dataset from SMILES strings and target values
 
         Args:
@@ -27,7 +27,7 @@ class QSPRDataset(Dataset):
 
     @staticmethod
     def smi_to_qspr(smiles: List[str], backend: str) -> Tuple[List[List[float]], List[str]]:
-        r"""
+        """
         Generate QSPR descriptors for each supplied SMILES string
 
         Args:
@@ -46,7 +46,7 @@ class QSPRDataset(Dataset):
             raise ValueError('Unknown backend software: {}'.format(backend))
 
     def set_index(self, index: List[int]):
-        r"""
+        """
         Reduce the number of samples in the dataset; samples retained given by supplied indices
 
         Args:
@@ -60,7 +60,7 @@ class QSPRDataset(Dataset):
         )
 
     def set_desc_index(self, index: List[int]):
-        r"""
+        """
         Reduce the number of features per sample; features retained given by supplied indices
 
         Args:
@@ -77,7 +77,7 @@ class QSPRDataset(Dataset):
         return len(self.smiles)
 
     def __getitem__(self, idx: int):
-        r"""
+        """
         Dictionary representation of compound at index `idx`
 
         Args:
@@ -99,7 +99,7 @@ class QSPRDatasetFromFile(QSPRDataset):
 
     def __init__(self, smiles_fn: str, target_vals: Iterable[Iterable[float]],
                  backend: str = 'padel'):
-        r"""
+        """
         QSPRDatasetFromFile: creates a torch.utils.data.Dataset given target values and a supplied
         filename/path to a SMILES file
 
@@ -124,7 +124,7 @@ class QSPRDatasetFromFile(QSPRDataset):
 
     @staticmethod
     def _open_smiles_file(smiles_fn: str) -> List[str]:
-        r"""
+        """
         Open SMILES file at specified location
 
         Args:
@@ -145,7 +145,7 @@ class QSPRDatasetFromValues(QSPRDataset):
 
     def __init__(self, desc_vals: Iterable[Iterable[float]],
                  target_vals: Iterable[Iterable[float]]):
-        r"""
+        """
         QSPRDatasetFromValues: creates a torch.utils.data.Dataset given supplied descriptor values,
         supplied target values
 

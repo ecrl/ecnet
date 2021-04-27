@@ -3,7 +3,7 @@ import sys
 
 
 class CallbackOperator(object):
-    r"""
+    """
     CallbackOperator: executes individual callback steps at each step
     """
 
@@ -87,7 +87,7 @@ class CallbackOperator(object):
 
 
 class Callback(object):
-    r"""
+    """
     Base Callback object
     """
 
@@ -107,7 +107,7 @@ class Callback(object):
 class LRDecayLinear(Callback):
 
     def __init__(self, init_lr: float, decay_rate: float, optimizer):
-        r"""
+        """
         Linear learning rate decay
 
         Args:
@@ -121,7 +121,7 @@ class LRDecayLinear(Callback):
         self.optimizer = optimizer
 
     def on_epoch_begin(self, epoch: int) -> bool:
-        r"""
+        """
         Training halted if:
             new learing rate == 0.0
         """
@@ -137,7 +137,7 @@ class LRDecayLinear(Callback):
 class Validator(Callback):
 
     def __init__(self, loader, model, eval_iter: int, patience: int):
-        r"""
+        """
         Periodic validation using training data subset
 
         Args:
@@ -159,7 +159,7 @@ class Validator(Callback):
         self._patience = patience
 
     def on_epoch_end(self, epoch: int) -> bool:
-        r"""
+        """
         Training halted if:
             number of epochs since last lowest valid. MAE > specified patience
         """
@@ -185,7 +185,7 @@ class Validator(Callback):
         return True
 
     def on_train_end(self) -> bool:
-        r"""
+        """
         After training, recall weights when lowest valid. MAE occurred
         """
 

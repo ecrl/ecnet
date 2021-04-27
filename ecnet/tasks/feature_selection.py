@@ -7,7 +7,7 @@ from ..datasets.structs import QSPRDataset
 
 def select_rfr(dataset: QSPRDataset, total_importance: float = 0.95,
                **kwargs) -> Tuple[List[int], List[float]]:
-    r"""
+    """
     select_rfr: reduces input data dimensionality such that specified proportion of total feature
     importance (derived from random forest regression) is retained in feature subset
 

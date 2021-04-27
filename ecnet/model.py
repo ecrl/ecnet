@@ -23,7 +23,7 @@ class ECNet(nn.Module):
 
     def __init__(self, input_dim: int, output_dim: int, hidden_dim: int, n_hidden: int,
                  dropout: float = 0.0, device: str = 'cpu'):
-        r"""
+        """
         ECNet, child of torch.nn.Module: handles data preprocessing, multilayer perceptron training,
         stores multilayer perceptron layers/weights for continued usage/saving
 
@@ -47,7 +47,7 @@ class ECNet(nn.Module):
         self.to(torch.device(device))
 
     def _construct(self):
-        r"""
+        """
         _construct: given supplied architecture params, construct multilayer perceptron
         """
 
@@ -62,7 +62,7 @@ class ECNet(nn.Module):
             epochs: int = 100, lr_decay: float = 0.0, valid_size: float = 0.0,
             valid_eval_iter: int = 1, patience: int = 16, verbose: int = 0,
             random_state: int = None, **kwargs) -> Tuple[List[float], List[float]]:
-        r"""
+        """
         fit: fits ECNet to either (1) SMILES and target values, or (2) a pre-loaded QSPRDataset;
         the training process utilizes the Adam optimization algorithm, MSE loss, ReLU activation
         functions between fully-connected layers, and optionally (1) a decaying learning rate, and
@@ -196,7 +196,7 @@ class ECNet(nn.Module):
         return (train_losses, valid_losses)
 
     def forward(self, x: torch.tensor) -> torch.tensor:
-        r"""
+        """
         Forward propagation of data through multilayer perceptron
 
         Args:
@@ -227,7 +227,7 @@ class ECNet(nn.Module):
         return F.mse_loss(pred, target)
 
     def save(self, model_filename: str):
-        r"""
+        """
         Saves the model for later use
 
         Args:
@@ -240,7 +240,7 @@ class ECNet(nn.Module):
 
 
 def load_model(model_filename: str) -> ECNet:
-    r"""
+    """
     Loads a model for use
 
     Args:

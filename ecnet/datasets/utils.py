@@ -5,7 +5,7 @@ from padelpy import from_smiles
 
 
 def _qspr_from_padel(smiles: List[str], timeout: int = None) -> Tuple[List[List[float]], List[str]]:
-    r"""
+    """
     Args:
         smiles (list[str]): list of SMILES strings
         timeout (int, optional): timeout for PaDEL-Descriptor process call; if None, uses
@@ -29,7 +29,7 @@ def _qspr_from_padel(smiles: List[str], timeout: int = None) -> Tuple[List[List[
 
 
 def _qspr_from_alvadesc(smiles: List[str]) -> Tuple[List[List[float]], List[str]]:
-    r"""
+    """
     Args:
         smiles (list[str]): list of SMILES strings
 
@@ -49,7 +49,7 @@ def _qspr_from_alvadesc(smiles: List[str]) -> Tuple[List[List[float]], List[str]
 
 
 def _qspr_from_alvadesc_smifile(smiles_fn: str) -> Tuple[List[List[float]], List[str]]:
-    r"""
+    """
     Args:
         smiles (list[str]): list of SMILES strings
 
