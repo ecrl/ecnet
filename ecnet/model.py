@@ -61,7 +61,8 @@ class ECNet(nn.Module):
             dataset: QSPRDataset = None, backend: str = 'padel', batch_size: int = 32,
             epochs: int = 100, lr_decay: float = 0.0, valid_size: float = 0.0,
             valid_eval_iter: int = 1, patience: int = 16, verbose: int = 0,
-            random_state: int = None, **kwargs) -> Tuple[List[float], List[float]]:
+            random_state: int = None, shuffle: bool = False,
+            **kwargs) -> Tuple[List[float], List[float]]:
         """
         fit: fits ECNet to either (1) SMILES and target values, or (2) a pre-loaded QSPRDataset;
         the training process utilizes the Adam optimization algorithm, MSE loss, ReLU activation
@@ -90,6 +91,8 @@ class ECNet(nn.Module):
             verbose (int, optional): if > 0, will print every `this` epochs; default = 0
             random_state (int, optional): random_state used by sklearn.model_selection.
                 train_test_split; default = None
+            shuffle (bool, optional): if True, shuffles training/validation data between epochs;
+                default = False; random_state should be None
             **kwargs: arguments accepted by torch.optim.Adam (i.e. learning rate, beta values)
 
         Returns:
@@ -135,6 +138,18 @@ class ECNet(nn.Module):
             # EPOCH BEGIN
             if not CBO.on_epoch_begin(epoch):
                 break
+
+            if shuffle:
+                index_train, index_valid = train_test_split(
+                    [i for i in range(len(dataset))], test_size=valid_size,
+                    random_state=random_state
+                )
+                dataloader_train = DataLoader(
+                    Subset(dataset, index_train), batch_size=batch_size, shuffle=True
+                )
+                dataloader_valid = DataLoader(
+                    Subset(dataset, index_valid), batch_size=len(index_valid), shuffle=True
+                )
 
             train_loss = 0.0
             self.train()
