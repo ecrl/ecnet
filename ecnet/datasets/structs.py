@@ -2,6 +2,7 @@ r"""PyTorch-iterable/callable data structures"""
 from typing import List, Tuple, Iterable
 import torch
 from torch.utils.data import Dataset
+from sklearn.decomposition import PCA
 
 from .utils import _qspr_from_padel, _qspr_from_alvadesc,\
     _qspr_from_alvadesc_smifile
@@ -21,9 +22,9 @@ class QSPRDataset(Dataset):
         """
 
         self.smiles = smiles
-        self.target_vals = torch.as_tensor(target_vals)
+        self.target_vals = torch.as_tensor(target_vals).type(torch.float32)
         self.desc_vals, self.desc_names = self.smi_to_qspr(smiles, backend)
-        self.desc_vals = torch.as_tensor(self.desc_vals)
+        self.desc_vals = torch.as_tensor(self.desc_vals).type(torch.float32)
 
     @staticmethod
     def smi_to_qspr(smiles: List[str], backend: str) -> Tuple[List[List[float]], List[str]]:
@@ -110,17 +111,17 @@ class QSPRDatasetFromFile(QSPRDataset):
         """
 
         self.smiles = self._open_smiles_file(smiles_fn)
-        self.target_vals = torch.as_tensor(target_vals)
+        self.target_vals = torch.as_tensor(target_vals).type(torch.float32)
         if backend == 'padel':
             self.desc_vals, self.desc_names = self.smi_to_qspr(
                 self.smiles, backend
             )
-            self.desc_vals = torch.as_tensor(self.desc_vals)
+            self.desc_vals = torch.as_tensor(self.desc_vals).type(torch.float32)
         elif backend == 'alvadesc':
             self.desc_vals, self.desc_names = _qspr_from_alvadesc_smifile(
                 smiles_fn
             )
-            self.desc_vals = torch.as_tensor(self.desc_vals)
+            self.desc_vals = torch.as_tensor(self.desc_vals).type(torch.float32)
 
     @staticmethod
     def _open_smiles_file(smiles_fn: str) -> List[str]:
@@ -156,5 +157,35 @@ class QSPRDatasetFromValues(QSPRDataset):
 
         self.smiles = ['' for _ in range(len(target_vals))]
         self.desc_names = ['' for _ in range(len(desc_vals[0]))]
-        self.desc_vals = torch.as_tensor(desc_vals)
-        self.target_vals = torch.as_tensor(target_vals)
+        self.desc_vals = torch.as_tensor(desc_vals).type(torch.float32)
+        self.target_vals = torch.as_tensor(target_vals).type(torch.float32)
+
+
+class PCADataset(QSPRDataset):
+
+    def __init__(self, smiles: List[str], target_vals: Iterable[Iterable[float]],
+                 backend: str = 'padel', existing_pca_dataset: 'PCADataset' = None):
+        """
+        PCADataset: creates a torch.utils.data.Dataset given supplied SMILES strings, supplied
+        target values; first generates QSPR descriptors, then transforms them via PCA; an existing
+        PCADataset can be supplied to peform PCA transformation
+
+        Args:
+            smiles (list[str]): SMILES strings
+            target_vals (Iterable[Iterable[float]]): target values of shape (n_samples, n_targets)
+            backend (str, optional): backend for QSPR generation, ['padel', 'alvadesc']
+            existing_pca_dataset (PCADataset, optional): if PCA already trained (e.g. trained
+                using training set, want to use for testing set), the pre-trained PCA can be used
+                to perform PCA for this data
+        """
+
+        self.smiles = smiles
+        self.target_vals = torch.as_tensor(target_vals).type(torch.float32)
+        self.desc_names = None
+        desc_vals, _ = self.smi_to_qspr(smiles, backend)
+        if existing_pca_dataset is None:
+            self.pca = PCA(n_components=min(desc_vals.shape[0], desc_vals.shape[1]))
+            self.pca.fit(desc_vals)
+        else:
+            self.pca = existing_pca_dataset.pca
+        self.desc_vals = torch.as_tensor(self.pca.transform(desc_vals)).type(torch.float32)
