@@ -10,9 +10,9 @@ setup(
     license='MIT',
     packages=find_packages(),
     install_requires=[
-        'torch==1.8.0',
-        'sklearn',
-        'padelpy==0.1.9',
+        'torch==2.0.0',
+        'scikit-learn==1.2.2',
+        'padelpy==0.1.13',
         'alvadescpy==0.1.2',
         'ecabc==3.0.0'
     ],
