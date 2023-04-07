@@ -1,3 +1,4 @@
-# ecnet.model
+# ecnet.ECNet
 
-::: ecnet.model
+::: ecnet.ECNet
+    handler: python
