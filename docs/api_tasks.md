@@ -1,13 +1,13 @@
 # ecnet.tasks
 
-::: ecnet.tasks.select_rfr
+::: ecnet.tasks.feature_selection.select_rfr
     handler: python
 
-::: ecnet.tasks.tune_batch_size
+::: ecnet.tasks.parameter_tuning.tune_batch_size
     handler: python
 
-::: ecnet.tasks.tune_model_architecture
+::: ecnet.tasks.parameter_tuning.tune_model_architecture
     handler: python
 
-::: ecnet.tasks.tune_training_parameters
+::: ecnet.tasks.parameter_tuning.tune_training_parameters
     handler: python
