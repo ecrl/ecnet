@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='ecnet',
-    version='4.1.0',
+    version='4.1.1',
     description='Fuel property prediction using QSPR descriptors',
     url='https://github.com/ecrl/ecnet',
     author='Travis Kessler',
