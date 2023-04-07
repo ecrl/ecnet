@@ -12,7 +12,7 @@ pool:
 steps:
 - task: UsePythonVersion@0
   inputs:
-    versionSpec: '3.7'
+    versionSpec: '3.11'
     architecture: 'x64'
 
 - script: |
@@ -23,4 +23,4 @@ steps:
 - script: |
     cd tests
     python test_all.py
-  displayName: 'unittest'
+  displayName: 'Unit testing'
