@@ -8,6 +8,9 @@ include-package-data = true
 [tool.setuptools.packages.find]
 exclude = ["databases*", "paper*"]
 
+[tool.setuptools.package-data]
+"*" = ["*.smiles", "*.target"]
+
 [tool.pytest.ini_options]
 filterwarnings = [
     "ignore::DeprecationWarning",
