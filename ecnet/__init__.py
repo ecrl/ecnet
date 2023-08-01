@@ -1,2 +1,4 @@
+import pkg_resources
 from .model import ECNet
-__version__ = '4.1.1'
+
+__version__ = pkg_resources.get_distribution("ecnet").version
