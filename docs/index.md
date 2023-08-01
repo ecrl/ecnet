@@ -27,4 +27,4 @@ Additional dependencies (torch, sklearn, padelpy, alvadescpy, ecabc) will be ins
 
     git clone https://github.com/ecrl/ecnet
     cd ecnet
-    python setup.py install
+    pip install .
