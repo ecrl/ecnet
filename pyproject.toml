@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+exclude = ["databases*", "paper*"]
+
+[project]
+name = "ecnet"
+version = "4.1.2"
+authors = [
+    { name="Travis Kessler", email="travis.j.kessler@gmail.com" },
+]
+description = "Fuel property prediction using QSPR descriptors"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "torch==2.0.0",
+    "scikit-learn==1.2.2",
+    "padelpy==0.1.15",
+    "alvadescpy==0.1.2",
+    "ecabc==3.0.0"
+]
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/ecrl/ecnet"
+"Bug Tracker" = "https://github.com/ecrl/ecnet/issues"
