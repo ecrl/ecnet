@@ -27,7 +27,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "torch==2.0.0",
-    "scikit-learn==1.2.2",
+    "scikit-learn==1.5.0",
     "padelpy==0.1.15",
     "alvadescpy==0.1.2",
     "ecabc==3.0.0"
