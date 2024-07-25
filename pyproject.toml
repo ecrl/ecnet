@@ -18,7 +18,7 @@ filterwarnings = [
 
 [project]
 name = "ecnet"
-version = "4.1.2"
+version = "4.1.3"
 authors = [
     { name="Travis Kessler", email="travis.j.kessler@gmail.com" },
 ]
@@ -26,11 +26,11 @@ description = "Fuel property prediction using QSPR descriptors"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "torch==2.0.0",
-    "scikit-learn==1.2.2",
-    "padelpy==0.1.15",
-    "alvadescpy==0.1.2",
-    "ecabc==3.0.0"
+    "torch==2.4.0",
+    "scikit-learn==1.5.1",
+    "padelpy==0.1.16",
+    "alvadescpy==0.1.3",
+    "ecabc==3.0.1"
 ]
 classifiers = [
     "Programming Language :: Python :: 3.11",
