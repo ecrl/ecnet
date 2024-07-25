@@ -26,7 +26,7 @@ description = "Fuel property prediction using QSPR descriptors"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "torch==2.0.0",
+    "torch==2.2.0",
     "scikit-learn==1.2.2",
     "padelpy==0.1.15",
     "alvadescpy==0.1.2",
