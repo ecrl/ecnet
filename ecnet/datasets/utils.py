@@ -42,7 +42,7 @@ def _qspr_from_alvadesc(smiles: List[str]) -> Tuple[List[List[float]], List[str]
     keys = list(desc[0].keys())
     for idx, d in enumerate(desc):
         for k in keys:
-            if d[k] == 'na':
+            if d[k] == 'na' or d[k] == r'na\r':
                 desc[idx][k] = 0.0
     desc = [[float(d[k]) for k in keys] for d in desc]
     return (desc, keys)
@@ -66,7 +66,7 @@ def _qspr_from_alvadesc_smifile(smiles_fn: str) -> Tuple[List[List[float]], List
     keys = list(desc[0].keys())
     for idx, d in enumerate(desc):
         for k in keys:
-            if d[k] == 'na':
+            if d[k] == 'na' or d[k] == r'na\r':
                 desc[idx][k] = 0.0
     desc = [[float(d[k]) for k in keys] for d in desc]
     return (desc, keys)
