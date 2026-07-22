@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install package with dev extras
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Ruff check
+        run: ruff check src tests
+      - name: Ruff format
+        run: ruff format --check src tests
+      - name: Pre-commit
+        run: pre-commit run --all-files
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Install package with dev extras
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Pytest with coverage gate
+        run: >
+          pytest tests/ -v
+          --cov=ecnet
+          --cov-report=term-missing
+          --cov-fail-under=90
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install package with dev extras
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: pip-audit
+        run: |
+          set -euo pipefail
+          ignore_args=()
+          while IFS= read -r id; do
+            [[ -z "${id}" || "${id}" =~ ^# ]] && continue
+            ignore_args+=(--ignore-vuln "${id}")
+          done < docs/pip-audit-ignores.txt
+          pip-audit "${ignore_args[@]}"
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install package with docs extras
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[docs]"
+      - name: Sphinx HTML (warnings as errors)
+        run: sphinx-build -W -b html docs/source docs/_build/html

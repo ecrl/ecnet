@@ -4,27 +4,84 @@
 
 [![GitHub version](https://badge.fury.io/gh/ecrl%2FECNet.svg)](https://badge.fury.io/gh/ecrl%2FECNet)
 [![PyPI version](https://badge.fury.io/py/ecnet.svg)](https://badge.fury.io/py/ecnet)
-[![status](http://joss.theoj.org/papers/f556afbc97e18e1c1294d98e0f7ff99f/status.svg)](http://joss.theoj.org/papers/f556afbc97e18e1c1294d98e0f7ff99f)
+[![status](https://joss.theoj.org/papers/10.21105/joss.00401/status.svg)](https://doi.org/10.21105/joss.00401)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/ECRL/ECNet/master/LICENSE.txt)
 [![Documentation Status](https://readthedocs.org/projects/ecnet/badge/?version=latest)](https://ecnet.readthedocs.io/en/latest/?badge=latest)
-	
-**ECNet** is an open source Python package for creating machine learning models to predict fuel properties. ECNet comes bundled with a variety of fuel property datasets, including cetane number, yield sooting index, and research/motor octane number. ECNet was built using the [PyTorch](https://pytorch.org/) library, allowing easy implementation of our models in your existing ML pipelines.
 
-ECNet leverages [QSPR descriptors](https://en.wikipedia.org/wiki/Quantitative_structure%E2%80%93activity_relationship) for use as input variables, specifically [PaDEL-Descriptor](http://www.yapcwsoft.com/dd/padeldescriptor/) and [alvaDesc](https://www.alvascience.com/alvadesc/). Using alvaDesc requires a valid license.
+**ECNet** is an open-source Python package for predicting fuel properties from
+molecular structure using quantitative structure–property relationship (QSPR)
+descriptors and multilayer perceptron models built with
+[PyTorch](https://pytorch.org/).
 
-Future plans for ECNet include:
-- Implementating RDKit to train using molecular fingerprints
-- Leveraging additional QSPR-generation software packages (e.g. [Mordred](https://github.com/mordred-descriptor/mordred))
-- A graphical user interface
+The current **v4** API centers on `ECNet`, bundled property loaders
+(`ecnet.datasets.load_*`), hyperparameter-tuning helpers, training callbacks,
+and analytical blend-property equations. Descriptor backends include
+[PaDEL-Descriptor](http://www.yapcwsoft.com/dd/padeldescriptor/) (default) and
+[alvaDesc](https://www.alvascience.com/alvadesc/) (optional; requires a valid
+license).
 
-# Installation and Usage
+## Installation
 
-Please refer to our [documentation page](https://ecnet.readthedocs.io/en/latest/) for installation instructions and full API documentation. You can also view some [example scripts](https://github.com/ECRL/ECNet/tree/master/examples) we put together.
+Requires **Python 3.11** or newer. Java is needed for the default PaDEL backend.
 
-# Contributing, Reporting Issues, and Other Support:
+```bash
+pip install ecnet
+```
 
-To contribute to ECNet, make a pull request. Contributions should include tests for new features added, as well as extensive documentation.
+From a clone of this repository:
 
-To report problems with the software or feature requests, file an issue. When reporting problems, include information such as error messages, your OS/environment and Python version.
+```bash
+pip install -e .
+pip install -e ".[dev]"   # pytest, ruff, pre-commit, pip-audit
+pip install -e ".[docs]"  # Sphinx + Furo
+```
 
-For additional support/questions, contact Travis Kessler (Travis_Kessler@student.uml.edu) and/or John Hunter Mack (Hunter_Mack@uml.edu).
+## Documentation and examples
+
+- User guide and API reference: [ecnet.readthedocs.io](https://ecnet.readthedocs.io/en/latest/)
+- Example notebooks: [`examples/`](https://github.com/ecrl/ecnet/tree/master/examples)
+- Stability policy: Sphinx *API stability* page (source: `docs/source/stability.rst`)
+- Bundled dataset cards: Sphinx *Bundled property datasets* page (`docs/source/data.rst`)
+
+## Historical JOSS architecture note
+
+The 2017 Journal of Open Source Software article
+([doi:10.21105/joss.00401](https://doi.org/10.21105/joss.00401)) and the
+accompanying `paper/paper.md` describe a **prior generation** of ECNet based on
+a project / build / node ensemble workflow. That architecture is **not** the
+current public API. For v4 usage, follow the Sphinx documentation and the
+imports documented under `ecnet`, `ecnet.datasets`, `ecnet.tasks`,
+`ecnet.blends`, and `ecnet.callbacks`. The JOSS paper remains an appropriate
+citation for the software’s publication history.
+
+## Citation
+
+If you use ECNet in scholarly work, please cite:
+
+Kessler, T., & Mack, J. H. (2017). ECNet: Large scale machine learning projects
+for fuel property prediction. *Journal of Open Source Software*, 2(17), 401.
+https://doi.org/10.21105/joss.00401
+
+```bibtex
+@article{Kessler2017,
+  doi = {10.21105/joss.00401},
+  url = {https://doi.org/10.21105/joss.00401},
+  year = {2017},
+  publisher = {The Open Journal},
+  volume = {2},
+  number = {17},
+  pages = {401},
+  author = {Kessler, Travis and Mack, John Hunter},
+  title = {ECNet: Large scale machine learning projects for fuel property prediction},
+  journal = {Journal of Open Source Software}
+}
+```
+
+## Contributing and support
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for local development setup, hooks, and
+checks. Report bugs and feature requests via GitHub issues (include OS, Python
+version, and relevant error output).
+
+Contact: Travis Kessler (<travis.j.kessler@gmail.com>) and John Hunter Mack
+(<Hunter_Mack@uml.edu>).

@@ -1,0 +1,43 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it using the metadata below.
+title: "ECNet: machine learning models for fuel property prediction"
+authors:
+  - family-names: Kessler
+    given-names: Travis
+    orcid: https://orcid.org/0000-0002-7363-4050
+    email: travis.j.kessler@gmail.com
+  - family-names: Mack
+    given-names: John Hunter
+    orcid: https://orcid.org/0000-0002-5455-8611
+    email: Hunter_Mack@uml.edu
+version: 4.1.5
+license: MIT
+repository-code: https://github.com/ecrl/ecnet
+url: https://ecnet.readthedocs.io/en/latest/
+abstract: >-
+  ECNet predicts fuel properties from molecular structure using QSPR
+  descriptors and multilayer perceptron models, with bundled property
+  datasets, tuning helpers, and analytical blend equations.
+keywords:
+  - fuel property prediction
+  - QSPR
+  - machine learning
+  - cetane number
+  - PyTorch
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Kessler
+      given-names: Travis
+      orcid: https://orcid.org/0000-0002-7363-4050
+    - family-names: Mack
+      given-names: John Hunter
+      orcid: https://orcid.org/0000-0002-5455-8611
+  title: "ECNet: Large scale machine learning projects for fuel property prediction"
+  journal: Journal of Open Source Software
+  year: 2017
+  volume: "2"
+  issue: "17"
+  start: 401
+  doi: 10.21105/joss.00401
+  url: https://doi.org/10.21105/joss.00401

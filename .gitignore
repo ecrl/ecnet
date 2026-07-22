@@ -1,0 +1,65 @@
+# Virtual environments
+.venv/
+.venv*/
+venv/
+
+# Python bytecode / caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.dmypy.json
+.tox/
+.nox/
+.hypothesis/
+.ipynb_checkpoints/
+
+# Test / coverage artifacts
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.cache/
+
+# Build / packaging
+dist/
+build/
+wheels/
+.eggs/
+*.egg-info/
+*.egg
+pip-wheel-metadata/
+*.whl
+
+# Docs builds
+docs/_build/
+docs/build/
+site/
+
+# Secrets and local env (keep example templates trackable)
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Legacy CWD pollution from older tests (keep package data trackable)
+_temp.*
+/*.pt
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Local agent tooling (maintainer-only; not part of published package)
+AGENTS.md
+CLAUDE.md
+.github/copilot-instructions.md
+.cursor/
+.claude/
+docs/blueprint/
+docs/MATHEMATICS_VERIFICATION.md
