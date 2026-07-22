@@ -1,10 +1,10 @@
 # ECNet: API-stable modernization of QSPR-based fuel property prediction
 
-**Design Document — v0.1**  
-**Status:** Approved (2026-07-21)  
-**Package:** `ecnet` (PyPI / import name unchanged)  
-**License:** MIT (unchanged)  
-**Current release baseline:** `4.1.4` (2024-08-29)  
+**Design Document — v0.1**
+**Status:** Approved (2026-07-21)
+**Package:** `ecnet` (PyPI / import name unchanged)
+**License:** MIT (unchanged)
+**Current release baseline:** `4.1.4` (2024-08-29)
 **First modernization tag:** `4.1.5` (after Phases A and B)
 
 ---
@@ -274,42 +274,42 @@ Numerical assertions use `pytest.approx` with tolerances justified per test (ble
 
 ### 9.1 `ecnet` (`__init__.py`)
 
-**Purpose:** Export `ECNet` and `__version__`.  
+**Purpose:** Export `ECNet` and `__version__`.
 **Changes:** Replace `pkg_resources` with `importlib.metadata.version("ecnet")`; add explicit `__all__`.
 
 ### 9.2 `ecnet.model`
 
-**Purpose:** `ECNet` MLP, training loop, save/load.  
-**Preserve:** Constructor args; `fit` defaults; MSE loss; ReLU between layers; validation/early-stopping semantics when `valid_size > 0`.  
+**Purpose:** `ECNet` MLP, training loop, save/load.
+**Preserve:** Constructor args; `fit` defaults; MSE loss; ReLU between layers; validation/early-stopping semantics when `valid_size > 0`.
 **Internal improvements (Phase C):** `load_model` shim that accepts legacy full-module `.pt` pickles and a newer state-dict format, without changing the `load_model(path)` signature; avoid CWD pollution; keep `save` requiring `.pt` extension (prefer writing the new format going forward while remaining able to read legacy files).
 
 ### 9.3 `ecnet.datasets`
 
-**Purpose:** QSPR dataset types, property loaders, PaDEL/alvaDesc utilities.  
-**Preserve:** Loader names and `(smiles, targets)` vs `QSPRDataset` return modes; default `backend='padel'`.  
+**Purpose:** QSPR dataset types, property loaders, PaDEL/alvaDesc utilities.
+**Preserve:** Loader names and `(smiles, targets)` vs `QSPRDataset` return modes; default `backend='padel'`.
 **Improvements:** Dataset cards (Phase D/G10); tests for all `load_*`; document `PCADataset` export policy.
 
 ### 9.4 `ecnet.tasks`
 
-**Purpose:** Random-forest feature selection and ABC-based hyperparameter tuning (`ecabc`).  
-**Preserve:** Function names and return dict key structures used by callers/tests.  
+**Purpose:** Random-forest feature selection and ABC-based hyperparameter tuning (`ecabc`).
+**Preserve:** Function names and return dict key structures used by callers/tests.
 **Tests:** Keep short-iteration tuning tests; mark slow variants if expanded.
 
 ### 9.5 `ecnet.blends`
 
-**Purpose:** Analytical blend property predictors and error propagation helpers.  
-**Preserve:** Equations and units.  
+**Purpose:** Analytical blend property predictors and error propagation helpers.
+**Preserve:** Equations and units.
 **Priority:** Highest test value in Phase A (pure functions, currently 0% coverage).
 
 ### 9.6 `ecnet.callbacks`
 
-**Purpose:** Training callbacks (`LRDecayLinear`, `Validator`, operator plumbing).  
-**Preserve:** Callback method contracts used by `ECNet.fit`.  
+**Purpose:** Training callbacks (`LRDecayLinear`, `Validator`, operator plumbing).
+**Preserve:** Callback method contracts used by `ECNet.fit`.
 **Tests:** Replace the no-op `Validator` test with a real early-stopping characterization test.
 
 ### 9.7 `databases/` (repo root)
 
-**Purpose today:** Large CSV masters + filter script; not part of the installed wheel.  
+**Purpose today:** Large CSV masters + filter script; not part of the installed wheel.
 **Approved:** keep out of wheels and sdists as a non-install research archive; add a README/dataset card clarifying that role (Phase D / G10). Do not silently bundle into PyPI artifacts.
 
 ---

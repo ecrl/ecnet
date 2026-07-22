@@ -1,0 +1,32 @@
+name: Feature request
+description: Propose an enhancement that fits the current API stability policy
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the use case and how it relates to the frozen public surface
+        documented in the Sphinx *API stability* page. Breaking API changes
+        require explicit maintainer approval.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or motivation
+      description: What gap does this fill?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: API sketch or workflow change (additive preferred).
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds or other approaches you evaluated.
+    validations:
+      required: false
